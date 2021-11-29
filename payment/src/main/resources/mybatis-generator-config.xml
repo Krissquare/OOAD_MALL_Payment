@@ -147,7 +147,7 @@
             <!--mysql 配置-->
             <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
         </table>
-        <table tableName="oomall_payment_pattern" domainObjectName="PaymentPattern"
+        <table tableName="oomall_payment_pattern" domainObjectName="PaymentPatternPo"
                enableCountByExample="false" enableUpdateByExample="false"
                enableDeleteByExample="false" enableSelectByExample="true"
                selectByExampleQueryId="false">
