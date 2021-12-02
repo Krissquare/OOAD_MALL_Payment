@@ -24,7 +24,7 @@
     <result column="point" jdbcType="BIGINT" property="point" />
     <result column="confirm_time" jdbcType="TIMESTAMP" property="confirmTime" />
     <result column="shipment_sn" jdbcType="VARCHAR" property="shipmentSn" />
-    <result column="state" jdbcType="TINYINT" property="state" />
+    <result column="state" jdbcType="SMALLINT" property="state" />
     <result column="be_deleted" jdbcType="TINYINT" property="beDeleted" />
     <result column="creator_id" jdbcType="BIGINT" property="creatorId" />
     <result column="creator_name" jdbcType="VARCHAR" property="creatorName" />
@@ -178,7 +178,7 @@
       #{address,jdbcType=VARCHAR}, #{mobile,jdbcType=VARCHAR}, #{message,jdbcType=VARCHAR}, 
       #{advancesaleId,jdbcType=BIGINT}, #{grouponId,jdbcType=BIGINT}, #{expressFee,jdbcType=BIGINT}, 
       #{discountPrice,jdbcType=BIGINT}, #{originPrice,jdbcType=BIGINT}, #{point,jdbcType=BIGINT}, 
-      #{confirmTime,jdbcType=TIMESTAMP}, #{shipmentSn,jdbcType=VARCHAR}, #{state,jdbcType=TINYINT}, 
+      #{confirmTime,jdbcType=TIMESTAMP}, #{shipmentSn,jdbcType=VARCHAR}, #{state,jdbcType=SMALLINT}, 
       #{beDeleted,jdbcType=TINYINT}, #{creatorId,jdbcType=BIGINT}, #{creatorName,jdbcType=VARCHAR}, 
       #{modifierId,jdbcType=BIGINT}, #{modifierName,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, 
       #{gmtModified,jdbcType=TIMESTAMP})
@@ -322,7 +322,7 @@
         #{shipmentSn,jdbcType=VARCHAR},
       </if>
       <if test="state != null">
-        #{state,jdbcType=TINYINT},
+        #{state,jdbcType=SMALLINT},
       </if>
       <if test="beDeleted != null">
         #{beDeleted,jdbcType=TINYINT},
@@ -409,7 +409,7 @@
         `shipment_sn` = #{record.shipmentSn,jdbcType=VARCHAR},
       </if>
       <if test="record.state != null">
-        `state` = #{record.state,jdbcType=TINYINT},
+        `state` = #{record.state,jdbcType=SMALLINT},
       </if>
       <if test="record.beDeleted != null">
         `be_deleted` = #{record.beDeleted,jdbcType=TINYINT},
@@ -461,7 +461,7 @@
       `point` = #{record.point,jdbcType=BIGINT},
       `confirm_time` = #{record.confirmTime,jdbcType=TIMESTAMP},
       `shipment_sn` = #{record.shipmentSn,jdbcType=VARCHAR},
-      `state` = #{record.state,jdbcType=TINYINT},
+      `state` = #{record.state,jdbcType=SMALLINT},
       `be_deleted` = #{record.beDeleted,jdbcType=TINYINT},
       `creator_id` = #{record.creatorId,jdbcType=BIGINT},
       `creator_name` = #{record.creatorName,jdbcType=VARCHAR},
@@ -532,7 +532,7 @@
         `shipment_sn` = #{shipmentSn,jdbcType=VARCHAR},
       </if>
       <if test="state != null">
-        `state` = #{state,jdbcType=TINYINT},
+        `state` = #{state,jdbcType=SMALLINT},
       </if>
       <if test="beDeleted != null">
         `be_deleted` = #{beDeleted,jdbcType=TINYINT},
@@ -581,7 +581,7 @@
       `point` = #{point,jdbcType=BIGINT},
       `confirm_time` = #{confirmTime,jdbcType=TIMESTAMP},
       `shipment_sn` = #{shipmentSn,jdbcType=VARCHAR},
-      `state` = #{state,jdbcType=TINYINT},
+      `state` = #{state,jdbcType=SMALLINT},
       `be_deleted` = #{beDeleted,jdbcType=TINYINT},
       `creator_id` = #{creatorId,jdbcType=BIGINT},
       `creator_name` = #{creatorName,jdbcType=VARCHAR},

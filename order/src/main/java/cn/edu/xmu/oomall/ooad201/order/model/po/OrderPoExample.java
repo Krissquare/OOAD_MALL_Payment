@@ -1345,52 +1345,52 @@ public class OrderPoExample {
             return (Criteria) this;
         }
 
-        public Criteria andStateEqualTo(Byte value) {
+        public Criteria andStateEqualTo(Short value) {
             addCriterion("`state` =", value, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateNotEqualTo(Byte value) {
+        public Criteria andStateNotEqualTo(Short value) {
             addCriterion("`state` <>", value, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateGreaterThan(Byte value) {
+        public Criteria andStateGreaterThan(Short value) {
             addCriterion("`state` >", value, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateGreaterThanOrEqualTo(Byte value) {
+        public Criteria andStateGreaterThanOrEqualTo(Short value) {
             addCriterion("`state` >=", value, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateLessThan(Byte value) {
+        public Criteria andStateLessThan(Short value) {
             addCriterion("`state` <", value, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateLessThanOrEqualTo(Byte value) {
+        public Criteria andStateLessThanOrEqualTo(Short value) {
             addCriterion("`state` <=", value, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateIn(List<Byte> values) {
+        public Criteria andStateIn(List<Short> values) {
             addCriterion("`state` in", values, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateNotIn(List<Byte> values) {
+        public Criteria andStateNotIn(List<Short> values) {
             addCriterion("`state` not in", values, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateBetween(Byte value1, Byte value2) {
+        public Criteria andStateBetween(Short value1, Short value2) {
             addCriterion("`state` between", value1, value2, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateNotBetween(Byte value1, Byte value2) {
+        public Criteria andStateNotBetween(Short value1, Short value2) {
             addCriterion("`state` not between", value1, value2, "state");
             return (Criteria) this;
         }

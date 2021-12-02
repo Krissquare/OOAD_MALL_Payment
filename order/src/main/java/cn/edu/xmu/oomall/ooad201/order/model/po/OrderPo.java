@@ -172,7 +172,7 @@ public class OrderPo {
      *
      * @mbg.generated
      */
-    private Byte state;
+    private Short state;
 
     /**
      *
@@ -677,7 +677,7 @@ public class OrderPo {
      *
      * @mbg.generated
      */
-    public Byte getState() {
+    public Short getState() {
         return state;
     }
 
@@ -689,7 +689,7 @@ public class OrderPo {
      *
      * @mbg.generated
      */
-    public void setState(Byte state) {
+    public void setState(Short state) {
         this.state = state;
     }
 
