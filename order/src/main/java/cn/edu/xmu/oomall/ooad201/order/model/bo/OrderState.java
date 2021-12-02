@@ -1,6 +1,5 @@
 package cn.edu.xmu.oomall.ooad201.order.model.bo;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
-
 public enum OrderState {
     //100 待付款
     NEW_ORDER(101,"新订单"),
