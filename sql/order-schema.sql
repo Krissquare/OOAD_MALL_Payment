@@ -71,7 +71,7 @@ CREATE TABLE `oomall_order` (
   `point` bigint(20) DEFAULT NULL,
   `confirm_time` datetime DEFAULT NULL,
   `shipment_sn` varchar(128) DEFAULT NULL,
-  `state` tinyint(4) DEFAULT NULL,
+  `state` tinyint(8) DEFAULT NULL,
   `be_deleted` tinyint(4) DEFAULT NULL,
   `creator_id` bigint(20) DEFAULT NULL,
   `creator_name` varchar(128) DEFAULT NULL,
