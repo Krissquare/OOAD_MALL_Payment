@@ -365,6 +365,11 @@
             <name>aliyun spring-plugin</name>
             <url>https://maven.aliyun.com/repository/spring-plugin</url>
         </repository>
+<!--        <repository>-->
+<!--            <id>nexus</id>-->
+<!--            <name>nexus</name>-->
+<!--            <url>http://124.71.227.239:8081/repository/maven-public/</url>-->
+<!--        </repository>-->
     </repositories>
 
 </project>
