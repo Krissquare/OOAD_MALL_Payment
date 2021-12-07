@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class PaymentDao {
     @Autowired
-    ErrorAccountPoMapper errorPaymentPoMapper;
+    ErrorAccountPoMapper errorAccountPoMapper;
     @Autowired
     PaymentPatternPoMapper paymentPatternPoMapper;
     @Autowired
