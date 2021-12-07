@@ -1345,52 +1345,52 @@ public class OrderPoExample {
             return (Criteria) this;
         }
 
-        public Criteria andStateEqualTo(Short value) {
+        public Criteria andStateEqualTo(Integer value) {
             addCriterion("`state` =", value, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateNotEqualTo(Short value) {
+        public Criteria andStateNotEqualTo(Integer value) {
             addCriterion("`state` <>", value, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateGreaterThan(Short value) {
+        public Criteria andStateGreaterThan(Integer value) {
             addCriterion("`state` >", value, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateGreaterThanOrEqualTo(Short value) {
+        public Criteria andStateGreaterThanOrEqualTo(Integer value) {
             addCriterion("`state` >=", value, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateLessThan(Short value) {
+        public Criteria andStateLessThan(Integer value) {
             addCriterion("`state` <", value, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateLessThanOrEqualTo(Short value) {
+        public Criteria andStateLessThanOrEqualTo(Integer value) {
             addCriterion("`state` <=", value, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateIn(List<Short> values) {
+        public Criteria andStateIn(List<Integer> values) {
             addCriterion("`state` in", values, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateNotIn(List<Short> values) {
+        public Criteria andStateNotIn(List<Integer> values) {
             addCriterion("`state` not in", values, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateBetween(Short value1, Short value2) {
+        public Criteria andStateBetween(Integer value1, Integer value2) {
             addCriterion("`state` between", value1, value2, "state");
             return (Criteria) this;
         }
 
-        public Criteria andStateNotBetween(Short value1, Short value2) {
+        public Criteria andStateNotBetween(Integer value1, Integer value2) {
             addCriterion("`state` not between", value1, value2, "state");
             return (Criteria) this;
         }

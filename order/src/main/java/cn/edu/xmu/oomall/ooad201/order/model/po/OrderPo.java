@@ -172,7 +172,7 @@ public class OrderPo {
      *
      * @mbg.generated
      */
-    private Short state;
+    private Integer state;
 
     /**
      *
@@ -677,7 +677,7 @@ public class OrderPo {
      *
      * @mbg.generated
      */
-    public Short getState() {
+    public Integer getState() {
         return state;
     }
 
@@ -689,7 +689,7 @@ public class OrderPo {
      *
      * @mbg.generated
      */
-    public void setState(Short state) {
+    public void setState(Integer state) {
         this.state = state;
     }
 

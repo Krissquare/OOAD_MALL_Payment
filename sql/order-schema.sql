@@ -19,10 +19,10 @@
 -- Table structure for table `oomall_error_payment`
 --
 
-DROP TABLE IF EXISTS `oomall_error_payment`;
+DROP TABLE IF EXISTS `oomall_error_account`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `oomall_error_payment` (
+CREATE TABLE `oomall_error_account` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `trade_sn` varchar(128) DEFAULT NULL,
   `pattern_id` bigint(20) DEFAULT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE `oomall_order` (
   `point` bigint(20) DEFAULT NULL,
   `confirm_time` datetime DEFAULT NULL,
   `shipment_sn` varchar(128) DEFAULT NULL,
-  `state` smallint(16) DEFAULT NULL,
+  `state` int DEFAULT NULL,
   `be_deleted` tinyint(4) DEFAULT NULL,
   `creator_id` bigint(20) DEFAULT NULL,
   `creator_name` varchar(128) DEFAULT NULL,

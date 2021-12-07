@@ -1,6 +1,5 @@
 package cn.edu.xmu.oomall.ooad201.payment.dao;
 
-import cn.edu.xmu.oomall.ooad201.payment.mapper.ErrorPaymentPoMapper;
 import cn.edu.xmu.oomall.ooad201.payment.mapper.PaymentPatternPoMapper;
 import cn.edu.xmu.oomall.ooad201.payment.mapper.PaymentPoMapper;
 import cn.edu.xmu.oomall.ooad201.payment.mapper.RefundPoMapper;

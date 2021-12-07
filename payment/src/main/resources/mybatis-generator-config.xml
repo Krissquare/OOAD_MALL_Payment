@@ -43,7 +43,7 @@
 
         <!--数据库链接URL，用户名、密码 -->
         <jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
-                        connectionURL="jdbc:mysql://localhost:3306/ooad?serverTimezone=GMT%2B8" userId="dbuser" password="12345678">
+                        connectionURL="jdbc:mysql://101.132.164.244:3306/ooad?serverTimezone=GMT%2B8" userId="dbuser" password="12345678">
         </jdbcConnection>
         <javaTypeResolver>
             <!--
@@ -128,7 +128,7 @@
 
         注意，table里面很多参数都是对javaModelGenerator，context等元素的默认属性的一个复写；
         -->
-        <table tableName="oomall_error_payment" domainObjectName="ErrorPaymentPo"
+        <table tableName="oomall_error_account" domainObjectName="ErrorAccountPo"
                enableCountByExample="false" enableUpdateByExample="true"
                enableDeleteByExample="true" enableSelectByExample="true"
                selectByExampleQueryId="false" delimitAllColumns="true">
