@@ -3,6 +3,7 @@ package cn.edu.xmu.oomall.ooad201.order.microService;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.ooad201.order.microService.vo.AdvanceVo;
 import cn.edu.xmu.oomall.ooad201.order.microService.vo.GrouponActivityVo;
+import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,7 +22,7 @@ public interface ActivityService {
      * @return 返回体cn.edu.xmu.oomall.ooad201.order.microService.vo.AdvanceVo
      */
     @GetMapping("/advancesales/{id}")
-    ReturnObject<AdvanceVo> getAdvanceSaleById(@PathVariable Long id);
+    InternalReturnObject<AdvanceVo> getAdvanceSaleById(@PathVariable Long id);
 
     /**
      * /groupons/{id}
@@ -31,5 +32,5 @@ public interface ActivityService {
      * @return cn.edu.xmu.oomall.ooad201.order.microService.vo.GrouponActivityVo
      */
     @GetMapping("/groupons/{id}")
-    ReturnObject<GrouponActivityVo> getGrouponsById(@PathVariable Long id);
+    InternalReturnObject<GrouponActivityVo> getGrouponsById(@PathVariable Long id);
 }

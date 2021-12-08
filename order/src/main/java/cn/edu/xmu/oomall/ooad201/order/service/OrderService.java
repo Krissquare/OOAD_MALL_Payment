@@ -41,14 +41,14 @@ public class OrderService {
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject addOrder(SimpleOrderVo simpleOrderVo,Long userId,String userName){
         if(simpleOrderVo.getGrouponId()!=null){
-            ReturnObject<GrouponActivityVo> grouponsById = activityService.getGrouponsById(simpleOrderVo.getGrouponId());
-            if(grouponsById.getCode()!= ReturnNo.OK){
-                return grouponsById;
+            InternalReturnObject<AdvanceVo> advanceSaleById = activityService.getAdvanceSaleById(simpleOrderVo.getAdvancesaleId());
+            if(advanceSaleById.getErrno()!= 0){
+                return new ReturnObject(ReturnNo.getByCode(advanceSaleById.getErrno()));
             }
             SimpleOrderItemVo simpleOrderItemVo = simpleOrderVo.getOrderItems().get(0);
-            ReturnObject<ProductVo> productById = goodsService.getProductById(simpleOrderItemVo.getProductId());
-            if(productById.getCode()!=ReturnNo.OK){
-                return productById;
+            InternalReturnObject<ProductVo> productById = goodsService.getProductById(simpleOrderItemVo.getProductId());
+            if(productById.getErrno()!=0){
+                return new ReturnObject(ReturnNo.getByCode(productById.getErrno()));
             }
             InternalReturnObject<OnSaleVo> onsaleById = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId());
             if(onsaleById.getData()==null){
@@ -60,18 +60,18 @@ public class OrderService {
 
         }
         else if(simpleOrderVo.getAdvancesaleId()!=null){
-            ReturnObject<AdvanceVo> advanceSaleById = activityService.getAdvanceSaleById(simpleOrderVo.getAdvancesaleId());
-            if(advanceSaleById.getCode()!= ReturnNo.OK){
-                return advanceSaleById;
+            InternalReturnObject<AdvanceVo> advanceSaleById = activityService.getAdvanceSaleById(simpleOrderVo.getAdvancesaleId());
+            if(advanceSaleById.getErrno()!= 0){
+                return new ReturnObject(ReturnNo.getByCode(advanceSaleById.getErrno()));
             }
             SimpleOrderItemVo simpleOrderItemVo = simpleOrderVo.getOrderItems().get(0);
-            ReturnObject<ProductVo> productById = goodsService.getProductById(simpleOrderItemVo.getProductId());
-            if(productById.getCode()!=ReturnNo.OK){
-                return productById;
+            InternalReturnObject<ProductVo> productById = goodsService.getProductById(simpleOrderItemVo.getProductId());
+            if(productById.getErrno()!=0){
+                return new ReturnObject(ReturnNo.getByCode(productById.getErrno()));
             }
             InternalReturnObject<OnSaleVo> onsaleById = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId());
-            if(onsaleById.getData()==null){
-                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            if(onsaleById.getErrno()!=0){
+                return new ReturnObject(ReturnNo.getByCode(onsaleById.getErrno()));
             }
             //根据预售去算钱
 

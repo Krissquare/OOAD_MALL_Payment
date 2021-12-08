@@ -32,6 +32,6 @@ public interface GoodsService {
      * @return cn.edu.xmu.oomall.ooad201.order.microService.vo.ProductVo
      */
     @GetMapping("/products/{id}")
-    ReturnObject<ProductVo> getProductById(@PathVariable Long id);
+    InternalReturnObject<ProductVo> getProductById(@PathVariable Long id);
 
 }
