@@ -3,23 +3,19 @@ package cn.edu.xmu.oomall.ooad201.order.service;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.ooad201.order.dao.OrderDao;
-import cn.edu.xmu.oomall.ooad201.order.microService.ActivityService;
-import cn.edu.xmu.oomall.ooad201.order.microService.CouponService;
-import cn.edu.xmu.oomall.ooad201.order.microService.FreightService;
-import cn.edu.xmu.oomall.ooad201.order.microService.GoodsService;
-import cn.edu.xmu.oomall.ooad201.order.microService.vo.AdvanceVo;
-import cn.edu.xmu.oomall.ooad201.order.microService.vo.GrouponActivityVo;
-import cn.edu.xmu.oomall.ooad201.order.microService.vo.OnSaleVo;
-import cn.edu.xmu.oomall.ooad201.order.microService.vo.ProductVo;
+import cn.edu.xmu.oomall.ooad201.order.microService.*;
+import cn.edu.xmu.oomall.ooad201.order.microService.vo.*;
 import cn.edu.xmu.oomall.ooad201.order.model.bo.Order;
 import cn.edu.xmu.oomall.ooad201.order.model.bo.OrderState;
-import cn.edu.xmu.oomall.ooad201.order.model.vo.SimpleOrderItemVo;
-import cn.edu.xmu.oomall.ooad201.order.model.vo.SimpleOrderVo;
+import cn.edu.xmu.oomall.ooad201.order.model.vo.*;
+import cn.edu.xmu.oomall.ooad201.order.model.vo.SimpleVo;
 import cn.edu.xmu.privilegegateway.annotation.util.Common;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 public class OrderService {
@@ -37,6 +33,12 @@ public class OrderService {
 
     @Autowired
     GoodsService goodsService;
+
+    @Autowired
+    CustomService customService;
+
+    @Autowired
+    ShopService shopService;
 
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject addOrder(SimpleOrderVo simpleOrderVo,Long userId,String userName){
@@ -105,5 +107,47 @@ public class OrderService {
         order.setState(OrderState.CANCEL_ORDER.getCode());
         Common.setPoModifiedFields(order,userId,userName);
         return orderDao.cancelOrderByCustomer(order);
+    }
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject confirmOrder(Long orderId)
+    {
+        LocalDateTime nowTime=LocalDateTime.now();
+        return orderDao.confirmOrder(orderId,nowTime);
+    }
+
+    @Transactional(readOnly = true,rollbackFor = Exception.class)
+    public ReturnObject searchBriefOrderByShopId(Long shopId,Integer pageNumber, Integer pageSize)
+    {
+        return orderDao.searchBriefOrderByShopId(shopId,pageNumber,pageSize);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject updateOrderComment(Long shopId, Long orderId, OrderVo orderVo, Long loginUserId, String loginUserName)
+    {
+        Order order=(Order) Common.cloneVo(orderVo,Order.class);
+        order.setShopId(shopId);
+        order.setId(orderId);
+        Common.setPoModifiedFields(order,loginUserId,loginUserName);
+        return orderDao.updateOrderComment(order);
+    }
+
+    @Transactional(readOnly = true,rollbackFor = Exception.class)
+    public ReturnObject getOrderDetail(Long shopId,Long orderId)
+    {
+        ReturnObject ret=orderDao.getOrderDetail(shopId,orderId);
+        if(ret.getData()!=null)
+        {
+            Order order=(Order)ret.getData();
+            SimpleVo customerVo=customService.getCustomerById(order.getCustomerId()).getData();
+            SimpleVo shopVo=shopService.getShopById(order.getShopId()).getData();
+            DetailOrderVo orderVo=(DetailOrderVo) Common.cloneVo(order,DetailOrderVo.class);
+            orderVo.setCustomerVo(customerVo);
+            orderVo.setShopVo(shopVo);
+            return new ReturnObject(orderVo);
+        }
+        else
+        {
+            return ret;
+        }
     }
 }
