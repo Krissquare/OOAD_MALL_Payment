@@ -33,7 +33,7 @@ public class OrderDao {
     @Autowired
     OrderItemPoMapper orderItemPoMapper;
 
-    final static private List<Integer> CANCEL_COMPLETE_LIST= Arrays.asList(OrderState.CANCEL_ORDER.getCode(),OrderState.COMPLETE_ORDER.getCode());
+    final static private List<Integer> CANCEL_COMPLETE_LIST = Arrays.asList(OrderState.CANCEL_ORDER.getCode(), OrderState.COMPLETE_ORDER.getCode());
 
     public ReturnObject deleteByCustomer(Order order) {
         try {
@@ -73,93 +73,74 @@ public class OrderDao {
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-    public ReturnObject confirmOrder(Long orderId, LocalDateTime nowTime)
-    {
-        try{
-            OrderPo orderPo=orderPoMapper.selectByPrimaryKey(orderId);
-            if(orderPo.getState()== OrderState.SEND_GOODS.getCode())
-            {
+
+    public ReturnObject confirmOrder(Long orderId, LocalDateTime nowTime) {
+        try {
+            OrderPo orderPo = orderPoMapper.selectByPrimaryKey(orderId);
+            if (orderPo.getState() == OrderState.SEND_GOODS.getCode()) {
                 orderPo.setState(OrderState.COMPLETE_ORDER.getCode());
                 orderPo.setConfirmTime(nowTime);
                 return new ReturnObject<>(ReturnNo.OK);
+            } else {
+                return new ReturnObject(ReturnNo.STATENOTALLOW, "当前货品状态不支持进行该操作");
             }
-            else
-            {
-                return new ReturnObject(ReturnNo.STATENOTALLOW,"当前货品状态不支持进行该操作");
-            }
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
 
-    public ReturnObject searchBriefOrderByShopId(Long shopId,Integer pageNumber, Integer pageSize)
-    {
-        try
-        {
+    public ReturnObject searchBriefOrderByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
+        try {
             PageHelper.startPage(pageNumber, pageSize, true, true, true);
-            OrderPoExample orderPoExample=new OrderPoExample();
-            OrderPoExample.Criteria cr=orderPoExample.createCriteria();
+            OrderPoExample orderPoExample = new OrderPoExample();
+            OrderPoExample.Criteria cr = orderPoExample.createCriteria();
             cr.andShopIdEqualTo(shopId);
-            List<OrderPo> orderPoList=orderPoMapper.selectByExample(orderPoExample);
-            if(orderPoList.size()==0)
-            {
+            List<OrderPo> orderPoList = orderPoMapper.selectByExample(orderPoExample);
+            if (orderPoList.size() == 0) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            ReturnObject<PageInfo<Object>> ret=new ReturnObject(new PageInfo<OrderPo>(orderPoList));
+            ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo<OrderPo>(orderPoList));
             return Common.getPageRetVo(ret, BriefOrderVo.class);
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-    public ReturnObject updateOrderComment(Order order)
-    {
-        try
-        {
-            OrderPo orderPo=orderPoMapper.selectByPrimaryKey(order.getId());
-            if(orderPo==null)
-            {
+
+    public ReturnObject updateOrderComment(Order order) {
+        try {
+            OrderPo orderPo = orderPoMapper.selectByPrimaryKey(order.getId());
+            if (orderPo == null) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            if(!orderPo.getShopId().equals(order.getShopId()))
-            {
+            if (!orderPo.getShopId().equals(order.getShopId())) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
             }
             orderPo.setMessage(order.getMessage());
-            Common.setPoModifiedFields(orderPo,order.getModifierId(),order.getModifierName());
+            Common.setPoModifiedFields(orderPo, order.getModifierId(), order.getModifierName());
             orderPoMapper.updateByPrimaryKeySelective(orderPo);
             return new ReturnObject<>(ReturnNo.OK);
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-    public ReturnObject getOrderDetail(Long shopId, Long orderId)
-    {
-        try{
-            OrderPo orderPo=orderPoMapper.selectByPrimaryKey(orderId);
-            if(orderPo==null)
-            {
+
+    public ReturnObject getOrderDetail(Long shopId, Long orderId) {
+        try {
+            OrderPo orderPo = orderPoMapper.selectByPrimaryKey(orderId);
+            if (orderPo == null) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            if(!orderPo.getShopId().equals(shopId))
-            {
+            if (!orderPo.getShopId().equals(shopId)) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
             }
-            Order order=(Order)Common.cloneVo(orderPo,Order.class);
+            Order order = (Order) Common.cloneVo(orderPo, Order.class);
             return new ReturnObject(order);
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
 }

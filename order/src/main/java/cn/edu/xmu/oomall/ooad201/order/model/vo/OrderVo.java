@@ -10,6 +10,6 @@ import javax.validation.constraints.NotBlank;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderVo {
-    @NotBlank(message="留言不能为空")
+    @NotBlank(message = "留言不能为空")
     private String message;
 }
