@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
+import static cn.edu.xmu.privilegegateway.annotation.util.Common.setPoModifiedFields;
+
 
 @Repository
 public class OrderDao {
@@ -100,7 +102,7 @@ public class OrderDao {
             if (orderPoList.size() == 0) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo<OrderPo>(orderPoList));
+            ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo(orderPoList));
             return Common.getPageRetVo(ret, BriefOrderVo.class);
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -118,7 +120,7 @@ public class OrderDao {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
             }
             orderPo.setMessage(order.getMessage());
-            Common.setPoModifiedFields(orderPo, order.getModifierId(), order.getModifierName());
+            setPoModifiedFields(orderPo, order.getModifierId(), order.getModifierName());
             orderPoMapper.updateByPrimaryKeySelective(orderPo);
             return new ReturnObject<>(ReturnNo.OK);
         } catch (Exception e) {
@@ -136,7 +138,7 @@ public class OrderDao {
             if (!orderPo.getShopId().equals(shopId)) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
             }
-            Order order = (Order) Common.cloneVo(orderPo, Order.class);
+            Order order = (Order) cloneVo(orderPo, Order.class);
             return new ReturnObject(order);
         } catch (Exception e) {
             logger.error(e.getMessage());
