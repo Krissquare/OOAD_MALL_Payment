@@ -455,62 +455,52 @@ public class PaymentPoExample {
             return (Criteria) this;
         }
 
-        public Criteria andActualAmountEqualTo(String value) {
+        public Criteria andActualAmountEqualTo(Long value) {
             addCriterion("`actual_amount` =", value, "actualAmount");
             return (Criteria) this;
         }
 
-        public Criteria andActualAmountNotEqualTo(String value) {
+        public Criteria andActualAmountNotEqualTo(Long value) {
             addCriterion("`actual_amount` <>", value, "actualAmount");
             return (Criteria) this;
         }
 
-        public Criteria andActualAmountGreaterThan(String value) {
+        public Criteria andActualAmountGreaterThan(Long value) {
             addCriterion("`actual_amount` >", value, "actualAmount");
             return (Criteria) this;
         }
 
-        public Criteria andActualAmountGreaterThanOrEqualTo(String value) {
+        public Criteria andActualAmountGreaterThanOrEqualTo(Long value) {
             addCriterion("`actual_amount` >=", value, "actualAmount");
             return (Criteria) this;
         }
 
-        public Criteria andActualAmountLessThan(String value) {
+        public Criteria andActualAmountLessThan(Long value) {
             addCriterion("`actual_amount` <", value, "actualAmount");
             return (Criteria) this;
         }
 
-        public Criteria andActualAmountLessThanOrEqualTo(String value) {
+        public Criteria andActualAmountLessThanOrEqualTo(Long value) {
             addCriterion("`actual_amount` <=", value, "actualAmount");
             return (Criteria) this;
         }
 
-        public Criteria andActualAmountLike(String value) {
-            addCriterion("`actual_amount` like", value, "actualAmount");
-            return (Criteria) this;
-        }
-
-        public Criteria andActualAmountNotLike(String value) {
-            addCriterion("`actual_amount` not like", value, "actualAmount");
-            return (Criteria) this;
-        }
-
-        public Criteria andActualAmountIn(List<String> values) {
+        public Criteria andActualAmountIn(List<Long> values) {
             addCriterion("`actual_amount` in", values, "actualAmount");
             return (Criteria) this;
         }
 
-        public Criteria andActualAmountNotIn(List<String> values) {
+        public Criteria andActualAmountNotIn(List<Long> values) {
             addCriterion("`actual_amount` not in", values, "actualAmount");
             return (Criteria) this;
         }
 
-        public Criteria andActualAmountBetween(String value1, String value2) {
+        public Criteria andActualAmountBetween(Long value1, Long value2) {
             addCriterion("`actual_amount` between", value1, value2, "actualAmount");
             return (Criteria) this;
         }
 
-        public Criteria andActualAmountNotBetween(String value1, String value2) {
+        public Criteria andActualAmountNotBetween(Long value1, Long value2) {
             addCriterion("`actual_amount` not between", value1, value2, "actualAmount");
             return (Criteria) this;
         }

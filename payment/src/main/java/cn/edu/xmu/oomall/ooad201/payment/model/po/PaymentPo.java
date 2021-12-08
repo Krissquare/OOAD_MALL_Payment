@@ -46,7 +46,7 @@ public class PaymentPo {
      *
      * @mbg.generated
      */
-    private String actualAmount;
+    private Long actualAmount;
 
     /**
      *
@@ -296,7 +296,7 @@ public class PaymentPo {
      *
      * @mbg.generated
      */
-    public String getActualAmount() {
+    public Long getActualAmount() {
         return actualAmount;
     }
 
@@ -308,8 +308,8 @@ public class PaymentPo {
      *
      * @mbg.generated
      */
-    public void setActualAmount(String actualAmount) {
-        this.actualAmount = actualAmount == null ? null : actualAmount.trim();
+    public void setActualAmount(Long actualAmount) {
+        this.actualAmount = actualAmount;
     }
 
     /**

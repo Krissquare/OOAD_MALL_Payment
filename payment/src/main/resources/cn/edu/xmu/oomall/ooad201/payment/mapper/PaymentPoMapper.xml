@@ -10,7 +10,7 @@
     <result column="trade_sn" jdbcType="VARCHAR" property="tradeSn" />
     <result column="pattern_id" jdbcType="BIGINT" property="patternId" />
     <result column="amount" jdbcType="BIGINT" property="amount" />
-    <result column="actual_amount" jdbcType="VARCHAR" property="actualAmount" />
+    <result column="actual_amount" jdbcType="BIGINT" property="actualAmount" />
     <result column="document_id" jdbcType="BIGINT" property="documentId" />
     <result column="document_type" jdbcType="TINYINT" property="documentType" />
     <result column="pay_time" jdbcType="TIMESTAMP" property="payTime" />
@@ -167,7 +167,7 @@
       `creator_name`, `modifier_id`, `modifier_name`, 
       `gmt_create`, `gmt_modified`)
     values (#{tradeSn,jdbcType=VARCHAR}, #{patternId,jdbcType=BIGINT}, #{amount,jdbcType=BIGINT}, 
-      #{actualAmount,jdbcType=VARCHAR}, #{documentId,jdbcType=BIGINT}, #{documentType,jdbcType=TINYINT}, 
+      #{actualAmount,jdbcType=BIGINT}, #{documentId,jdbcType=BIGINT}, #{documentType,jdbcType=TINYINT}, 
       #{payTime,jdbcType=TIMESTAMP}, #{beginTime,jdbcType=TIMESTAMP}, #{endTime,jdbcType=TIMESTAMP}, 
       #{state,jdbcType=TINYINT}, #{descr,jdbcType=VARCHAR}, #{adjustId,jdbcType=BIGINT}, 
       #{adjustName,jdbcType=VARCHAR}, #{adjustTime,jdbcType=TIMESTAMP}, #{creatorId,jdbcType=BIGINT}, 
@@ -256,7 +256,7 @@
         #{amount,jdbcType=BIGINT},
       </if>
       <if test="actualAmount != null">
-        #{actualAmount,jdbcType=VARCHAR},
+        #{actualAmount,jdbcType=BIGINT},
       </if>
       <if test="documentId != null">
         #{documentId,jdbcType=BIGINT},
@@ -328,7 +328,7 @@
         `amount` = #{record.amount,jdbcType=BIGINT},
       </if>
       <if test="record.actualAmount != null">
-        `actual_amount` = #{record.actualAmount,jdbcType=VARCHAR},
+        `actual_amount` = #{record.actualAmount,jdbcType=BIGINT},
       </if>
       <if test="record.documentId != null">
         `document_id` = #{record.documentId,jdbcType=BIGINT},
@@ -393,7 +393,7 @@
       `trade_sn` = #{record.tradeSn,jdbcType=VARCHAR},
       `pattern_id` = #{record.patternId,jdbcType=BIGINT},
       `amount` = #{record.amount,jdbcType=BIGINT},
-      `actual_amount` = #{record.actualAmount,jdbcType=VARCHAR},
+      `actual_amount` = #{record.actualAmount,jdbcType=BIGINT},
       `document_id` = #{record.documentId,jdbcType=BIGINT},
       `document_type` = #{record.documentType,jdbcType=TINYINT},
       `pay_time` = #{record.payTime,jdbcType=TIMESTAMP},
@@ -431,7 +431,7 @@
         `amount` = #{amount,jdbcType=BIGINT},
       </if>
       <if test="actualAmount != null">
-        `actual_amount` = #{actualAmount,jdbcType=VARCHAR},
+        `actual_amount` = #{actualAmount,jdbcType=BIGINT},
       </if>
       <if test="documentId != null">
         `document_id` = #{documentId,jdbcType=BIGINT},
@@ -493,7 +493,7 @@
     set `trade_sn` = #{tradeSn,jdbcType=VARCHAR},
       `pattern_id` = #{patternId,jdbcType=BIGINT},
       `amount` = #{amount,jdbcType=BIGINT},
-      `actual_amount` = #{actualAmount,jdbcType=VARCHAR},
+      `actual_amount` = #{actualAmount,jdbcType=BIGINT},
       `document_id` = #{documentId,jdbcType=BIGINT},
       `document_type` = #{documentType,jdbcType=TINYINT},
       `pay_time` = #{payTime,jdbcType=TIMESTAMP},
