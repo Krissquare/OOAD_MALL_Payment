@@ -41,9 +41,9 @@ public class OrderService {
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject addOrder(SimpleOrderVo simpleOrderVo,Long userId,String userName){
         if(simpleOrderVo.getGrouponId()!=null){
-            InternalReturnObject<AdvanceVo> advanceSaleById = activityService.getAdvanceSaleById(simpleOrderVo.getAdvancesaleId());
-            if(advanceSaleById.getErrno()!= 0){
-                return new ReturnObject(ReturnNo.getByCode(advanceSaleById.getErrno()));
+            InternalReturnObject<GrouponActivityVo> grouponsById = activityService.getGrouponsById(simpleOrderVo.getGrouponId());
+            if(grouponsById.getErrno()!= 0){
+                return new ReturnObject(ReturnNo.getByCode(grouponsById.getErrno()));
             }
             SimpleOrderItemVo simpleOrderItemVo = simpleOrderVo.getOrderItems().get(0);
             InternalReturnObject<ProductVo> productById = goodsService.getProductById(simpleOrderItemVo.getProductId());
