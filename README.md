@@ -1,6 +1,6 @@
 ### 1.测试服务器地址 http://101.132.164.244:9999/
 
-### 2.nexus http://124.71.227.239:8081/repository/maven-public/私服地址(通常不开）
+### 2.nexus http://124.71.227.239:8081/repository/maven-public/ 私服地址(通常不开）
 
 
 
