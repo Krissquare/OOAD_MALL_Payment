@@ -10,11 +10,13 @@ import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.model.po.OrderPoExample;
 import cn.edu.xmu.oomall.order.model.vo.BriefOrderVo;
+import cn.edu.xmu.privilegegateway.annotation.util.RedisUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -35,14 +37,23 @@ public class OrderDao {
     @Autowired
     OrderItemPoMapper orderItemPoMapper;
 
+    @Value("${oomall.order.expiretime}")
+    private long orderExpireTime;
+
+    @Autowired
+    RedisUtil redisUtil;
+
+    final static private String ORDER_KEY="order_id";
+
     public ReturnObject getOrderById(Long id) {
         try {
             OrderPo po = orderPoMapper.selectByPrimaryKey(id);
             if (po == null||po.getBeDeleted()==1) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            OrderPo orderPo = cloneVo(po, OrderPo.class);
-            return new ReturnObject<>(orderPo);
+            Order order = cloneVo(po, Order.class);
+            redisUtil.set(String.format(ORDER_KEY, id),order,orderExpireTime);
+            return new ReturnObject<>(order);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
@@ -57,6 +68,7 @@ public class OrderDao {
             if (flag == 0) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             } else {
+                redisUtil.del(String.format(ORDER_KEY,order.getId()));
                 return new ReturnObject<>(ReturnNo.OK);
             }
         } catch (Exception e) {
