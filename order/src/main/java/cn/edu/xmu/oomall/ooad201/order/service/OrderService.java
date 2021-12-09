@@ -6,6 +6,7 @@ import cn.edu.xmu.oomall.ooad201.order.dao.OrderDao;
 import cn.edu.xmu.oomall.ooad201.order.microService.*;
 import cn.edu.xmu.oomall.ooad201.order.microService.vo.*;
 import cn.edu.xmu.oomall.ooad201.order.model.bo.Order;
+import cn.edu.xmu.oomall.ooad201.order.model.bo.OrderItem;
 import cn.edu.xmu.oomall.ooad201.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.ooad201.order.model.vo.*;
 import cn.edu.xmu.oomall.ooad201.order.model.vo.SimpleVo;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class OrderService {
@@ -115,8 +118,10 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject searchBriefOrderByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
-        return orderDao.searchBriefOrderByShopId(shopId, pageNumber, pageSize);
+    public ReturnObject searchBriefOrderByShopId(Long shopId,Long customerId,String orderSn,LocalDateTime beginTime,LocalDateTime endTime, Integer pageNumber, Integer pageSize)
+    {
+
+        return orderDao.searchBriefOrderByShopId(shopId,customerId,orderSn,beginTime,endTime, pageNumber, pageSize);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -138,6 +143,14 @@ public class OrderService {
             DetailOrderVo orderVo = (DetailOrderVo) Common.cloneVo(order, DetailOrderVo.class);
             orderVo.setCustomerVo(customerVo);
             orderVo.setShopVo(shopVo);
+            List<OrderItem> orderItemList=orderDao.getOrderItemByOrderId(orderId);
+            List<SimpleOrderItemVo> simpleOrderItemVos=new ArrayList<>();
+            for(OrderItem orderItem:orderItemList)
+            {
+                SimpleOrderItemVo simpleOrderItemVo=(SimpleOrderItemVo) Common.cloneVo(orderItem,SimpleOrderItemVo.class);
+                simpleOrderItemVos.add(simpleOrderItemVo);
+            }
+            orderVo.setOrderItems(simpleOrderItemVos);
             return new ReturnObject(orderVo);
         } else {
             return ret;

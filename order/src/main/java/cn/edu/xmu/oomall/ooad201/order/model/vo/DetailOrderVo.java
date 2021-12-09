@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -22,4 +23,10 @@ public class DetailOrderVo {
     private String message;
     private Long regionId;
     private String address;
+    private String mobile;
+    private String consignee;
+    private Long grouponId;
+    private Long advancesaleId;
+    private String shipmentSn;
+    private List<SimpleOrderItemVo> orderItems;
 }

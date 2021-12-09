@@ -6,7 +6,10 @@ import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.ooad201.order.mapper.OrderItemPoMapper;
 import cn.edu.xmu.oomall.ooad201.order.mapper.OrderPoMapper;
 import cn.edu.xmu.oomall.ooad201.order.model.bo.Order;
+import cn.edu.xmu.oomall.ooad201.order.model.bo.OrderItem;
 import cn.edu.xmu.oomall.ooad201.order.model.bo.OrderState;
+import cn.edu.xmu.oomall.ooad201.order.model.po.OrderItemPo;
+import cn.edu.xmu.oomall.ooad201.order.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.ooad201.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.ooad201.order.model.po.OrderPoExample;
 import cn.edu.xmu.oomall.ooad201.order.model.vo.BriefOrderVo;
@@ -18,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -92,12 +96,28 @@ public class OrderDao {
         }
     }
 
-    public ReturnObject searchBriefOrderByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
+    public ReturnObject searchBriefOrderByShopId(Long shopId, Long customerId,String orderSn,LocalDateTime beginTime,LocalDateTime endTime,Integer pageNumber, Integer pageSize) {
         try {
             PageHelper.startPage(pageNumber, pageSize, true, true, true);
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria cr = orderPoExample.createCriteria();
             cr.andShopIdEqualTo(shopId);
+            if(customerId!=null)
+            {
+                cr.andCustomerIdEqualTo(customerId);
+            }
+            if(orderSn!=null)
+            {
+                cr.andOrderSnEqualTo(orderSn);
+            }
+            if(beginTime!=null)
+            {
+                cr.andGmtCreateGreaterThan(beginTime);
+            }
+            if(endTime!=null)
+            {
+                cr.andGmtCreateLessThan(endTime);
+            }
             List<OrderPo> orderPoList = orderPoMapper.selectByExample(orderPoExample);
             if (orderPoList.size() == 0) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
@@ -144,5 +164,18 @@ public class OrderDao {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
+    }
+    public List<OrderItem> getOrderItemByOrderId(Long orderId)
+    {
+        OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
+        OrderItemPoExample.Criteria cr=orderItemPoExample.createCriteria();
+        cr.andOrderIdEqualTo(orderId);
+        List<OrderItemPo> orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
+        List<OrderItem> orderItemList=new ArrayList<>(orderItemPos.size());
+        for(OrderItemPo orderItemPo:orderItemPos)
+        {
+            orderItemList.add((OrderItem) cloneVo(orderItemPo,OrderItem.class));
+        }
+        return orderItemList;
     }
 }

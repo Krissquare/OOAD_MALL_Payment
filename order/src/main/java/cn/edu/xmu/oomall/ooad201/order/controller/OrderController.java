@@ -11,12 +11,14 @@ import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping(value = "/", produces = "application/json;charset=UTF-8")
@@ -107,9 +109,12 @@ public class OrderController {
     })
     @GetMapping("shops/{shopId}/orders")
     @Audit(departName = "order")
-    public Object searchBriefOrder(@PathVariable("shopId") Long shopId, @RequestParam(value = "page", required = false) Integer page,
+    public Object searchBriefOrder(@PathVariable("shopId") Long shopId, @RequestParam(value="customerId",required = false) Long customerId,@RequestParam(value="orderSn",required = false)String orderSn,
+                                   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime beginTime,
+                                   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime endTime,
+                                   @RequestParam(value = "page", required = false) Integer page,
                                    @RequestParam(value = "pageSize", required = false) Integer pageSize) {
-        return Common.decorateReturnObject(orderService.searchBriefOrderByShopId(shopId, page, pageSize));
+        return Common.decorateReturnObject(orderService.searchBriefOrderByShopId(shopId,customerId,orderSn,beginTime,endTime, page, pageSize));
     }
 
     @ApiOperation(value = "店家修改订单（留言）")
