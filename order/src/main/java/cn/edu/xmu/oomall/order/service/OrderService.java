@@ -43,6 +43,13 @@ public class OrderService {
     @Autowired
     ShopService shopService;
 
+    /**
+     * 新建订单
+     * @param simpleOrderVo
+     * @param userId
+     * @param userName
+     * @return
+     */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject insertOrder(SimpleOrderVo simpleOrderVo, Long userId, String userName) {
         if (simpleOrderVo.getGrouponId() != null) {
@@ -84,6 +91,14 @@ public class OrderService {
         return new ReturnObject();
     }
 
+    /**
+     * 买家逻辑删除订单
+     * created by  xiuchen lang
+     * @param id
+     * @param userId
+     * @param userName
+     * @return
+     */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject deleteOrderByCustomer(Long id, Long userId, String userName) {
         ReturnObject returnObject = orderDao.getOrderById(id);
@@ -104,6 +119,14 @@ public class OrderService {
         return orderDao.updateOrder(order);
     }
 
+    /**
+     * 买家取消订单
+     * create by xiuchen Lang
+     * @param id
+     * @param userId
+     * @param userName
+     * @return
+     */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject cancelOrderByCustomer(Long id, Long userId, String userName) {
         ReturnObject returnObject = orderDao.getOrderById(id);

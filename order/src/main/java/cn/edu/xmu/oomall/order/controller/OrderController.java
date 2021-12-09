@@ -27,7 +27,15 @@ public class OrderController {
     @Autowired
     private HttpServletResponse httpServletResponse;
 
-
+    /**
+     * 新建订单
+     * @author created by xiuchen lang
+     * @param simpleOrderVo
+     * @param bindingResult
+     * @param userId
+     * @param userName
+     * @return
+     */
     @Audit(departName = "order")
     @PostMapping("/orders")
     public Object insertOrderByCustom(@RequestBody @Valid SimpleOrderVo simpleOrderVo,
