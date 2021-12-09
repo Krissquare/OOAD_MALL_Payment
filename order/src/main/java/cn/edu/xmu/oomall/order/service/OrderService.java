@@ -11,7 +11,6 @@ import cn.edu.xmu.oomall.order.microservice.vo.ProductVo;
 import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.vo.*;
-import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import cn.edu.xmu.privilegegateway.annotation.util.Common;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Service
 public class OrderService {
@@ -86,28 +86,42 @@ public class OrderService {
 
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject deleteOrderByCustomer(Long id, Long userId, String userName) {
-        //TODO:调用查询买家查询自己订单  有东西证明是自己的
-//      ReturnObject r = orderDao.selectById(order.getModifierId());
-//      if(r.getCode()!=ReturnNo.OK)
-//          return r;
+        ReturnObject returnObject = orderDao.getOrderById(id);
+        if (returnObject.getCode() != ReturnNo.OK) {
+            return returnObject;
+        }
+        Order data = (Order) returnObject.getData();
+        if (!Objects.equals(data.getCustomerId(), userId)) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        if (!(data.getState() == OrderState.COMPLETE_ORDER.getCode() || data.getState() == OrderState.CANCEL_ORDER.getCode())) {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
         Order order = new Order();
         order.setId(id);
         order.setBeDeleted((byte) 1);
         Common.setPoModifiedFields(order, userId, userName);
-        return orderDao.deleteOrder(order);
+        return orderDao.updateOrder(order);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject cancelOrderByCustomer(Long id, Long userId, String userName) {
-        //TODO:调用查询买家查询自己订单  有东西证明是自己的
-//        ReturnObject r = orderDao.selectById(order.getModifierId());
-//        if(r.getCode()!=ReturnNo.OK)
-//            return r;
+        ReturnObject returnObject = orderDao.getOrderById(id);
+        if (returnObject.getCode() != ReturnNo.OK) {
+            return returnObject;
+        }
+        Order data = (Order) returnObject.getData();
+        if (!Objects.equals(data.getCustomerId(), userId)) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        if (data.getState() == OrderState.COMPLETE_ORDER.getCode() || data.getState() == OrderState.CANCEL_ORDER.getCode()) {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
         Order order = new Order();
         order.setId(id);
         order.setState(OrderState.CANCEL_ORDER.getCode());
         Common.setPoModifiedFields(order, userId, userName);
-        return orderDao.cancelOrder(order);
+        return orderDao.updateOrder(order);
     }
 
     @Transactional(rollbackFor = Exception.class)

@@ -38,7 +38,7 @@ public class OrderDao {
     public ReturnObject getOrderById(Long id) {
         try {
             OrderPo po = orderPoMapper.selectByPrimaryKey(id);
-            if (po == null) {
+            if (po == null||po.getBeDeleted()==1) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
             OrderPo orderPo = cloneVo(po, OrderPo.class);
@@ -64,71 +64,6 @@ public class OrderDao {
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-
-
-    // 不用了
-    public ReturnObject deleteOrder(Order order) {
-        try {
-            List<Integer> CANCEL_COMPLETE_LIST =
-                    Arrays.asList(OrderState.CANCEL_ORDER.getCode(), OrderState.COMPLETE_ORDER.getCode());
-            OrderPo orderPo = cloneVo(order, OrderPo.class);
-            OrderPoExample orderPoExample = new OrderPoExample();
-            OrderPoExample.Criteria criteria = orderPoExample.createCriteria();
-            criteria.andIdEqualTo(orderPo.getId())
-                    .andCustomerIdEqualTo(orderPo.getModifierId())
-                    .andBeDeletedIsNull()
-                    .andStateIn(CANCEL_COMPLETE_LIST);
-            int ret = orderPoMapper.updateByExampleSelective(orderPo, orderPoExample);
-            if (ret == 1) {
-                return new ReturnObject();
-            }
-            return new ReturnObject(ReturnNo.STATENOTALLOW);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
-        }
-    }
-
-
-    // 不用了
-    public ReturnObject cancelOrder(Order order) {
-        try {
-            List<Integer> CANCEL_COMPLETE_LIST =
-                    Arrays.asList(OrderState.CANCEL_ORDER.getCode(), OrderState.COMPLETE_ORDER.getCode());
-            OrderPo orderPo = cloneVo(order, OrderPo.class);
-            OrderPoExample orderPoExample = new OrderPoExample();
-            OrderPoExample.Criteria criteria = orderPoExample.createCriteria();
-            criteria.andIdEqualTo(orderPo.getId())
-                    .andCustomerIdEqualTo(orderPo.getModifierId())
-                    .andStateNotIn(CANCEL_COMPLETE_LIST);
-            int ret = orderPoMapper.updateByExampleSelective(orderPo, orderPoExample);
-            if (ret == 1) {
-                return new ReturnObject();
-            }
-            return new ReturnObject(ReturnNo.STATENOTALLOW);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
-        }
-    }
-
-    // 不用了
-    public ReturnObject confirmOrder(Long orderId, LocalDateTime nowTime) {
-        try {
-            OrderPo orderPo = orderPoMapper.selectByPrimaryKey(orderId);
-            if (orderPo.getState() == OrderState.SEND_GOODS.getCode()) {
-                orderPo.setState(OrderState.COMPLETE_ORDER.getCode());
-                orderPo.setConfirmTime(nowTime);
-                return new ReturnObject<>(ReturnNo.OK);
-            } else {
-                return new ReturnObject(ReturnNo.STATENOTALLOW, "当前货品状态不支持进行该操作");
-            }
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
-        }
-    }
-
 
     public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
         try {
