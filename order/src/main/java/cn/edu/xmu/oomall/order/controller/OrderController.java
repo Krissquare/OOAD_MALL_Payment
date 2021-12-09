@@ -27,6 +27,7 @@ public class OrderController {
     @Autowired
     private HttpServletResponse httpServletResponse;
 
+
     @Audit(departName = "order")
     @PostMapping("/orders")
     public Object addOrder(@RequestBody @Valid SimpleOrderVo simpleOrderVo,
@@ -43,6 +44,7 @@ public class OrderController {
         return orderService.addOrder(simpleOrderVo, userId, userName);
     }
 
+
     /**
      * 用户逻辑删除自己订单，需判断是不是自己的
      * create by xiuchen Lang
@@ -58,6 +60,7 @@ public class OrderController {
         return Common.decorateReturnObject(orderService.deleteOrderByCustomer(id, userId, username));
     }
 
+
     /**
      * 用户逻辑取消自己订单，需判断是不是自己的
      * create by xiuchen Lang
@@ -72,6 +75,7 @@ public class OrderController {
     public Object cancleOrderByCunstomer(@PathVariable("id") Long id, @LoginUser Long userId, @LoginName String username) {
         return Common.decorateReturnObject(orderService.cancelOrderByCustomer(id, userId, username));
     }
+
 
     @ApiOperation(value = "买家标记确认收货")
     @ApiImplicitParams({
@@ -92,6 +96,7 @@ public class OrderController {
         return Common.decorateReturnObject(orderService.confirmOrder(id));
     }
 
+
     @ApiOperation(value = "店家查询商户所有订单（概要）")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "shopId", value = "店铺id", required = true, dataType = "Long", paramType = "path"),
@@ -111,6 +116,7 @@ public class OrderController {
                                    @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         return Common.decorateReturnObject(orderService.searchBriefOrderByShopId(shopId, page, pageSize));
     }
+
 
     @ApiOperation(value = "店家修改订单（留言）")
     @ApiImplicitParams({
@@ -140,4 +146,7 @@ public class OrderController {
     public Object getOrderDetail(@PathVariable("shopId") Long shopId, @PathVariable("id") Long id) {
         return Common.decorateReturnObject(orderService.getOrderDetail(shopId, id));
     }
+
+
+
 }

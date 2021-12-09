@@ -1,5 +1,5 @@
 package cn.edu.xmu.oomall.transaction.mapper;
 
-public class TransactionDao {
+public class TransactionMapper {
 
 }
