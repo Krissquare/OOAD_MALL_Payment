@@ -41,8 +41,8 @@ public class OrderDao {
             if (po == null) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            OrderPo orderPo = cloneVo(po, OrderPo.class);
-            return new ReturnObject<>(orderPo);
+            Order order = cloneVo(po, Order.class);
+            return new ReturnObject<>(order);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());

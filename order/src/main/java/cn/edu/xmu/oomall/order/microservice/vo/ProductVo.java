@@ -15,7 +15,7 @@ public class ProductVo {
     private Long id;
     private SimpleVo shop;
     private Long goodsId;
-    private Long onSaleId;
+//    private Long onSaleId;
     private String name;
     private String skuSn;
     private String imageUrl;
