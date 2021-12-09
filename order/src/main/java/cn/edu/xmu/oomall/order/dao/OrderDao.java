@@ -35,11 +35,42 @@ public class OrderDao {
     @Autowired
     OrderItemPoMapper orderItemPoMapper;
 
-    final static private List<Integer> CANCEL_COMPLETE_LIST = Arrays.asList(OrderState.CANCEL_ORDER.getCode(), OrderState.COMPLETE_ORDER.getCode());
+    public ReturnObject getOrderById(Long id) {
+        try {
+            OrderPo po = orderPoMapper.selectByPrimaryKey(id);
+            if (po == null) {
+                return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            OrderPo orderPo = cloneVo(po, OrderPo.class);
+            return new ReturnObject<>(orderPo);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
 
-    // 写死，不能复用
+
+    public ReturnObject updateOrder(Order order) {
+        try {
+            OrderPo orderPo = cloneVo(order, OrderPo.class);
+            int flag = orderPoMapper.updateByPrimaryKeySelective(orderPo);
+            if (flag == 0) {
+                return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
+            } else {
+                return new ReturnObject<>(ReturnNo.OK);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
+
+    // 不用了
     public ReturnObject deleteOrder(Order order) {
         try {
+            List<Integer> CANCEL_COMPLETE_LIST =
+                    Arrays.asList(OrderState.CANCEL_ORDER.getCode(), OrderState.COMPLETE_ORDER.getCode());
             OrderPo orderPo = cloneVo(order, OrderPo.class);
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria criteria = orderPoExample.createCriteria();
@@ -58,9 +89,12 @@ public class OrderDao {
         }
     }
 
-    // 写死，不能复用
+
+    // 不用了
     public ReturnObject cancelOrder(Order order) {
         try {
+            List<Integer> CANCEL_COMPLETE_LIST =
+                    Arrays.asList(OrderState.CANCEL_ORDER.getCode(), OrderState.COMPLETE_ORDER.getCode());
             OrderPo orderPo = cloneVo(order, OrderPo.class);
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria criteria = orderPoExample.createCriteria();
@@ -78,6 +112,7 @@ public class OrderDao {
         }
     }
 
+    // 不用了
     public ReturnObject confirmOrder(Long orderId, LocalDateTime nowTime) {
         try {
             OrderPo orderPo = orderPoMapper.selectByPrimaryKey(orderId);
@@ -93,6 +128,7 @@ public class OrderDao {
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
+
 
     public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
         try {
@@ -112,6 +148,7 @@ public class OrderDao {
         }
     }
 
+
     public ReturnObject updateOrderComment(Order order) {
         try {
             OrderPo orderPo = orderPoMapper.selectByPrimaryKey(order.getId());
@@ -130,24 +167,5 @@ public class OrderDao {
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-
-    public ReturnObject getOrderDetail(Long shopId, Long orderId) {
-        try {
-            OrderPo orderPo = orderPoMapper.selectByPrimaryKey(orderId);
-            if (orderPo == null) {
-                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
-            }
-            if (!orderPo.getShopId().equals(shopId)) {
-                return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
-            }
-            Order order = cloneVo(orderPo, Order.class);
-            return new ReturnObject(order);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
-        }
-    }
-
-
 
 }
