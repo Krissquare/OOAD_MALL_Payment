@@ -105,10 +105,10 @@ class OrderApplicationTests {
         adminToken = jwtHelper.createToken(1L, "admin", 0L, 3600, 0);
         String responseString = this.mvc.perform(MockMvcRequestBuilders.put("/orders/1/confirm").header("authorization", adminToken)
                 .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isOk())
+                .andExpect(status().isForbidden())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":507,\"errmsg\":\"当前货品状态不支持进行该操作\"}";
+        String expected = "{\"errno\":505,\"errmsg\":\"操作的资源id不是自己的对象\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 

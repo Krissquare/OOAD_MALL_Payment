@@ -1,5 +1,4 @@
-package cn.edu.xmu.oomall.ooad201.order.service;
-
+package cn.edu.xmu.oomall.order.service;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.dao.OrderDao;
@@ -9,6 +8,7 @@ import cn.edu.xmu.oomall.order.microservice.vo.GrouponActivityVo;
 import cn.edu.xmu.oomall.order.microservice.vo.OnSaleVo;
 import cn.edu.xmu.oomall.order.microservice.vo.ProductVo;
 import cn.edu.xmu.oomall.order.model.bo.Order;
+import cn.edu.xmu.oomall.order.model.bo.OrderItem;
 import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
@@ -115,51 +115,67 @@ public class OrderService {
 
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject confirmOrder(Long orderId) {
+        ReturnObject ret=orderDao.getOrderById(orderId);
+        if(ret.getData()==null) {
+            return ret;
+        }
+        Order order=(Order) ret.getData();
+        if(!order.getState().equals(OrderState.SEND_GOODS.getCode()))
+        {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
         LocalDateTime nowTime = LocalDateTime.now();
-        return orderDao.confirmOrder(orderId, nowTime);
+        order.setConfirmTime(nowTime);
+        return orderDao.updateOrder(order);
     }
 
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
-        return orderDao.listBriefOrdersByShopId(shopId, pageNumber, pageSize);
+    public ReturnObject listBriefOrdersByShopId(Long shopId,Long customerId,String orderSn,LocalDateTime beginTime,LocalDateTime endTime, Integer pageNumber, Integer pageSize) {
+        return orderDao.listBriefOrdersByShopId(shopId,customerId,orderSn,beginTime,endTime, pageNumber, pageSize);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject updateOrderComment(Long shopId, Long orderId, OrderVo orderVo, Long loginUserId, String loginUserName) {
-        Order order = Common.cloneVo(orderVo, Order.class);
-        order.setShopId(shopId);
-        order.setId(orderId);
+        ReturnObject ret=orderDao.getOrderById(orderId);
+        if(ret.getData()==null)
+        {
+            return ret;
+        }
+        Order order = (Order) ret.getData();
+        if(!order.getShopId().equals(shopId))
+        {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        order.setMessage(orderVo.getMessage());
         Common.setPoModifiedFields(order, loginUserId, loginUserName);
-        return orderDao.updateOrderComment(order);
+        return orderDao.updateOrder(order);
     }
 
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject getOrderDetail(Long shopId, Long orderId) {
-        ReturnObject ret = orderDao.getOrderDetail(shopId, orderId);
-        if (ret.getData() != null) {
-            Order order = (Order) ret.getData();
-            SimpleVo customerVo = customService.getCustomerById(order.getCustomerId()).getData();
-            SimpleVo shopVo = shopService.getShopById(order.getShopId()).getData();
-            DetailOrderVo orderVo = (DetailOrderVo) Common.cloneVo(order, DetailOrderVo.class);
-            orderVo.setCustomerVo(customerVo);
-            orderVo.setShopVo(shopVo);
-            List<OrderItem> orderItemList=orderDao.getOrderItemByOrderId(orderId);
-            List<SimpleOrderItemVo> simpleOrderItemVos=new ArrayList<>();
-            for(OrderItem orderItem:orderItemList)
-            {
-                SimpleOrderItemVo simpleOrderItemVo=(SimpleOrderItemVo) Common.cloneVo(orderItem,SimpleOrderItemVo.class);
-                simpleOrderItemVos.add(simpleOrderItemVo);
-            }
-            orderVo.setOrderItems(simpleOrderItemVos);
-            return new ReturnObject(orderVo);
-        } else {
+        ReturnObject ret = orderDao.getOrderById(orderId);
+        if (ret.getData() == null) {
             return ret;
         }
+        Order order = (Order) ret.getData();
+        if (!order.getShopId().equals(shopId)) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        SimpleVo customerVo = customService.getCustomerById(order.getCustomerId()).getData();
+        SimpleVo shopVo = shopService.getShopById(order.getShopId()).getData();
+        DetailOrderVo orderVo = (DetailOrderVo) Common.cloneVo(order, DetailOrderVo.class);
+        orderVo.setCustomerVo(customerVo);
+        orderVo.setShopVo(shopVo);
+        List<OrderItem> orderItemList = (List<OrderItem>) orderDao.getOrderItemByOrderId(orderId).getData();
+        List<SimpleOrderItemVo> simpleOrderItemVos = new ArrayList<>();
+        for (OrderItem orderItem : orderItemList) {
+            SimpleOrderItemVo simpleOrderItemVo = (SimpleOrderItemVo) Common.cloneVo(orderItem, SimpleOrderItemVo.class);
+            simpleOrderItemVos.add(simpleOrderItemVo);
+        }
+        orderVo.setOrderItems(simpleOrderItemVos);
+        return new ReturnObject(orderVo);
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public ReturnObject confirmGrouponActivity(Long shopId, Long grouponActivityId, String loginUserId, String loginUserName) {
 
-    }
 
 }

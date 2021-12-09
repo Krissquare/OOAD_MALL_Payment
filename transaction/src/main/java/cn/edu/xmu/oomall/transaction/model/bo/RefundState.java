@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.ooad201.payment.model.bo;
+package cn.edu.xmu.oomall.transaction.model.bo;
 
 public enum RefundState {
     WAIT_REFUND(0,"待退款"),

@@ -6,7 +6,10 @@ import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.mapper.OrderItemPoMapper;
 import cn.edu.xmu.oomall.order.mapper.OrderPoMapper;
 import cn.edu.xmu.oomall.order.model.bo.Order;
+import cn.edu.xmu.oomall.order.model.bo.OrderItem;
 import cn.edu.xmu.oomall.order.model.bo.OrderState;
+import cn.edu.xmu.oomall.order.model.po.OrderItemPo;
+import cn.edu.xmu.oomall.order.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.model.po.OrderPoExample;
 import cn.edu.xmu.oomall.order.model.vo.BriefOrderVo;
@@ -18,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,8 +45,8 @@ public class OrderDao {
             if (po == null) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            OrderPo orderPo = cloneVo(po, OrderPo.class);
-            return new ReturnObject<>(orderPo);
+            Order order = cloneVo(po, Order.class);
+            return new ReturnObject<>(order);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
@@ -112,25 +116,9 @@ public class OrderDao {
         }
     }
 
-    // 不用了
-    public ReturnObject confirmOrder(Long orderId, LocalDateTime nowTime) {
-        try {
-            OrderPo orderPo = orderPoMapper.selectByPrimaryKey(orderId);
-            if (orderPo.getState() == OrderState.SEND_GOODS.getCode()) {
-                orderPo.setState(OrderState.COMPLETE_ORDER.getCode());
-                orderPo.setConfirmTime(nowTime);
-                return new ReturnObject<>(ReturnNo.OK);
-            } else {
-                return new ReturnObject(ReturnNo.STATENOTALLOW, "当前货品状态不支持进行该操作");
-            }
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
-        }
-    }
 
 
-    public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
+    public ReturnObject listBriefOrdersByShopId(Long shopId,Long customerId,String orderSn,LocalDateTime beginTime,LocalDateTime endTime, Integer pageNumber, Integer pageSize) {
         try {
             PageHelper.startPage(pageNumber, pageSize, true, true, true);
             OrderPoExample orderPoExample = new OrderPoExample();
@@ -165,42 +153,7 @@ public class OrderDao {
     }
 
 
-    public ReturnObject updateOrderComment(Order order) {
-        try {
-            OrderPo orderPo = orderPoMapper.selectByPrimaryKey(order.getId());
-            if (orderPo == null) {
-                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
-            }
-            if (!orderPo.getShopId().equals(order.getShopId())) {
-                return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
-            }
-            orderPo.setMessage(order.getMessage());
-            setPoModifiedFields(orderPo, order.getModifierId(), order.getModifierName());
-            orderPoMapper.updateByPrimaryKeySelective(orderPo);
-            return new ReturnObject<>(ReturnNo.OK);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
-        }
-    }
-
-    public ReturnObject getOrderDetail(Long shopId, Long orderId) {
-        try {
-            OrderPo orderPo = orderPoMapper.selectByPrimaryKey(orderId);
-            if (orderPo == null) {
-                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
-            }
-            if (!orderPo.getShopId().equals(shopId)) {
-                return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
-            }
-            Order order = cloneVo(orderPo, Order.class);
-            return new ReturnObject(order);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
-        }
-    }
-    public List<OrderItem> getOrderItemByOrderId(Long orderId)
+    public ReturnObject getOrderItemByOrderId(Long orderId)
     {
         OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
         OrderItemPoExample.Criteria cr=orderItemPoExample.createCriteria();
@@ -211,7 +164,7 @@ public class OrderDao {
         {
             orderItemList.add((OrderItem) cloneVo(orderItemPo,OrderItem.class));
         }
-        return orderItemList;
+        return new ReturnObject(orderItemList);
     }
 
 

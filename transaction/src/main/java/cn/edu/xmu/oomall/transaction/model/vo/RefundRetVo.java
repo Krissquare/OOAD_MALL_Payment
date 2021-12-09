@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.ooad201.payment.model.vo;
+package cn.edu.xmu.oomall.transaction.model.vo;
 
 import lombok.Data;
 import lombok.Getter;

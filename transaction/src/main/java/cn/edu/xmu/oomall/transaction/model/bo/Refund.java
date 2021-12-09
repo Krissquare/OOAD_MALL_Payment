@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.ooad201.payment.model.bo;
+package cn.edu.xmu.oomall.transaction.model.bo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

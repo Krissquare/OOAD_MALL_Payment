@@ -115,9 +115,14 @@ public class OrderController {
     })
     @GetMapping("shops/{shopId}/orders")
     @Audit(departName = "order")
-    public Object listBriefOrdersByShopId(@PathVariable("shopId") Long shopId, @RequestParam(value = "page", required = false) Integer page,
+    public Object listBriefOrdersByShopId(@PathVariable("shopId") Long shopId,
+                                          @RequestParam(value="customerId",required = false)Long customerId,
+                                          @RequestParam(value="orderSn",required = false) String orderSn,
+                                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime beginTime,
+                                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime endTime,
+                                          @RequestParam(value = "page", required = false) Integer page,
                                    @RequestParam(value = "pageSize", required = false) Integer pageSize) {
-        return Common.decorateReturnObject(orderService.listBriefOrdersByShopId(shopId, page, pageSize));
+        return Common.decorateReturnObject(orderService.listBriefOrdersByShopId(shopId, customerId,orderSn,beginTime,endTime,page, pageSize));
     }
 
 
@@ -137,7 +142,7 @@ public class OrderController {
     })
     @PutMapping("shops/{shopId}/orders/{id}")
     @Audit(departName = "order")
-    public Object updateOrder(@PathVariable("shopId") Long shopId, @PathVariable("id") Long orderId, @Validated @RequestBody OrderVo orderVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName) {
+    public Object updateOrderComment(@PathVariable("shopId") Long shopId, @PathVariable("id") Long orderId, @Validated @RequestBody OrderVo orderVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName) {
         if (bindingResult.hasErrors()) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
         }
@@ -151,11 +156,5 @@ public class OrderController {
     }
 
 
-    @PutMapping("/internal/shops/{shopId}/grouponorders/{id}/confirm")
-    @Audit(departName = "order")
-    public Object confirmGrouponActivity(@PathVariable("shopId") Long shopId, @PathVariable("shopId") Long grouponActivityId,
-                                         @LoginUser Long loginUserId, @LoginName String loginUserName) {
-        return Common.decorateReturnObject(orderService.confirmGrouponActivity(shopId, grouponActivityId, loginUserId, loginUserName));
-    }
 
 }
