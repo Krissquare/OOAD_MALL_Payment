@@ -55,7 +55,7 @@ public class PaymentPo {
      *
      * @mbg.generated
      */
-    private Long documentId;
+    private String documentId;
 
     /**
      *
@@ -320,7 +320,7 @@ public class PaymentPo {
      *
      * @mbg.generated
      */
-    public Long getDocumentId() {
+    public String getDocumentId() {
         return documentId;
     }
 
@@ -332,8 +332,8 @@ public class PaymentPo {
      *
      * @mbg.generated
      */
-    public void setDocumentId(Long documentId) {
-        this.documentId = documentId;
+    public void setDocumentId(String documentId) {
+        this.documentId = documentId == null ? null : documentId.trim();
     }
 
     /**
