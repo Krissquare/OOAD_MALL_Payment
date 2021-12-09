@@ -43,7 +43,7 @@ public class OrderDao {
     @Autowired
     RedisUtil redisUtil;
 
-    final static private String ORDER_KEY="order_id";
+    final static private String ORDER_KEY="order_%d";
 
     public ReturnObject getOrderById(Long id) {
         try {
