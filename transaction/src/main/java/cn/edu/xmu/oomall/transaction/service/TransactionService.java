@@ -43,7 +43,7 @@ public class TransactionService {
         Refund refund1=(Refund) ret.getData();
         if(refund1.getState()!= RefundState.FINISH_REFUND.getCode())
         {
-            return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
+            return new ReturnObject<>(ReturnNo.STATENOTALLOW);
         }
         refund1.setState(refundRecVo.getState());
         refund1.setDescr(refundRecVo.getDescr());

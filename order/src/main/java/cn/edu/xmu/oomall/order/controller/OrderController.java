@@ -95,8 +95,8 @@ public class OrderController {
     })
     @PutMapping("orders/{id}/confirm")
     @Audit(departName = "order")
-    public Object confirmOrder(@PathVariable("id") Long id) {
-        return Common.decorateReturnObject(orderService.confirmOrder(id));
+    public Object confirmOrder(@PathVariable("id") Long id,@LoginUser Long loginUserId,@LoginName String loginName) {
+        return Common.decorateReturnObject(orderService.confirmOrder(id,loginUserId,loginName));
     }
 
 

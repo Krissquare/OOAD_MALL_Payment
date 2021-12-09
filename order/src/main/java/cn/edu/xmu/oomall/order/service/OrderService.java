@@ -114,7 +114,7 @@ public class OrderService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject confirmOrder(Long orderId) {
+    public ReturnObject confirmOrder(Long orderId,Long loginUserId,String loginUserName) {
         ReturnObject ret=orderDao.getOrderById(orderId);
         if(ret.getData()==null) {
             return ret;
@@ -122,10 +122,10 @@ public class OrderService {
         Order order=(Order) ret.getData();
         if(!order.getState().equals(OrderState.SEND_GOODS.getCode()))
         {
-            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
-        LocalDateTime nowTime = LocalDateTime.now();
-        order.setConfirmTime(nowTime);
+        order.setState(OrderState.COMPLETE_ORDER.getCode());
+        Common.setPoModifiedFields(order,loginUserId,loginUserName);
         return orderDao.updateOrder(order);
     }
 
