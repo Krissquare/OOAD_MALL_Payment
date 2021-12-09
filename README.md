@@ -6,7 +6,10 @@
 
 ### 3.rocketmq-console地址：http://121.36.76.162:8081/
 
-### 4.swagger https://app.swaggerhub.com/apis/ooad2-01/2-01ooad/1.0.0#/
+### 4.swagger 
+### qm https://app.swaggerhub.com/apis/mingqcn/OOMALL/1.1.6
+
+### 我们组 https://app.swaggerhub.com/apis/ooad2-01/2-01ooad/1.0.0#/
 
 ### 5.nacos界面 http://101.132.164.244:8888/nacos/index.html
 
