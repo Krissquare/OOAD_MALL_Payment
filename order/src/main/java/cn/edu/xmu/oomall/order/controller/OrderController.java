@@ -11,12 +11,14 @@ import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping(value = "/", produces = "application/json;charset=UTF-8")
@@ -152,8 +154,14 @@ public class OrderController {
 
     @GetMapping("orders")
     @Audit(departName = "order")
-    public Object listCustomerBriefOrders(@LoginUser Long userId){
-        return Common.decorateReturnObject(orderService.listCustomerBriefOrder(userId)) ;
+    public Object listCustomerBriefOrders(@LoginUser Long userId,
+                                          @RequestParam(value = "orderSn", required = false) String orderSn,
+                                          @RequestParam(value = "state", required = false) Integer state,
+                                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(value = "beginTime", required = false) LocalDateTime beginTime,
+                                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(value = "endTime", required = false) LocalDateTime endTime,
+                                          @RequestParam(value = "page", required = false) Integer pageNumber,
+                                          @RequestParam(value = "pageSize", required = false) Integer pageSize){
+        return Common.decorateReturnObject(orderService.listCustomerBriefOrder(userId,orderSn,state,beginTime,endTime,pageNumber,pageSize)) ;
     }
 
 }

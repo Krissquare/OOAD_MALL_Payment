@@ -150,22 +150,21 @@ public class OrderService {
 
     public ReturnObject listAllOrderState(){
         HashMap<Integer, String> ret = new HashMap<>();
-        ret.put(100,"待付款");
-        ret.put(101,"新订单");
-        ret.put(102,"待支付尾款");
-        ret.put(200,"待收货");
-        ret.put(201,"付款完成");
-        ret.put(202,"待成团");
-        ret.put(203,"未成团");
-        ret.put(300,"已发货");
-        ret.put(400,"已完成");
-        ret.put(500,"已取消");
+        for (OrderState item: OrderState.values()){
+            ret.put(item.getCode(), item.getMessage());
+        }
         return new ReturnObject(ret);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject listCustomerBriefOrder(Long userId){
-        return null;
+    public ReturnObject listCustomerBriefOrder(Long userId,
+                                               String orderSn,
+                                               Integer state,
+                                               LocalDateTime beginTime,
+                                               LocalDateTime endTime,
+                                               Integer pageNumber,
+                                               Integer pageSize){
+        return orderDao.listBriefOrderByUserId(userId,orderSn,state,beginTime,endTime,pageNumber,pageSize);
     }
 
 }

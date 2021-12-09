@@ -30,9 +30,11 @@ public class OrderDao {
     private static final Logger logger = LoggerFactory.getLogger(OrderDao.class);
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     OrderPoMapper orderPoMapper;
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     OrderItemPoMapper orderItemPoMapper;
 
     final static private List<Integer> CANCEL_COMPLETE_LIST = Arrays.asList(OrderState.CANCEL_ORDER.getCode(), OrderState.COMPLETE_ORDER.getCode());
@@ -145,4 +147,32 @@ public class OrderDao {
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
+
+    public ReturnObject listBriefOrderByUserId(Long userId,
+                                               String orderSn,
+                                               Integer state,
+                                               LocalDateTime beginTime,
+                                               LocalDateTime endTime,
+                                               Integer pageNumber,
+                                               Integer pageSize){
+        try{
+            PageHelper.startPage(pageNumber,pageSize,true,true,true);
+            OrderPoExample orderPoExample = new OrderPoExample();
+            OrderPoExample.Criteria cr = orderPoExample.createCriteria();
+            cr.andCustomerIdEqualTo(userId);
+            cr.andOrderSnEqualTo(orderSn);
+            cr.andStateEqualTo(state);
+            cr.andConfirmTimeBetween(beginTime,endTime);
+            List<OrderPo> orderPoList = orderPoMapper.selectByExample(orderPoExample);
+            if (orderPoList.size() == 0){
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo(orderPoList));
+            return Common.getPageRetVo(ret, BriefOrderVo.class);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
 }
