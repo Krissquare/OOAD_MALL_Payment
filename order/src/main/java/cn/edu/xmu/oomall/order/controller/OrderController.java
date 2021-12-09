@@ -33,9 +33,9 @@ public class OrderController {
                            BindingResult bindingResult,
                            @LoginUser Long userId,
                            @LoginName String userName) {
-        Object o = Common.processFieldErrors(bindingResult, httpServletResponse);
-        if (o != null) {
-            return o;
+        Object object = Common.processFieldErrors(bindingResult, httpServletResponse);
+        if (object != null) {
+            return object;
         }
         if (simpleOrderVo.getAdvancesaleId() != null && simpleOrderVo.getGrouponId() != null) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
