@@ -9,7 +9,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * @author xiuchen lang
  */
 @SpringBootApplication(scanBasePackages = {"cn.edu.xmu.oomall.core", "cn.edu.xmu.oomall.transaction","cn.edu.xmu.privilegegateway"})
-@MapperScan("cn.edu.xmu.oomall.ooad201.order.mapper")
+@MapperScan("cn.edu.xmu.oomall.transaction.mapper")
 @EnableFeignClients(basePackages = "cn.edu.xmu.oomall.transaction.microservice")
 public class TransactionApplication {
     public static void main(String[] args) {
