@@ -18,8 +18,8 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>payment</module>
         <module>order</module>
+        <module>transaction</module>
     </modules>
 
     <properties>
