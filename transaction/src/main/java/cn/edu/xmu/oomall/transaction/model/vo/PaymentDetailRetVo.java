@@ -1,11 +1,14 @@
 package cn.edu.xmu.oomall.transaction.model.vo;
 
+import lombok.Data;
+
 import java.time.LocalDateTime;
 
 /**
  * @author 高艺桐 22920192204199
  * @date 2021/12/09 20:07
  */
+@Data
 public class PaymentDetailRetVo {
     private Long id;
     private String tradeSn;
