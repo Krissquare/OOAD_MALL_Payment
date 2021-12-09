@@ -30,7 +30,7 @@ public class TransactionDao {
     @Autowired
     RefundPoMapper refundPoMapper;
 
-    public ReturnObject getRefund(String documentId, Byte state, Long patternId, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
+    public ReturnObject listRefunds(String documentId, Byte state, Long patternId, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
         try {
             PageHelper.startPage(page, pageSize, true, true, true);
             RefundPoExample refundPoExample = new RefundPoExample();
@@ -62,7 +62,7 @@ public class TransactionDao {
         }
     }
 
-    public ReturnObject getRefundDetail(Long id) {
+    public ReturnObject getRefundById(Long id) {
         try {
             RefundPo refundPo = refundPoMapper.selectByPrimaryKey(id);
             if (refundPo == null) {

@@ -34,7 +34,7 @@ public class TransactionController {
         {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
-        return Common.decorateReturnObject(transactionService.getRefund(documentId,state,beginTime,endTime,page, pageSize));
+        return Common.decorateReturnObject(transactionService.listRefunds(documentId,state,beginTime,endTime,page, pageSize));
     }
     @Audit(departName = "payment")
     @GetMapping("shops/{shopId}/refund/{id}")

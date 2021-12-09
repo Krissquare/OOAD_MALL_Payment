@@ -137,7 +137,7 @@ public class OrderService {
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject updateOrderComment(Long shopId, Long orderId, OrderVo orderVo, Long loginUserId, String loginUserName) {
         ReturnObject ret=orderDao.getOrderById(orderId);
-        if(ret.getData()==null)
+        if(!ret.getCode().equals(ReturnNo.OK))
         {
             return ret;
         }
@@ -154,7 +154,7 @@ public class OrderService {
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject getOrderDetail(Long shopId, Long orderId) {
         ReturnObject ret = orderDao.getOrderById(orderId);
-        if (ret.getData() == null) {
+        if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;
         }
         Order order = (Order) ret.getData();

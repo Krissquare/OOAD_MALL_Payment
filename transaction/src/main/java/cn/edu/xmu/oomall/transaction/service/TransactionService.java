@@ -17,14 +17,14 @@ public class TransactionService {
     @Autowired
     TransactionDao transactionDao;
 
-    public ReturnObject getRefund(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
+    public ReturnObject listRefunds(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
     {
-        return transactionDao.getRefund(documentId,state,null,beginTime,endTime,page,pageSize);
+        return transactionDao.listRefunds(documentId,state,null,beginTime,endTime,page,pageSize);
     }
 
     public ReturnObject getRefundDetail(Long id)
     {
-        ReturnObject ret=transactionDao.getRefundDetail(id);
+        ReturnObject ret=transactionDao.getRefundById(id);
         if(ret.getData()==null)
         {
             return ret;
@@ -35,8 +35,8 @@ public class TransactionService {
     public ReturnObject updateRefund(Long id, RefundRecVo refundRecVo, Long loginUserId, String loginUserName)
     {
 
-        ReturnObject ret=transactionDao.getRefundDetail(id);
-        if(ret.getData()==null)
+        ReturnObject ret=transactionDao.getRefundById(id);
+        if(!ret.getCode().equals(ReturnNo.OK))
         {
             return ret;
         }
