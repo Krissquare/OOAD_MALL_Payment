@@ -27,9 +27,10 @@ public class OrderController {
     @Autowired
     private HttpServletResponse httpServletResponse;
 
+
     @Audit(departName = "order")
     @PostMapping("/orders")
-    public Object addOrder(@RequestBody @Valid SimpleOrderVo simpleOrderVo,
+    public Object insertOrder(@RequestBody @Valid SimpleOrderVo simpleOrderVo,
                            BindingResult bindingResult,
                            @LoginUser Long userId,
                            @LoginName String userName) {
@@ -40,8 +41,10 @@ public class OrderController {
         if (simpleOrderVo.getAdvancesaleId() != null && simpleOrderVo.getGrouponId() != null) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
         }
-        return orderService.addOrder(simpleOrderVo, userId, userName);
+
+        return orderService.insertOrder(simpleOrderVo, userId, userName);
     }
+
 
     /**
      * 用户逻辑删除自己订单，需判断是不是自己的
@@ -54,9 +57,10 @@ public class OrderController {
      */
     @Audit(departName = "order")
     @DeleteMapping("/orders/{id}")
-    public Object deleteOrderByCustomer(@PathVariable("id") Long id, @LoginUser Long userId, @LoginName String username) {
+    public Object deleteOrder(@PathVariable("id") Long id, @LoginUser Long userId, @LoginName String username) {
         return Common.decorateReturnObject(orderService.deleteOrderByCustomer(id, userId, username));
     }
+
 
     /**
      * 用户逻辑取消自己订单，需判断是不是自己的
@@ -69,9 +73,10 @@ public class OrderController {
      */
     @Audit(departName = "order")
     @PutMapping("/orders/{id}/cancel")
-    public Object cancleOrderByCunstomer(@PathVariable("id") Long id, @LoginUser Long userId, @LoginName String username) {
+    public Object cancleOrder(@PathVariable("id") Long id, @LoginUser Long userId, @LoginName String username) {
         return Common.decorateReturnObject(orderService.cancelOrderByCustomer(id, userId, username));
     }
+
 
     @ApiOperation(value = "买家标记确认收货")
     @ApiImplicitParams({
@@ -92,6 +97,7 @@ public class OrderController {
         return Common.decorateReturnObject(orderService.confirmOrder(id));
     }
 
+
     @ApiOperation(value = "店家查询商户所有订单（概要）")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "shopId", value = "店铺id", required = true, dataType = "Long", paramType = "path"),
@@ -107,10 +113,11 @@ public class OrderController {
     })
     @GetMapping("shops/{shopId}/orders")
     @Audit(departName = "order")
-    public Object searchBriefOrder(@PathVariable("shopId") Long shopId, @RequestParam(value = "page", required = false) Integer page,
+    public Object listBriefOrdersByShopId(@PathVariable("shopId") Long shopId, @RequestParam(value = "page", required = false) Integer page,
                                    @RequestParam(value = "pageSize", required = false) Integer pageSize) {
-        return Common.decorateReturnObject(orderService.searchBriefOrderByShopId(shopId, page, pageSize));
+        return Common.decorateReturnObject(orderService.listBriefOrdersByShopId(shopId, page, pageSize));
     }
+
 
     @ApiOperation(value = "店家修改订单（留言）")
     @ApiImplicitParams({
@@ -130,7 +137,7 @@ public class OrderController {
     @Audit(departName = "order")
     public Object updateOrder(@PathVariable("shopId") Long shopId, @PathVariable("id") Long orderId, @Validated @RequestBody OrderVo orderVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName) {
         if (bindingResult.hasErrors()) {
-            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID, "传入的RequestBody参数格式不合法"));
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
         }
         return Common.decorateReturnObject(orderService.updateOrderComment(shopId, orderId, orderVo, loginUserId, loginUserName));
     }
@@ -140,4 +147,13 @@ public class OrderController {
     public Object getOrderDetail(@PathVariable("shopId") Long shopId, @PathVariable("id") Long id) {
         return Common.decorateReturnObject(orderService.getOrderDetail(shopId, id));
     }
+
+
+    @PutMapping("/internal/shops/{shopId}/grouponorders/{id}/confirm")
+    @Audit(departName = "order")
+    public Object confirmGrouponActivity(@PathVariable("shopId") Long shopId, @PathVariable("shopId") Long grouponActivityId,
+                                         @LoginUser Long loginUserId, @LoginName String loginUserName) {
+        return Common.decorateReturnObject(orderService.confirmGrouponActivity(shopId, grouponActivityId, loginUserId, loginUserName));
+    }
+
 }
