@@ -5,7 +5,7 @@ management:
         include: "*"
 
 server:
-  port: 8081
+  port: 8080
   tomcat:
     threads:
       max: 500
@@ -15,7 +15,7 @@ spring:
     #解决Bean重复定义问题
     allow-bean-definition-overriding: true
   application:
-    name: order-service
+    name: transaction-service
   cloud:
     nacos:
       discovery:
@@ -78,9 +78,9 @@ spring:
 
 mybatis:
   #po对象的包
-  type-aliases-package: cn.edu.xmu.oomall.order.model.po
+  type-aliases-package: cn.edu.xmu.oomall.transaction.model.po
   #mapper.xml所在的位置
-  mapper-locations: classpath*:cn.edu.xmu.oomall.order.mapper/*.xml
+  mapper-locations: classpath*:cn.edu.xmu.oomall.transaction.mapper/*.xml
   #自动将SQL中查出来的带下划线的字段，转换为驼峰标志，再去匹配类中的属性
   configuration:
     #输出产生的SQL

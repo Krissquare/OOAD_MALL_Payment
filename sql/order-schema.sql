@@ -127,7 +127,7 @@ CREATE TABLE `oomall_payment` (
   `pattern_id` bigint(20) DEFAULT NULL,
   `amount` bigint(20) DEFAULT NULL,
   `actual_amount` bigint(20) DEFAULT NULL,
-  `document_id` bigint(20) DEFAULT NULL,
+  `document_id` varchar(128) DEFAULT NULL,
   `document_type` tinyint(4) DEFAULT NULL,
   `pay_time` datetime DEFAULT NULL,
   `begin_time` datetime DEFAULT NULL,
