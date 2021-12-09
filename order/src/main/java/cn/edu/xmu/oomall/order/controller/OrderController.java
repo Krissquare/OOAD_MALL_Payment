@@ -32,7 +32,7 @@ public class OrderController {
 
     @Audit(departName = "order")
     @PostMapping("/orders")
-    public Object insertOrder(@RequestBody @Valid SimpleOrderVo simpleOrderVo,
+    public Object insertOrderByCustom(@RequestBody @Valid SimpleOrderVo simpleOrderVo,
                            BindingResult bindingResult,
                            @LoginUser Long userId,
                            @LoginName String userName) {
@@ -59,7 +59,7 @@ public class OrderController {
      */
     @Audit(departName = "order")
     @DeleteMapping("/orders/{id}")
-    public Object deleteOrder(@PathVariable("id") Long id, @LoginUser Long userId, @LoginName String username) {
+    public Object deleteOrderByCustom(@PathVariable("id") Long id, @LoginUser Long userId, @LoginName String username) {
         return Common.decorateReturnObject(orderService.deleteOrderByCustomer(id, userId, username));
     }
 

@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.ooad201.order.dao;
+package cn.edu.xmu.oomall.order.dao;
 
 import cn.edu.xmu.oomall.core.util.Common;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
@@ -35,11 +35,42 @@ public class OrderDao {
     @Autowired
     OrderItemPoMapper orderItemPoMapper;
 
-    final static private List<Integer> CANCEL_COMPLETE_LIST = Arrays.asList(OrderState.CANCEL_ORDER.getCode(), OrderState.COMPLETE_ORDER.getCode());
+    public ReturnObject getOrderById(Long id) {
+        try {
+            OrderPo po = orderPoMapper.selectByPrimaryKey(id);
+            if (po == null) {
+                return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            OrderPo orderPo = cloneVo(po, OrderPo.class);
+            return new ReturnObject<>(orderPo);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
 
-    // 写死，不能复用
+
+    public ReturnObject updateOrder(Order order) {
+        try {
+            OrderPo orderPo = cloneVo(order, OrderPo.class);
+            int flag = orderPoMapper.updateByPrimaryKeySelective(orderPo);
+            if (flag == 0) {
+                return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
+            } else {
+                return new ReturnObject<>(ReturnNo.OK);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
+
+    // 不用了
     public ReturnObject deleteOrder(Order order) {
         try {
+            List<Integer> CANCEL_COMPLETE_LIST =
+                    Arrays.asList(OrderState.CANCEL_ORDER.getCode(), OrderState.COMPLETE_ORDER.getCode());
             OrderPo orderPo = cloneVo(order, OrderPo.class);
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria criteria = orderPoExample.createCriteria();
@@ -58,9 +89,12 @@ public class OrderDao {
         }
     }
 
-    // 写死，不能复用
+
+    // 不用了
     public ReturnObject cancelOrder(Order order) {
         try {
+            List<Integer> CANCEL_COMPLETE_LIST =
+                    Arrays.asList(OrderState.CANCEL_ORDER.getCode(), OrderState.COMPLETE_ORDER.getCode());
             OrderPo orderPo = cloneVo(order, OrderPo.class);
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria criteria = orderPoExample.createCriteria();
@@ -78,6 +112,7 @@ public class OrderDao {
         }
     }
 
+    // 不用了
     public ReturnObject confirmOrder(Long orderId, LocalDateTime nowTime) {
         try {
             OrderPo orderPo = orderPoMapper.selectByPrimaryKey(orderId);
@@ -94,7 +129,8 @@ public class OrderDao {
         }
     }
 
-    public ReturnObject searchBriefOrderByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
+
+    public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
         try {
             PageHelper.startPage(pageNumber, pageSize, true, true, true);
             OrderPoExample orderPoExample = new OrderPoExample();
@@ -127,6 +163,7 @@ public class OrderDao {
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
+
 
     public ReturnObject updateOrderComment(Order order) {
         try {
