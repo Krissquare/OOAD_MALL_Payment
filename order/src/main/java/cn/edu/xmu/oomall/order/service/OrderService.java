@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 
 @Service
 public class OrderService {
@@ -146,4 +147,25 @@ public class OrderService {
             return ret;
         }
     }
+
+    public ReturnObject listAllOrderState(){
+        HashMap<Integer, String> ret = new HashMap<>();
+        ret.put(100,"待付款");
+        ret.put(101,"新订单");
+        ret.put(102,"待支付尾款");
+        ret.put(200,"待收货");
+        ret.put(201,"付款完成");
+        ret.put(202,"待成团");
+        ret.put(203,"未成团");
+        ret.put(300,"已发货");
+        ret.put(400,"已完成");
+        ret.put(500,"已取消");
+        return new ReturnObject(ret);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject listCustomerBriefOrder(Long userId){
+        return null;
+    }
+
 }

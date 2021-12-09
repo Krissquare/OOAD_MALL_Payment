@@ -140,4 +140,20 @@ public class OrderController {
     public Object getOrderDetail(@PathVariable("shopId") Long shopId, @PathVariable("id") Long id) {
         return Common.decorateReturnObject(orderService.getOrderDetail(shopId, id));
     }
+
+    /**
+     * task a-1
+     * @Auther Fang Zheng
+     * */
+    @GetMapping("orders/states")
+    public Object listAllOrderStateController(){
+        return Common.decorateReturnObject(orderService.listAllOrderState());
+    }
+
+    @GetMapping("orders")
+    @Audit(departName = "order")
+    public Object listCustomerBriefOrders(@LoginUser Long userId){
+        return Common.decorateReturnObject(orderService.listCustomerBriefOrder(userId)) ;
+    }
+
 }
