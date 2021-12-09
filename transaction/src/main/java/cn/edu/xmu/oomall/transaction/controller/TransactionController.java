@@ -51,6 +51,11 @@ public class TransactionController {
         {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
+        if(beginTime!=null&&endTime!=null)
+        {
+            if(beginTime.isAfter(endTime))
+                return new ReturnObject(ReturnNo.LATE_BEGINTIME);
+        }
         return transactionService.listPayment(documentId,state,beginTime,endTime,page,pageSize);
     }
 
