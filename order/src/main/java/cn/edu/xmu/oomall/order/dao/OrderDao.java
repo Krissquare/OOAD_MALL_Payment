@@ -37,7 +37,8 @@ public class OrderDao {
 
     final static private List<Integer> CANCEL_COMPLETE_LIST = Arrays.asList(OrderState.CANCEL_ORDER.getCode(), OrderState.COMPLETE_ORDER.getCode());
 
-    public ReturnObject deleteByCustomer(Order order) {
+    // 写死，不能复用
+    public ReturnObject deleteOrder(Order order) {
         try {
             OrderPo orderPo = cloneVo(order, OrderPo.class);
             OrderPoExample orderPoExample = new OrderPoExample();
@@ -57,7 +58,8 @@ public class OrderDao {
         }
     }
 
-    public ReturnObject cancelOrderByCustomer(Order order) {
+    // 写死，不能复用
+    public ReturnObject cancelOrder(Order order) {
         try {
             OrderPo orderPo = cloneVo(order, OrderPo.class);
             OrderPoExample orderPoExample = new OrderPoExample();
@@ -92,9 +94,9 @@ public class OrderDao {
         }
     }
 
-    public ReturnObject searchBriefOrderByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
+    public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
         try {
-            PageHelper.startPage(pageNumber, pageSize, true, true, true);
+            PageHelper.startPage(pageNumber, pageSize);
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria cr = orderPoExample.createCriteria();
             cr.andShopIdEqualTo(shopId);
@@ -138,11 +140,14 @@ public class OrderDao {
             if (!orderPo.getShopId().equals(shopId)) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
             }
-            Order order = (Order) cloneVo(orderPo, Order.class);
+            Order order = cloneVo(orderPo, Order.class);
             return new ReturnObject(order);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
+
+
+
 }

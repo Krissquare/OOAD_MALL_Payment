@@ -44,7 +44,7 @@ public class OrderService {
     ShopService shopService;
 
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject addOrder(SimpleOrderVo simpleOrderVo, Long userId, String userName) {
+    public ReturnObject insertOrder(SimpleOrderVo simpleOrderVo, Long userId, String userName) {
         if (simpleOrderVo.getGrouponId() != null) {
             InternalReturnObject<GrouponActivityVo> grouponsById = activityService.getGrouponsById(simpleOrderVo.getGrouponId());
             if (grouponsById.getErrno() != 0) {
@@ -61,7 +61,6 @@ public class OrderService {
             }
             //团购通过onsale去算 每一件就的价钱是onsale的价钱
             Long price = onsaleById.getData().getPrice();
-
 
         } else if (simpleOrderVo.getAdvancesaleId() != null) {
             InternalReturnObject<AdvanceVo> advanceSaleById = activityService.getAdvanceSaleById(simpleOrderVo.getAdvancesaleId());
@@ -95,7 +94,7 @@ public class OrderService {
         order.setId(id);
         order.setBeDeleted((byte) 1);
         Common.setPoModifiedFields(order, userId, userName);
-        return orderDao.deleteByCustomer(order);
+        return orderDao.deleteOrder(order);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -108,7 +107,7 @@ public class OrderService {
         order.setId(id);
         order.setState(OrderState.CANCEL_ORDER.getCode());
         Common.setPoModifiedFields(order, userId, userName);
-        return orderDao.cancelOrderByCustomer(order);
+        return orderDao.cancelOrder(order);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -118,13 +117,13 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject searchBriefOrderByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
-        return orderDao.searchBriefOrderByShopId(shopId, pageNumber, pageSize);
+    public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
+        return orderDao.listBriefOrdersByShopId(shopId, pageNumber, pageSize);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject updateOrderComment(Long shopId, Long orderId, OrderVo orderVo, Long loginUserId, String loginUserName) {
-        Order order = (Order) Common.cloneVo(orderVo, Order.class);
+        Order order = Common.cloneVo(orderVo, Order.class);
         order.setShopId(shopId);
         order.setId(orderId);
         Common.setPoModifiedFields(order, loginUserId, loginUserName);
@@ -146,4 +145,10 @@ public class OrderService {
             return ret;
         }
     }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject confirmGrouponActivity(Long shopId, Long grouponActivityId, String loginUserId, String loginUserName) {
+
+    }
+
 }
