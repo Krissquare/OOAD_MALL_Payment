@@ -7,7 +7,6 @@ import cn.edu.xmu.oomall.order.mapper.OrderItemPoMapper;
 import cn.edu.xmu.oomall.order.mapper.OrderPoMapper;
 import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderItem;
-import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.po.OrderItemPo;
 import cn.edu.xmu.oomall.order.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
@@ -46,7 +45,6 @@ public class OrderDao {
     RedisUtil redisUtil;
 
     final static private String ORDER_KEY = "order_%d";
-
 
     public ReturnObject getOrderById(Long id) {
         try {

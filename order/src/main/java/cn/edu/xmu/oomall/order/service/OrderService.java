@@ -55,41 +55,53 @@ public class OrderService {
      */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject insertOrder(SimpleOrderVo simpleOrderVo, Long userId, String userName) {
-        if (simpleOrderVo.getGrouponId() != null) {
-            InternalReturnObject<GrouponActivityVo> grouponsById = activityService.getGrouponsById(simpleOrderVo.getGrouponId());
-            if (grouponsById.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(grouponsById.getErrno()));
-            }
-            SimpleOrderItemVo simpleOrderItemVo = simpleOrderVo.getOrderItems().get(0);
-            InternalReturnObject<ProductVo> productById = goodsService.getProductById(simpleOrderItemVo.getProductId());
-            if (productById.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(productById.getErrno()));
-            }
-            InternalReturnObject<OnSaleVo> onsaleById = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId());
-            if (onsaleById.getData() == null) {
-                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
-            }
-            //团购通过onsale去算 每一件就的价钱是onsale的价钱
-            Long price = onsaleById.getData().getPrice();
+        // 订单的orderItem不能为空
+        if (simpleOrderVo.getOrderItems().size() == 0) {
+            return new ReturnObject(ReturnNo.FIELD_NOTVALID);
+        }
 
-        } else if (simpleOrderVo.getAdvancesaleId() != null) {
-            InternalReturnObject<AdvanceVo> advanceSaleById = activityService.getAdvanceSaleById(simpleOrderVo.getAdvancesaleId());
-            if (advanceSaleById.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(advanceSaleById.getErrno()));
-            }
-            SimpleOrderItemVo simpleOrderItemVo = simpleOrderVo.getOrderItems().get(0);
-            InternalReturnObject<ProductVo> productById = goodsService.getProductById(simpleOrderItemVo.getProductId());
-            if (productById.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(productById.getErrno()));
-            }
-            InternalReturnObject<OnSaleVo> onsaleById = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId());
-            if (onsaleById.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(onsaleById.getErrno()));
-            }
-            //根据预售去算钱
-
+        if (simpleOrderVo.getGrouponId() == null && simpleOrderVo.getAdvancesaleId() == null) {
+            // 普通订单
+            // TODO：都没有 传到3-1计算钱
         } else {
-            //都没有 传到3-1计算钱
+            // 团购、预售订单的orderItem必须为1
+            if (simpleOrderVo.getOrderItems().size() != 1) {
+                return new ReturnObject(ReturnNo.FIELD_NOTVALID);
+            }
+
+            SimpleOrderItemVo simpleOrderItemVo = simpleOrderVo.getOrderItems().get(0);
+            // 判断productId是否存在
+            InternalReturnObject<ProductVo> productVo = goodsService.getProductById(simpleOrderItemVo.getProductId());
+            if (productVo.getErrno() != 0) {
+                return new ReturnObject(ReturnNo.getByCode(productVo.getErrno()));
+            }
+            // 判断onsaleId是否存在
+            InternalReturnObject<OnSaleVo> onSaleVo = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId());
+            if (onSaleVo.getErrno() != 0) {
+                return new ReturnObject(ReturnNo.getByCode(onSaleVo.getErrno()));
+            }
+            // 判断回传的Product中的OnsaleId（某一时刻唯一）是否和传入的OnsaleId对应
+            if (onSaleVo.getData().getId().equals(productVo.getData().getOnSaleId())) {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+            }
+
+            // 验证完毕，开始算钱
+            if (simpleOrderVo.getGrouponId() != null) {
+                // 团购订单
+                InternalReturnObject<GrouponActivityVo> grouponsById = activityService.getGrouponsById(simpleOrderVo.getGrouponId());
+                if (grouponsById.getErrno() != 0) {
+                    return new ReturnObject(ReturnNo.getByCode(grouponsById.getErrno()));
+                }
+                // TODO：团购通过onsale去算 每一件就的价钱是onsale的价钱
+
+            } else if (simpleOrderVo.getAdvancesaleId() != null) {
+                // 预售订单
+                InternalReturnObject<AdvanceVo> advanceSaleById = activityService.getAdvanceSaleById(simpleOrderVo.getAdvancesaleId());
+                if (advanceSaleById.getErrno() != 0) {
+                    return new ReturnObject(ReturnNo.getByCode(advanceSaleById.getErrno()));
+                }
+                // TODO: 根据预售去算钱
+            }
         }
         return new ReturnObject();
     }
@@ -190,7 +202,7 @@ public class OrderService {
         }
         order.setMessage(orderVo.getMessage());
         Common.setPoModifiedFields(order, loginUserId, loginUserName);
-        return orderDao.updateOrderComment(order);
+        return orderDao.updateOrder(order);
     }
 
     @Transactional(readOnly = true, rollbackFor = Exception.class)
