@@ -177,4 +177,17 @@ public class OrderDao {
         }
     }
 
+    /**
+     * a-1
+     * @Auther Fang Zheng
+     * */
+    public ReturnObject listCustomerWholeOrderByUserIdAndOrderId(Long userId, Long orderId){
+        try{
+            return null;
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
 }

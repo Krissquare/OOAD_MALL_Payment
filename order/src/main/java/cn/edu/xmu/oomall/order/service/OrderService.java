@@ -211,4 +211,12 @@ public class OrderService {
         return orderDao.listBriefOrderByUserId(userId,orderSn,state,beginTime,endTime,pageNumber,pageSize);
     }
 
+    /**
+     * a-1
+     * @Auther Fang Zheng
+     * */
+    public ReturnObject listCustomerWholeOrder(Long userId, Long orderId){
+        return orderDao.listCustomerWholeOrderByUserIdAndOrderId(userId,orderId);
+    }
+
 }

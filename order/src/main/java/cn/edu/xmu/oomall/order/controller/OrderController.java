@@ -173,7 +173,7 @@ public class OrderController {
      * */
     @GetMapping("orders")
     @Audit(departName = "order")
-    public Object listCustomerBriefOrders(@LoginUser Long userId,
+    public Object listCustomerBriefOrdersController(@LoginUser Long userId,
                                           @RequestParam(value = "orderSn", required = false) String orderSn,
                                           @RequestParam(value = "state", required = false) Integer state,
                                           @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(value = "beginTime", required = false) LocalDateTime beginTime,
@@ -187,5 +187,21 @@ public class OrderController {
         }
         return Common.decorateReturnObject(orderService.listCustomerBriefOrder(userId,orderSn,state,beginTime,endTime,pageNumber,pageSize)) ;
     }
+
+    /**
+     * a-1
+     * @Auther Fang Zheng
+     * */
+    @GetMapping("orders/{id}")
+    @Audit(departName = "order")
+    public Object listCustomerWholeOrderController(@PathVariable("id") Long orderId,
+                                         @LoginUser Long userId){
+        return Common.decorateReturnObject(orderService.listCustomerWholeOrder(userId,orderId));
+    }
+
+    /**
+     * a-1
+     * @Auther Fang Zheng
+     * */
 
 }
