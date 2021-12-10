@@ -52,16 +52,16 @@ public class OrderDao {
         try {
             String key = String.format(ORDER_KEY, id);
             Order order = (Order) redisUtil.get(key);
-            if(order!=null){
+            if (order != null) {
                 return new ReturnObject(order);
             }
             OrderPo po = orderPoMapper.selectByPrimaryKey(id);
-            if (po == null||po.getBeDeleted()!=null&&po.getBeDeleted()==1) {
+            if (po == null || po.getBeDeleted() != null && po.getBeDeleted() == 1) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            Order order1 = cloneVo(po, Order.class);
-            redisUtil.set(key,order1,orderExpireTime);
-            return new ReturnObject<>(order1);
+            order = cloneVo(po, Order.class);
+            redisUtil.set(key, order, orderExpireTime);
+            return new ReturnObject<>(order);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
