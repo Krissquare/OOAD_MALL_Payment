@@ -181,4 +181,15 @@ public class TransactionControllerTest {
         JSONAssert.assertEquals(expectedResponse, responseString, true);
     }
 
+    @Test
+    public void listAllPaymentState() throws Exception{
+        String response = this.mvc.perform(get("/payments/states").contentType("application/json;charset=UTF-8"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+
+        String expected = "{\"errno\":0,\"data\":{\"0\":\"待支付\",\"1\":\"已支付\",\"2\":\"已对账\",\"3\":\"已清算\",\"5\":\"失败\"},\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expected, response, true);
+    }
+
 }

@@ -218,4 +218,10 @@ public class TransactionController {
     public Object notifyByAlipay(@RequestBody AlipayNotifyVo alipayNotifyVo){
         return null;
     }
+
+    @GetMapping("/payments/states")
+    public Object listAllPaymentStates(){
+        return Common.decorateReturnObject(transactionService.listAllPaymentState());
+    }
+
 }

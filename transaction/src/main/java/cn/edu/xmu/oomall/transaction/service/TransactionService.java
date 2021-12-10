@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.setPoModifiedFields;
@@ -155,6 +156,14 @@ public class TransactionService {
 
     public ReturnObject paymentNotifyByWechat(WechatPaymentNotifyVo wechatPaymentNotifyVo) {
         return null;
+    }
+
+    public ReturnObject listAllPaymentState(){
+        HashMap<Byte, String> states = new HashMap<>();
+        for (PaymentState item: PaymentState.values()){
+            states.put(item.getCode(),item.getState());
+        }
+        return new ReturnObject(states);
     }
 
 }
