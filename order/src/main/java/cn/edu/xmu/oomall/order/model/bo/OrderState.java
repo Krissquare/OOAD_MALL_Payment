@@ -3,6 +3,8 @@ import cn.edu.xmu.oomall.core.util.ReturnNo;
 import lombok.Getter;
 
 @Getter
+
+
 public enum OrderState {
     //100 待付款
     NEW_ORDER(101,"新订单"),

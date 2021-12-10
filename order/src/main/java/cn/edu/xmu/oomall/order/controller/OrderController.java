@@ -7,6 +7,7 @@ import cn.edu.xmu.oomall.order.model.vo.OrderVo;
 import cn.edu.xmu.oomall.order.model.vo.SimpleOrderVo;
 import cn.edu.xmu.oomall.order.model.vo.UpdateOrderVo;
 import cn.edu.xmu.oomall.order.service.OrderService;
+import cn.edu.xmu.oomall.order.util.MyDateTime;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
@@ -88,6 +89,10 @@ public class OrderController {
         return Common.decorateReturnObject(orderService.cancelOrderByCustomer(id, userId, username));
     }
 
+    /**
+     * 买家标记确认收货
+     * create by hty
+     */
 
     @ApiOperation(value = "买家标记确认收货")
     @ApiImplicitParams({
@@ -108,6 +113,10 @@ public class OrderController {
         return Common.decorateReturnObject(orderService.confirmOrder(id,loginUserId,loginName));
     }
 
+    /**
+     * create by hty
+     * 店家查询商户所有订单（概要）
+     */
 
     @ApiOperation(value = "店家查询商户所有订单（概要）")
     @ApiImplicitParams({
@@ -127,8 +136,8 @@ public class OrderController {
     public Object listBriefOrdersByShopId(@PathVariable("shopId") Long shopId,
                                           @RequestParam(value="customerId",required = false)Long customerId,
                                           @RequestParam(value="orderSn",required = false) String orderSn,
-                                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime beginTime,
-                                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime endTime,
+                                          @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
+                                          @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
                                           @RequestParam(value = "page", required = false) Integer page,
                                    @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         if(beginTime!=null&&endTime!=null&&beginTime.isAfter(endTime))
@@ -138,6 +147,17 @@ public class OrderController {
         return Common.decorateReturnObject(orderService.listBriefOrdersByShopId(shopId, customerId,orderSn,beginTime,endTime,page, pageSize));
     }
 
+    /**
+     * create by hty
+     * 店家修改订单（留言）
+     * @param shopId
+     * @param orderId
+     * @param orderVo
+     * @param bindingResult
+     * @param loginUserId
+     * @param loginUserName
+     * @return
+     */
 
     @ApiOperation(value = "店家修改订单（留言）")
     @ApiImplicitParams({
@@ -162,6 +182,13 @@ public class OrderController {
         return Common.decorateReturnObject(orderService.updateOrderComment(shopId, orderId, orderVo, loginUserId, loginUserName));
     }
 
+    /**
+     * create by hty
+     * 店家查询订单详情
+     * @param shopId
+     * @param id
+     * @return
+     */
     @GetMapping("shops/{shopId}/orders/{id}")
     @Audit(departName = "order")
     public Object getOrderDetail(@PathVariable("shopId") Long shopId, @PathVariable("id") Long id) {
