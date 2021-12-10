@@ -91,10 +91,28 @@ public class TransactionService {
         }
     }
 
+    /**
+     * hty
+     * 平台管理员查询退款
+     * @param documentId
+     * @param state
+     * @param beginTime
+     * @param endTime
+     * @param page
+     * @param pageSize
+     * @return
+     */
     public ReturnObject listRefund(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
     {
         return transactionDao.listRefund(documentId,state,null,beginTime,endTime,page,pageSize);
     }
+
+    /**
+     * hty
+     * 获取退款详情
+     * @param id
+     * @return
+     */
 
     public ReturnObject getRefundDetail(Long id)
     {
@@ -106,6 +124,16 @@ public class TransactionService {
         RefundDetailVo returnDetailVo=(RefundDetailVo) Common.cloneVo(ret.getData(), RefundDetailVo.class);
         return new ReturnObject(returnDetailVo);
     }
+
+    /**
+     * hty
+     * 修改退款信息
+     * @param id
+     * @param refundRecVo
+     * @param loginUserId
+     * @param loginUserName
+     * @return
+     */
 
     public ReturnObject updateRefund(Long id, RefundRecVo refundRecVo, Long loginUserId, String loginUserName)
     {

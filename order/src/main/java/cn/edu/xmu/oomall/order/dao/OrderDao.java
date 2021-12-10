@@ -51,7 +51,7 @@ public class OrderDao {
     public ReturnObject getOrderById(Long id) {
         try {
             OrderPo po = orderPoMapper.selectByPrimaryKey(id);
-            if (po == null||po.getBeDeleted()==1) {
+            if (po == null||po.getBeDeleted()!=null&&po.getBeDeleted()==1) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
             Order order = cloneVo(po, Order.class);

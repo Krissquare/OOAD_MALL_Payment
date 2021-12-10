@@ -158,7 +158,7 @@ public class OrderService {
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject confirmOrder(Long orderId,Long loginUserId,String loginUserName) {
         ReturnObject ret=orderDao.getOrderById(orderId);
-        if(ret.getData()==null) {
+        if(!ret.getCode().equals(ReturnNo.OK)) {
             return ret;
         }
         Order order=(Order) ret.getData();
@@ -171,10 +171,33 @@ public class OrderService {
         return orderDao.updateOrder(order);
     }
 
+    /**
+     * create by hty
+     * 店家获取订单概要
+     * @param shopId
+     * @param customerId
+     * @param orderSn
+     * @param beginTime
+     * @param endTime
+     * @param pageNumber
+     * @param pageSize
+     * @return
+     */
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject listBriefOrdersByShopId(Long shopId,Long customerId,String orderSn,LocalDateTime beginTime,LocalDateTime endTime, Integer pageNumber, Integer pageSize) {
         return orderDao.listBriefOrdersByShopId(shopId,customerId,orderSn,beginTime,endTime, pageNumber, pageSize);
     }
+
+    /**
+     * create by hty
+     * 店家修改订单留言
+     * @param shopId
+     * @param orderId
+     * @param orderVo
+     * @param loginUserId
+     * @param loginUserName
+     * @return
+     */
 
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject updateOrderComment(Long shopId, Long orderId, OrderVo orderVo, Long loginUserId, String loginUserName) {
@@ -193,6 +216,14 @@ public class OrderService {
         return orderDao.updateOrder(order);
     }
 
+    /**
+     * create by hty
+     * 店家获取订单详情
+     * @param shopId
+     * @param orderId
+     * @return
+     */
+
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject getOrderDetail(Long shopId, Long orderId) {
         ReturnObject ret = orderDao.getOrderById(orderId);
@@ -208,7 +239,7 @@ public class OrderService {
         DetailOrderVo orderVo = Common.cloneVo(order, DetailOrderVo.class);
         orderVo.setCustomerVo(customerVo);
         orderVo.setShopVo(shopVo);
-        List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();
+        List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();//根据orderId查orderItem
         List<SimpleOrderItemVo> simpleOrderItemVos = new ArrayList<>();
         for (OrderItem orderItem : orderItemList) {
             SimpleOrderItemVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderItemVo.class);
