@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Objects;
 
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
@@ -369,6 +370,92 @@ public class OrderService {
         Map<String, Object> data = (Map<String, Object>) returnObject.getData();
         List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
         return new ReturnObject(list);
+    }
+
+    /**
+     * a-1
+     * @author Fang Zheng
+     * */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject listAllOrderState(){
+        HashMap<Integer, String> ret = new HashMap<>();
+        for (OrderState item: OrderState.values()){
+            ret.put(item.getCode(), item.getMessage());
+        }
+        return new ReturnObject(ret);
+    }
+
+    /**
+     * a-1
+     * @author Fang Zheng
+     * */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject listCustomerBriefOrder(Long userId,
+                                               String orderSn,
+                                               Integer state,
+                                               LocalDateTime beginTime,
+                                               LocalDateTime endTime,
+                                               Integer pageNumber,
+                                               Integer pageSize){
+        return orderDao.listBriefOrderByUserId(userId,orderSn,state,beginTime,endTime,pageNumber,pageSize);
+    }
+
+    /**
+     * a-1
+     * @author Fang Zheng
+     * */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject listCustomerWholeOrder(Long userId, Long orderId){
+        ReturnObject ret = orderDao.getOrderById(orderId);
+        if (!ret.getCode().equals(ReturnNo.OK)){
+            return ret;
+        }
+        Order order = (Order) ret.getData();
+        if (!order.getCustomerId().equals(userId)){
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        InternalReturnObject customerRet = customService.getCustomerById(order.getCustomerId());
+        if (!customerRet.getErrno().equals(ReturnNo.OK)){
+            return new ReturnObject(ReturnNo.CUSTOMERID_NOTEXIST);
+        }
+        SimpleVo customerVo = (SimpleVo) customerRet.getData();
+        InternalReturnObject shopRet = shopService.getShopById(order.getShopId());
+        if (!customerRet.getErrno().equals(ReturnNo.OK)){
+            return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+        }
+        SimpleVo shopVo = (SimpleVo) shopRet.getData();
+        DetailOrderVo orderVo = Common.cloneVo(order, DetailOrderVo.class);
+        orderVo.setCustomerVo(customerVo);
+        orderVo.setShopVo(shopVo);
+        List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();
+        List<SimpleOrderItemVo> simpleOrderItemVos = new ArrayList<>();
+        for (OrderItem orderItem : orderItemList) {
+            SimpleOrderItemVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderItemVo.class);
+            simpleOrderItemVos.add(simpleOrderItemVo);
+        }
+        orderVo.setOrderItems(simpleOrderItemVos);
+        return new ReturnObject(orderVo);
+    }
+
+    /**
+     * a-1
+     * @author FangZheng
+     * */
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject updateCustomerOrder(Long userId,
+                                            Long orderId,
+                                            UpdateOrderVo updateOrderVo){
+        ReturnObject ret = orderDao.getOrderById(orderId);
+        if (!ret.getCode().equals(ReturnNo.OK)){
+            return ret;
+        }
+        Order oldOrder = (Order) ret.getData();
+        if (!oldOrder.getCustomerId().equals(userId)){
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        Order newOrder = Common.cloneVo(updateOrderVo, Order.class);
+        newOrder.setId(orderId);
+        return orderDao.updateOrder(newOrder);
     }
 
 }

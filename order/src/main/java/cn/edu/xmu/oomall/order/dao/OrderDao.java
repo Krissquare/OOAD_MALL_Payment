@@ -33,9 +33,11 @@ public class OrderDao {
     private static final Logger logger = LoggerFactory.getLogger(OrderDao.class);
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     OrderPoMapper orderPoMapper;
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     OrderItemPoMapper orderItemPoMapper;
 
     @Value("${oomall.order.expiretime}")
@@ -136,4 +138,45 @@ public class OrderDao {
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
+
+    /**
+     * a-1
+     * @author Fang Zheng
+     * */
+    public ReturnObject listBriefOrderByUserId(Long userId,
+                                               String orderSn,
+                                               Integer state,
+                                               LocalDateTime beginTime,
+                                               LocalDateTime endTime,
+                                               Integer pageNumber,
+                                               Integer pageSize){
+        try{
+            if (pageNumber!=null && pageSize!=null) {
+                PageHelper.startPage(pageNumber, pageSize, true, true, true);
+            }
+            OrderPoExample orderPoExample = new OrderPoExample();
+            OrderPoExample.Criteria cr = orderPoExample.createCriteria();
+            cr.andCustomerIdEqualTo(userId);
+            cr.andBeDeletedIsNull();
+            if (orderSn != null) {
+                cr.andOrderSnEqualTo(orderSn);
+            }
+            if (state != null){
+                cr.andStateEqualTo(state);
+            }
+            if (beginTime != null) {
+                cr.andConfirmTimeGreaterThanOrEqualTo(beginTime);
+            }
+            if (endTime != null){
+                cr.andConfirmTimeLessThanOrEqualTo(endTime);
+            }
+            List<OrderPo> orderPoList = orderPoMapper.selectByExample(orderPoExample);
+            ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo(orderPoList));
+            return Common.getPageRetVo(ret, BriefOrderVo.class);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
 }
