@@ -221,7 +221,7 @@ public class OrderService {
 
     /**
      * a-1
-     * @Auther Fang Zheng
+     * @author Fang Zheng
      * */
     public ReturnObject listAllOrderState(){
         HashMap<Integer, String> ret = new HashMap<>();
@@ -233,7 +233,7 @@ public class OrderService {
 
     /**
      * a-1
-     * @Auther Fang Zheng
+     * @author Fang Zheng
      * */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject listCustomerBriefOrder(Long userId,
@@ -248,10 +248,46 @@ public class OrderService {
 
     /**
      * a-1
-     * @Auther Fang Zheng
+     * @author Fang Zheng
      * */
     public ReturnObject listCustomerWholeOrder(Long userId, Long orderId){
-        return orderDao.listCustomerWholeOrderByUserIdAndOrderId(userId,orderId);
+        ReturnObject ret = orderDao.getOrderById(orderId);
+        if (!ret.getCode().equals(ReturnNo.OK)){
+            return ret;
+        }
+        Order order = (Order) ret.getData();
+        if (!order.getCustomerId().equals(userId)){
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        SimpleVo customerVo = customService.getCustomerById(order.getCustomerId()).getData();
+        SimpleVo shopVo = shopService.getShopById(order.getShopId()).getData();
+        DetailOrderVo orderVo = Common.cloneVo(order, DetailOrderVo.class);
+        orderVo.setCustomerVo(customerVo);
+        orderVo.setShopVo(shopVo);
+        List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();
+        List<SimpleOrderItemVo> simpleOrderItemVos = new ArrayList<>();
+        for (OrderItem orderItem : orderItemList) {
+            SimpleOrderItemVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderItemVo.class);
+            simpleOrderItemVos.add(simpleOrderItemVo);
+        }
+        orderVo.setOrderItems(simpleOrderItemVos);
+        return new ReturnObject(orderVo);
+    }
+
+    public ReturnObject updateCustomerOrder(Long userId,
+                                            Long orderId,
+                                            UpdateOrderVo updateOrderVo){
+        ReturnObject ret = orderDao.getOrderById(orderId);
+        if (!ret.getCode().equals(ReturnNo.OK)){
+            return ret;
+        }
+        Order order = (Order) ret.getData();
+        if (!order.getCustomerId().equals(userId)){
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        Order newOrder = Common.cloneVo(updateOrderVo, Order.class);
+        newOrder.setId(orderId);
+        return orderDao.updateOrder(newOrder);
     }
 
 }

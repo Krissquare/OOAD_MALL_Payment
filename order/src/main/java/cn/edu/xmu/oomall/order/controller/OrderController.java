@@ -5,6 +5,7 @@ import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.model.vo.OrderVo;
 import cn.edu.xmu.oomall.order.model.vo.SimpleOrderVo;
+import cn.edu.xmu.oomall.order.model.vo.UpdateOrderVo;
 import cn.edu.xmu.oomall.order.service.OrderService;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
@@ -169,7 +170,7 @@ public class OrderController {
 
     /**
      * task a-1
-     * @Auther Fang Zheng
+     * @author Fang Zheng
      * */
     @GetMapping("orders/states")
     public Object listAllOrderStateController(){
@@ -178,7 +179,7 @@ public class OrderController {
 
     /**
      * a-1
-     * @Auther Fang Zheng
+     * @author Fang Zheng
      * */
     @GetMapping("orders")
     @Audit(departName = "order")
@@ -199,18 +200,29 @@ public class OrderController {
 
     /**
      * a-1
-     * @Auther Fang Zheng
+     * @author Fang Zheng
      * */
     @GetMapping("orders/{id}")
     @Audit(departName = "order")
     public Object listCustomerWholeOrderController(@PathVariable("id") Long orderId,
-                                         @LoginUser Long userId){
+                                                   @LoginUser Long userId){
         return Common.decorateReturnObject(orderService.listCustomerWholeOrder(userId,orderId));
     }
 
     /**
      * a-1
-     * @Auther Fang Zheng
+     * @author Fang Zheng
      * */
-
+    @PutMapping("orders/{id}")
+    @Audit(departName = "order")
+    public Object updateCustomerOrderController(@PathVariable("id") Long orderId,
+                                                @LoginUser Long userId,
+                                                @RequestBody @Valid UpdateOrderVo updateOrderVo,
+                                                BindingResult bindingResult){
+        Object object = Common.processFieldErrors(bindingResult, httpServletResponse);
+        if (object != null) {
+            return object;
+        }
+        return Common.decorateReturnObject(orderService.updateCustomerOrder(userId,orderId,updateOrderVo));
+    }
 }
