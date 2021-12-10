@@ -217,18 +217,6 @@ public class OrderService {
         }
         orderVo.setOrderItems(simpleOrderItemVos);
         return new ReturnObject(orderVo);
-        ReturnObject ret = orderDao.getOrderDetail(shopId, orderId);
-        if (ret.getData() != null) {
-            Order order = (Order) ret.getData();
-            SimpleVo customerVo = customService.getCustomerById(order.getCustomerId()).getData();
-            SimpleVo shopVo = shopService.getShopById(order.getShopId()).getData();
-            DetailOrderVo orderVo = (DetailOrderVo) Common.cloneVo(order, DetailOrderVo.class);
-            orderVo.setCustomerVo(customerVo);
-            orderVo.setShopVo(shopVo);
-            return new ReturnObject(orderVo);
-        } else {
-            return ret;
-        }
     }
 
     /**

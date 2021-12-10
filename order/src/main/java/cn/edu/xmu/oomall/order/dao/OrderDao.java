@@ -130,43 +130,6 @@ public class OrderDao {
         }
     }
 
-
-    public ReturnObject updateOrderComment(Order order) {
-        try {
-            OrderPo orderPo = orderPoMapper.selectByPrimaryKey(order.getId());
-            if (orderPo == null) {
-                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
-            }
-            if (!orderPo.getShopId().equals(order.getShopId())) {
-                return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
-            }
-            orderPo.setMessage(order.getMessage());
-            setPoModifiedFields(orderPo, order.getModifierId(), order.getModifierName());
-            orderPoMapper.updateByPrimaryKeySelective(orderPo);
-            return new ReturnObject<>(ReturnNo.OK);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
-        }
-    }
-
-    public ReturnObject getOrderDetail(Long shopId, Long orderId) {
-        try {
-            OrderPo orderPo = orderPoMapper.selectByPrimaryKey(orderId);
-            if (orderPo == null) {
-                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
-            }
-            if (!orderPo.getShopId().equals(shopId)) {
-                return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
-            }
-            Order order = (Order) cloneVo(orderPo, Order.class);
-            return new ReturnObject(order);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
-        }
-    }
-
     /**
      * a-1
      * @Auther Fang Zheng
