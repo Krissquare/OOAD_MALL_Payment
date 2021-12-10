@@ -266,10 +266,10 @@ public class OrderService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject confirmGrouponOrder(Long shopId, Long grouponActivityId, Long loginUserId, String loginUserName) {
-        ReturnObject<Order> retOrder = orderDao.getOrderById(grouponActivityId);
+    public ReturnObject confirmGrouponOrder(Long shopId, Long id, Long loginUserId, String loginUserName) {
+        ReturnObject<Order> retOrder = orderDao.getOrderById(id);
         // 判断订单存在与否
-        if (retOrder.getCode().equals(ReturnNo.OK)) {
+        if (!retOrder.getCode().equals(ReturnNo.OK)) {
             return retOrder;
         }
         // 判断订单是否为团购订单
@@ -277,13 +277,15 @@ public class OrderService {
         if (newOrder.getGrouponId() == null) {
             return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
-
+        if(!newOrder.getShopId().equals(shopId)){
+            return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
         // 设置订单状态为付款成功
         newOrder.setState(OrderState.FINISH_PAY.getCode());
         Common.setPoModifiedFields(newOrder, loginUserId, loginUserName);
         ReturnObject returnObject = orderDao.updateOrder(newOrder);
-
-//        TODO: 需根据团购规则退款
+        //TODO:解析团购规则json信息，计算退款价格
+//        TODO: 退款
 //        if (!returnObject.getCode().equals(ReturnNo.OK)) {
 //            return returnObject;
 //        }
