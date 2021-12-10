@@ -87,16 +87,21 @@ public class OrderDao {
 
     public ReturnObject listOrderItemsByOrderId(Long orderId)
     {
-        OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
-        OrderItemPoExample.Criteria cr=orderItemPoExample.createCriteria();
-        cr.andOrderIdEqualTo(orderId);
-        List<OrderItemPo> orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
-        List<OrderItem> orderItemList=new ArrayList<>(orderItemPos.size());
-        for(OrderItemPo orderItemPo:orderItemPos)
-        {
-            orderItemList.add(cloneVo(orderItemPo,OrderItem.class));
+        try {
+            OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
+            OrderItemPoExample.Criteria cr=orderItemPoExample.createCriteria();
+            cr.andOrderIdEqualTo(orderId);
+            List<OrderItemPo> orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
+            List<OrderItem> orderItemList=new ArrayList<>(orderItemPos.size());
+            for(OrderItemPo orderItemPo:orderItemPos)
+            {
+                orderItemList.add(cloneVo(orderItemPo,OrderItem.class));
+            }
+            return new ReturnObject(orderItemList);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
-        return new ReturnObject(orderItemList);
     }
 
     public ReturnObject listBriefOrdersByShopId(Long shopId,Long customerId,String orderSn,LocalDateTime beginTime,LocalDateTime endTime, Integer pageNumber, Integer pageSize) {
