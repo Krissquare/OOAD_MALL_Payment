@@ -223,6 +223,7 @@ public class OrderService {
      * a-1
      * @author Fang Zheng
      * */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject listAllOrderState(){
         HashMap<Integer, String> ret = new HashMap<>();
         for (OrderState item: OrderState.values()){
@@ -235,7 +236,7 @@ public class OrderService {
      * a-1
      * @author Fang Zheng
      * */
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject listCustomerBriefOrder(Long userId,
                                                String orderSn,
                                                Integer state,
@@ -250,6 +251,7 @@ public class OrderService {
      * a-1
      * @author Fang Zheng
      * */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject listCustomerWholeOrder(Long userId, Long orderId){
         ReturnObject ret = orderDao.getOrderById(orderId);
         if (!ret.getCode().equals(ReturnNo.OK)){
@@ -274,6 +276,11 @@ public class OrderService {
         return new ReturnObject(orderVo);
     }
 
+    /**
+     * a-1
+     * @author Fang Zheng
+     * */
+    @Transactional(rollbackFor = Exception.class)
     public ReturnObject updateCustomerOrder(Long userId,
                                             Long orderId,
                                             UpdateOrderVo updateOrderVo){
