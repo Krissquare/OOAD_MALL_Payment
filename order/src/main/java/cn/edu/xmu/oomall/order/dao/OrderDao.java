@@ -158,7 +158,7 @@ public class OrderDao {
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria cr = orderPoExample.createCriteria();
             cr.andCustomerIdEqualTo(userId);
-            cr.andBeDeletedNotEqualTo((byte) 1);
+            cr.andBeDeletedIsNull();
             if (orderSn != null) {
                 cr.andOrderSnEqualTo(orderSn);
             }
