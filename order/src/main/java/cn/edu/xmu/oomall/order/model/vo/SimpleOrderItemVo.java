@@ -24,4 +24,6 @@ public class SimpleOrderItemVo {
     private Long quantity;
     private Long couponActId;
     private Long couponId;
+    private Long price;
+    private String name;
 }

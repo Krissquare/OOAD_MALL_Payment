@@ -88,24 +88,24 @@ public class OrderController {
     }
 
 
-//    @ApiOperation(value = "买家标记确认收货")
-//    @ApiImplicitParams({
-//            @ApiImplicitParam(name = "id", value = "订单id", required = true, dataType = "Long", paramType = "path"),
-//            @ApiImplicitParam(name = "loginUser", value = "用户登录账号(id)", required = true, dataType = "Long", paramType = "query"),
-//            @ApiImplicitParam(name = "loginUser", value = "用户登录名", required = true, dataType = "String", paramType = "query")
-//    })
-//    @ApiResponses({
-//            @ApiResponse(code = 0, message = "成功"),
-//            @ApiResponse(code = 504, message = "资源不存在"),
-//            @ApiResponse(code = 503, message = "字段不合法"),
-//            @ApiResponse(code = 500, message = "服务器内部错误"),
-//            @ApiResponse(code = 505, message = "操作的资源id不是自己的对象")
-//    })
-//    @PutMapping("orders/{id}/confirm")
-//    @Audit(departName = "order")
-//    public Object confirmOrder(@PathVariable("id") Long id) {
-//        return Common.decorateReturnObject(orderService.confirmOrder(id));
-//    }
+    @ApiOperation(value = "买家标记确认收货")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "id", value = "订单id", required = true, dataType = "Long", paramType = "path"),
+            @ApiImplicitParam(name = "loginUser", value = "用户登录账号(id)", required = true, dataType = "Long", paramType = "query"),
+            @ApiImplicitParam(name = "loginUser", value = "用户登录名", required = true, dataType = "String", paramType = "query")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+            @ApiResponse(code = 504, message = "资源不存在"),
+            @ApiResponse(code = 503, message = "字段不合法"),
+            @ApiResponse(code = 500, message = "服务器内部错误"),
+            @ApiResponse(code = 505, message = "操作的资源id不是自己的对象")
+    })
+    @PutMapping("orders/{id}/confirm")
+    @Audit(departName = "order")
+    public Object confirmOrder(@PathVariable("id") Long id,@LoginUser Long loginUserId,@LoginName String loginName) {
+        return Common.decorateReturnObject(orderService.confirmOrder(id,loginUserId,loginName));
+    }
 
 
     @ApiOperation(value = "店家查询商户所有订单（概要）")
@@ -123,9 +123,18 @@ public class OrderController {
     })
     @GetMapping("shops/{shopId}/orders")
     @Audit(departName = "order")
-    public Object listBriefOrdersByShopId(@PathVariable("shopId") Long shopId, @RequestParam(value = "page", required = false) Integer page,
+    public Object listBriefOrdersByShopId(@PathVariable("shopId") Long shopId,
+                                          @RequestParam(value="customerId",required = false)Long customerId,
+                                          @RequestParam(value="orderSn",required = false) String orderSn,
+                                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime beginTime,
+                                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime endTime,
+                                          @RequestParam(value = "page", required = false) Integer page,
                                    @RequestParam(value = "pageSize", required = false) Integer pageSize) {
-        return Common.decorateReturnObject(orderService.listBriefOrdersByShopId(shopId, page, pageSize));
+        if(beginTime!=null&&endTime!=null&&beginTime.isAfter(endTime))
+        {
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
+        }
+        return Common.decorateReturnObject(orderService.listBriefOrdersByShopId(shopId, customerId,orderSn,beginTime,endTime,page, pageSize));
     }
 
 
@@ -145,7 +154,7 @@ public class OrderController {
     })
     @PutMapping("shops/{shopId}/orders/{id}")
     @Audit(departName = "order")
-    public Object updateOrder(@PathVariable("shopId") Long shopId, @PathVariable("id") Long orderId, @Validated @RequestBody OrderVo orderVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName) {
+    public Object updateOrderComment(@PathVariable("shopId") Long shopId, @PathVariable("id") Long orderId, @Validated @RequestBody OrderVo orderVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName) {
         if (bindingResult.hasErrors()) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
         }

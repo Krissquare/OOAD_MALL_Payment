@@ -9,6 +9,7 @@ import cn.edu.xmu.oomall.order.microservice.vo.GrouponActivityVo;
 import cn.edu.xmu.oomall.order.microservice.vo.OnSaleVo;
 import cn.edu.xmu.oomall.order.microservice.vo.ProductVo;
 import cn.edu.xmu.oomall.order.model.bo.Order;
+import cn.edu.xmu.oomall.order.model.bo.OrderItem;
 import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.privilegegateway.annotation.util.Common;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -148,28 +151,72 @@ public class OrderService {
         return orderDao.updateOrder(order);
     }
 
-//    @Transactional(rollbackFor = Exception.class)
-//    public ReturnObject confirmOrder(Long orderId) {
-//        LocalDateTime nowTime = LocalDateTime.now();
-//        return orderDao.confirmOrder(orderId, nowTime);
-//    }
+
+    /**
+     * 买家取消订单
+     * create by hty
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject confirmOrder(Long orderId,Long loginUserId,String loginUserName) {
+        ReturnObject ret=orderDao.getOrderById(orderId);
+        if(ret.getData()==null) {
+            return ret;
+        }
+        Order order=(Order) ret.getData();
+        if(!order.getState().equals(OrderState.SEND_GOODS.getCode()))
+        {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
+        order.setState(OrderState.COMPLETE_ORDER.getCode());
+        Common.setPoModifiedFields(order,loginUserId,loginUserName);
+        return orderDao.updateOrder(order);
+    }
 
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
-        return orderDao.listBriefOrdersByShopId(shopId, pageNumber, pageSize);
+    public ReturnObject listBriefOrdersByShopId(Long shopId,Long customerId,String orderSn,LocalDateTime beginTime,LocalDateTime endTime, Integer pageNumber, Integer pageSize) {
+        return orderDao.listBriefOrdersByShopId(shopId,customerId,orderSn,beginTime,endTime, pageNumber, pageSize);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject updateOrderComment(Long shopId, Long orderId, OrderVo orderVo, Long loginUserId, String loginUserName) {
-        Order order = Common.cloneVo(orderVo, Order.class);
-        order.setShopId(shopId);
-        order.setId(orderId);
+        ReturnObject ret=orderDao.getOrderById(orderId);
+        if(!ret.getCode().equals(ReturnNo.OK))
+        {
+            return ret;
+        }
+        Order order = (Order) ret.getData();
+        if(!order.getShopId().equals(shopId))
+        {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        order.setMessage(orderVo.getMessage());
         Common.setPoModifiedFields(order, loginUserId, loginUserName);
-        return orderDao.updateOrderComment(order);
+        return orderDao.updateOrder(order);
     }
 
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject getOrderDetail(Long shopId, Long orderId) {
+        ReturnObject ret = orderDao.getOrderById(orderId);
+        if (!ret.getCode().equals(ReturnNo.OK)) {
+            return ret;
+        }
+        Order order = (Order) ret.getData();
+        if (!order.getShopId().equals(shopId)) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        SimpleVo customerVo = customService.getCustomerById(order.getCustomerId()).getData();
+        SimpleVo shopVo = shopService.getShopById(order.getShopId()).getData();
+        DetailOrderVo orderVo = Common.cloneVo(order, DetailOrderVo.class);
+        orderVo.setCustomerVo(customerVo);
+        orderVo.setShopVo(shopVo);
+        List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();
+        List<SimpleOrderItemVo> simpleOrderItemVos = new ArrayList<>();
+        for (OrderItem orderItem : orderItemList) {
+            SimpleOrderItemVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderItemVo.class);
+            simpleOrderItemVos.add(simpleOrderItemVo);
+        }
+        orderVo.setOrderItems(simpleOrderItemVos);
+        return new ReturnObject(orderVo);
         ReturnObject ret = orderDao.getOrderDetail(shopId, orderId);
         if (ret.getData() != null) {
             Order order = (Order) ret.getData();
