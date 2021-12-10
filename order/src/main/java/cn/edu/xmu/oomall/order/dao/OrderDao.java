@@ -6,7 +6,10 @@ import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.mapper.OrderItemPoMapper;
 import cn.edu.xmu.oomall.order.mapper.OrderPoMapper;
 import cn.edu.xmu.oomall.order.model.bo.Order;
+import cn.edu.xmu.oomall.order.model.bo.OrderItem;
 import cn.edu.xmu.oomall.order.model.bo.OrderState;
+import cn.edu.xmu.oomall.order.model.po.OrderItemPo;
+import cn.edu.xmu.oomall.order.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.model.po.OrderPoExample;
 import cn.edu.xmu.oomall.order.model.vo.BriefOrderVo;
@@ -19,10 +22,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
-import static cn.edu.xmu.privilegegateway.annotation.util.Common.setPoModifiedFields;
 
 
 @Repository
@@ -42,6 +46,7 @@ public class OrderDao {
     RedisUtil redisUtil;
 
     final static private String ORDER_KEY = "order_%d";
+
 
     public ReturnObject getOrderById(Long id) {
         try {
@@ -75,12 +80,43 @@ public class OrderDao {
         }
     }
 
-    public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
+
+    public ReturnObject listOrderItemsByOrderId(Long orderId)
+    {
+        OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
+        OrderItemPoExample.Criteria cr=orderItemPoExample.createCriteria();
+        cr.andOrderIdEqualTo(orderId);
+        List<OrderItemPo> orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
+        List<OrderItem> orderItemList=new ArrayList<>(orderItemPos.size());
+        for(OrderItemPo orderItemPo:orderItemPos)
+        {
+            orderItemList.add(cloneVo(orderItemPo,OrderItem.class));
+        }
+        return new ReturnObject(orderItemList);
+    }
+
+    public ReturnObject listBriefOrdersByShopId(Long shopId,Long customerId,String orderSn,LocalDateTime beginTime,LocalDateTime endTime, Integer pageNumber, Integer pageSize) {
         try {
-            PageHelper.startPage(pageNumber, pageSize);
+            PageHelper.startPage(pageNumber, pageSize, true, true, true);
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria cr = orderPoExample.createCriteria();
             cr.andShopIdEqualTo(shopId);
+            if(customerId!=null)
+            {
+                cr.andCustomerIdEqualTo(customerId);
+            }
+            if(orderSn!=null)
+            {
+                cr.andOrderSnEqualTo(orderSn);
+            }
+            if(beginTime!=null)
+            {
+                cr.andGmtCreateGreaterThan(beginTime);
+            }
+            if(endTime!=null)
+            {
+                cr.andGmtCreateLessThan(endTime);
+            }
             List<OrderPo> orderPoList = orderPoMapper.selectByExample(orderPoExample);
             if (orderPoList.size() == 0) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
@@ -92,25 +128,4 @@ public class OrderDao {
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-
-
-    public ReturnObject updateOrderComment(Order order) {
-        try {
-            OrderPo orderPo = orderPoMapper.selectByPrimaryKey(order.getId());
-            if (orderPo == null) {
-                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
-            }
-            if (!orderPo.getShopId().equals(order.getShopId())) {
-                return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
-            }
-            orderPo.setMessage(order.getMessage());
-            setPoModifiedFields(orderPo, order.getModifierId(), order.getModifierName());
-            orderPoMapper.updateByPrimaryKeySelective(orderPo);
-            return new ReturnObject<>(ReturnNo.OK);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
-        }
-    }
-
 }
