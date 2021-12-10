@@ -243,12 +243,35 @@ public class OrderController {
      * @param id
      * @return
      */
+    @Audit(departName = "shops")
     @GetMapping("/orders/{id}/payment")
     public Object getPaymentByOrderId(@LoginUser Long loginUserId,
                                       @LoginName String loginUserName,
                                       @PathVariable(value = "id") Long id) {
         return Common.decorateReturnObject(orderService.getPaymentByOrderId(id,loginUserId,loginUserName));
     }
+
+    /**
+     * author:hqg
+     * modified by:gyt
+     * 确认团购订单
+     * @param loginUserId
+     * @param loginUserName
+     * @param shopId
+     * @param id
+     * @return
+     */
+    @Audit(departName = "shops")
+    @PutMapping("/internal/shops/{shopId}/grouponorders/{id}/confirm")
+    public Object confirmGrouponOrder(@LoginUser Long loginUserId,
+                                      @LoginName String loginUserName,
+                                      @PathVariable(value = "shopId")Long shopId,
+                                      @PathVariable(value = "id")Long id
+                                      ){
+        return Common.decorateReturnObject(orderService.confirmGrouponOrder(shopId,id,loginUserId,loginUserName));
+    }
+
+
 
 
 

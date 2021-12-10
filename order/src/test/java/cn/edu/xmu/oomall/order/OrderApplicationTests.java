@@ -209,4 +209,18 @@ class OrderApplicationTests {
         JSONAssert.assertEquals(expectedResponse, responseString, true);
     }
 
+    @Test
+    public void confirmGrouponOrder() throws Exception
+    {
+        String responseString = this.mvc.perform(put("/internal/shops/3/grouponorders/6/confirm")
+                .contentType("application/json;charset=UTF-8")
+                .header("authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectedResponse = "{\"errno\":0,\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, true);
+    }
+
+
 }
