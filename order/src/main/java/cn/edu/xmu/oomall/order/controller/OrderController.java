@@ -161,6 +161,11 @@ public class OrderController {
                                           @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(value = "endTime", required = false) LocalDateTime endTime,
                                           @RequestParam(value = "page", required = false) Integer pageNumber,
                                           @RequestParam(value = "pageSize", required = false) Integer pageSize){
+        if (beginTime != null && endTime != null){
+            if (beginTime.isAfter(endTime)){
+                return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
+            }
+        }
         return Common.decorateReturnObject(orderService.listCustomerBriefOrder(userId,orderSn,state,beginTime,endTime,pageNumber,pageSize)) ;
     }
 
