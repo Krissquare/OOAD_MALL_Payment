@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -42,10 +41,11 @@ public class OrderDao {
     public ReturnObject getOrderById(Long id) {
         try {
             OrderPo po = orderPoMapper.selectByPrimaryKey(id);
-            if (po == null) {
+            if (po == null||po.getBeDeleted()==1) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
             Order order = cloneVo(po, Order.class);
+            redisUtil.set(String.format(ORDER_KEY, id),order,orderExpireTime);
             return new ReturnObject<>(order);
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -69,58 +69,9 @@ public class OrderDao {
         }
     }
 
-
-    // 不用了
-    public ReturnObject deleteOrder(Order order) {
+    public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
         try {
-            List<Integer> CANCEL_COMPLETE_LIST =
-                    Arrays.asList(OrderState.CANCEL_ORDER.getCode(), OrderState.COMPLETE_ORDER.getCode());
-            OrderPo orderPo = cloneVo(order, OrderPo.class);
-            OrderPoExample orderPoExample = new OrderPoExample();
-            OrderPoExample.Criteria criteria = orderPoExample.createCriteria();
-            criteria.andIdEqualTo(orderPo.getId())
-                    .andCustomerIdEqualTo(orderPo.getModifierId())
-                    .andBeDeletedIsNull()
-                    .andStateIn(CANCEL_COMPLETE_LIST);
-            int ret = orderPoMapper.updateByExampleSelective(orderPo, orderPoExample);
-            if (ret == 1) {
-                return new ReturnObject();
-            }
-            return new ReturnObject(ReturnNo.STATENOTALLOW);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
-        }
-    }
-
-
-    // 不用了
-    public ReturnObject cancelOrder(Order order) {
-        try {
-            List<Integer> CANCEL_COMPLETE_LIST =
-                    Arrays.asList(OrderState.CANCEL_ORDER.getCode(), OrderState.COMPLETE_ORDER.getCode());
-            OrderPo orderPo = cloneVo(order, OrderPo.class);
-            OrderPoExample orderPoExample = new OrderPoExample();
-            OrderPoExample.Criteria criteria = orderPoExample.createCriteria();
-            criteria.andIdEqualTo(orderPo.getId())
-                    .andCustomerIdEqualTo(orderPo.getModifierId())
-                    .andStateNotIn(CANCEL_COMPLETE_LIST);
-            int ret = orderPoMapper.updateByExampleSelective(orderPo, orderPoExample);
-            if (ret == 1) {
-                return new ReturnObject();
-            }
-            return new ReturnObject(ReturnNo.STATENOTALLOW);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
-        }
-    }
-
-
-
-    public ReturnObject listBriefOrdersByShopId(Long shopId,Long customerId,String orderSn,LocalDateTime beginTime,LocalDateTime endTime, Integer pageNumber, Integer pageSize) {
-        try {
-            PageHelper.startPage(pageNumber, pageSize, true, true, true);
+            PageHelper.startPage(pageNumber, pageSize);
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria cr = orderPoExample.createCriteria();
             cr.andShopIdEqualTo(shopId);
