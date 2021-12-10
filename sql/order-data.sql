@@ -85,6 +85,9 @@ UNLOCK TABLES;
 LOCK TABLES `oomall_payment_pattern` WRITE;
 /*!40000 ALTER TABLE `oomall_payment_pattern` DISABLE KEYS */;
 /*!40000 ALTER TABLE `oomall_payment_pattern` ENABLE KEYS */;
+INSERT INTO `oomall_payment_pattern` (`id`, `name`, `state`, `begin_time`, `end_time`, `class_name`, `creator_id`, `creator_name`, `modifier_id`, `modifier_name`, `gmt_create`, `gmt_modified`) VALUES (1, '支付宝', NULL, NULL, NULL, 'AlipayTransaction', NULL, NULL, NULL, NULL, '2021-12-10 22:33:58', NULL);
+INSERT INTO `oomall_payment_pattern` (`id`, `name`, `state`, `begin_time`, `end_time`, `class_name`, `creator_id`, `creator_name`, `modifier_id`, `modifier_name`, `gmt_create`, `gmt_modified`) VALUES (2, '微信', NULL, NULL, NULL, 'WechatpayTransaction', NULL, NULL, NULL, NULL, '2021-12-10 22:33:58', NULL);
+
 UNLOCK TABLES;
 
 --
