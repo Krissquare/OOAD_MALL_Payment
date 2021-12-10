@@ -89,9 +89,29 @@ public class TransactionService {
         }
     }
 
+    /**
+     * hty
+     * 平台管理员查询退款
+     *
+     * @param documentId
+     * @param state
+     * @param beginTime
+     * @param endTime
+     * @param page
+     * @param pageSize
+     * @return
+     */
     public ReturnObject listRefund(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
         return transactionDao.listRefund(documentId, state, null, beginTime, endTime, page, pageSize);
     }
+
+    /**
+     * hty
+     * 获取退款详情
+     *
+     * @param id
+     * @return
+     */
 
     public ReturnObject getRefundDetail(Long id) {
         ReturnObject ret = transactionDao.getRefundById(id);
@@ -102,6 +122,16 @@ public class TransactionService {
         return new ReturnObject(returnDetailVo);
     }
 
+    /**
+     * hty
+     * 修改退款信息
+     *
+     * @param id
+     * @param refundRecVo
+     * @param loginUserId
+     * @param loginUserName
+     * @return
+     */
     public ReturnObject updateRefund(Long id, RefundRecVo refundRecVo, Long loginUserId, String loginUserName) {
         ReturnObject ret = transactionDao.getRefundById(id);
         if (!ret.getCode().equals(ReturnNo.OK)) {
@@ -126,6 +156,5 @@ public class TransactionService {
     public ReturnObject paymentNotifyByWechat(WechatPaymentNotifyVo wechatPaymentNotifyVo) {
         return null;
     }
-
 
 }

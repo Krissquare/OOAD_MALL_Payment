@@ -61,10 +61,10 @@ class OrderApplicationTests {
         String responseString = mvc.perform(delete("/orders/1")
                 .header("authorization", token)
                 .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isOk())
+                .andExpect(status().isForbidden())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectString = "{\"errno\":507,\"errmsg\":\"当前状态禁止此操作\"}";
+        String expectString = "{\"errno\":505,\"errmsg\":\"操作的资源id不是自己的对象\"}";
         JSONAssert.assertEquals(expectString, responseString, true);
 
         String responseString1 = mvc.perform(delete("/orders/10")
@@ -84,10 +84,10 @@ class OrderApplicationTests {
         String responseString = mvc.perform(put("/orders/1/cancel")
                 .header("authorization", token)
                 .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isOk())
+                .andExpect(status().isForbidden())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectString = "{\"errno\":507,\"errmsg\":\"当前状态禁止此操作\"}";
+        String expectString = "{\"errno\":505,\"errmsg\":\"操作的资源id不是自己的对象\"}";
         JSONAssert.assertEquals(expectString, responseString, true);
 
         String responseString1 = mvc.perform(put("/orders/9/cancel")
@@ -105,10 +105,10 @@ class OrderApplicationTests {
         adminToken = jwtHelper.createToken(1L, "admin", 0L, 3600, 0);
         String responseString = this.mvc.perform(MockMvcRequestBuilders.put("/orders/1/confirm").header("authorization", adminToken)
                 .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":505,\"errmsg\":\"操作的资源id不是自己的对象\"}";
+        String expected = "{\"errno\":507,\"errmsg\":\"当前状态禁止此操作\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
