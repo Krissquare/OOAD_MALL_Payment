@@ -7,7 +7,6 @@ import cn.edu.xmu.oomall.order.mapper.OrderItemPoMapper;
 import cn.edu.xmu.oomall.order.mapper.OrderPoMapper;
 import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderItem;
-import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.po.OrderItemPo;
 import cn.edu.xmu.oomall.order.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
@@ -46,7 +45,6 @@ public class OrderDao {
     RedisUtil redisUtil;
 
     final static private String ORDER_KEY="order_%d";
-
 
     public ReturnObject getOrderById(Long id) {
         try {
@@ -110,20 +108,16 @@ public class OrderDao {
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria cr = orderPoExample.createCriteria();
             cr.andShopIdEqualTo(shopId);
-            if(customerId!=null)
-            {
+            if (customerId != null) {
                 cr.andCustomerIdEqualTo(customerId);
             }
-            if(orderSn!=null)
-            {
+            if (orderSn != null) {
                 cr.andOrderSnEqualTo(orderSn);
             }
-            if(beginTime!=null)
-            {
+            if (beginTime != null) {
                 cr.andGmtCreateGreaterThan(beginTime);
             }
-            if(endTime!=null)
-            {
+            if (endTime != null) {
                 cr.andGmtCreateLessThan(endTime);
             }
             List<OrderPo> orderPoList = orderPoMapper.selectByExample(orderPoExample);

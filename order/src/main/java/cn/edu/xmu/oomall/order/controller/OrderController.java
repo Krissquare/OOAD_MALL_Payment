@@ -194,6 +194,4 @@ public class OrderController {
         return Common.decorateReturnObject(orderService.getOrderDetail(shopId, id));
     }
 
-
-
 }
