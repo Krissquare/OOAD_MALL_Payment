@@ -414,8 +414,16 @@ public class OrderService {
         if (!order.getCustomerId().equals(userId)){
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
-        SimpleVo customerVo = customService.getCustomerById(order.getCustomerId()).getData();
-        SimpleVo shopVo = shopService.getShopById(order.getShopId()).getData();
+        InternalReturnObject customerRet = customService.getCustomerById(order.getCustomerId());
+        if (!customerRet.getErrno().equals(ReturnNo.OK)){
+            return new ReturnObject(ReturnNo.CUSTOMERID_NOTEXIST);
+        }
+        SimpleVo customerVo = (SimpleVo) customerRet.getData();
+        InternalReturnObject shopRet = shopService.getShopById(order.getShopId());
+        if (!customerRet.getErrno().equals(ReturnNo.OK)){
+            return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+        }
+        SimpleVo shopVo = (SimpleVo) shopRet.getData();
         DetailOrderVo orderVo = Common.cloneVo(order, DetailOrderVo.class);
         orderVo.setCustomerVo(customerVo);
         orderVo.setShopVo(shopVo);
