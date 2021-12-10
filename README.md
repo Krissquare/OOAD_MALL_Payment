@@ -9,7 +9,7 @@
 ### 4.swagger 
 ### qm https://app.swaggerhub.com/apis/mingqcn/OOMALL/1.1.6
 
-### 我们组 https://app.swaggerhub.com/apis/ooad2-01/2-01ooad/1.0.0#/
+### 我们组 https://app.swaggerhub.com/apis/ooad2-01/InternalApl/1.0.0#/
 
 ### 5.nacos界面 http://101.132.164.244:8888/nacos/index.html
 
