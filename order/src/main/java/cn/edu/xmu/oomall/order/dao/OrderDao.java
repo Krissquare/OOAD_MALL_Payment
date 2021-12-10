@@ -171,9 +171,6 @@ public class OrderDao {
                 cr.andConfirmTimeLessThanOrEqualTo(endTime);
             }
             List<OrderPo> orderPoList = orderPoMapper.selectByExample(orderPoExample);
-            if (orderPoList.size() == 0){
-                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
-            }
             ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo(orderPoList));
             return Common.getPageRetVo(ret, BriefOrderVo.class);
         }catch (Exception e){
