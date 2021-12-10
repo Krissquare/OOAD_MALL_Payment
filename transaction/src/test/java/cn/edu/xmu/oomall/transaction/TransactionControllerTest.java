@@ -1,6 +1,8 @@
 package cn.edu.xmu.oomall.transaction;
 
 import cn.edu.xmu.oomall.core.util.JacksonUtil;
+import cn.edu.xmu.oomall.transaction.model.vo.PaymentModifyVo;
+import cn.edu.xmu.oomall.transaction.util.MyDateTime;
 import cn.edu.xmu.privilegegateway.annotation.util.JwtHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,10 +31,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional
 public class TransactionControllerTest {
-    private static String adminToken;
-    private static final JwtHelper jwtHelper = new JwtHelper();
     @Autowired
     private MockMvc mvc;
+
+    private static String adminToken;
+
+    private static final JwtHelper jwtHelper = new JwtHelper();
+
+    private DateTimeFormatter df;
+
+    private static final Locale LOCALE=Locale.CHINA;
+
+    @BeforeEach
+    void init() {
+        df = DateTimeFormatter.ofPattern(MyDateTime.DATE_TIME_FORMAT, LOCALE);
+        adminToken =jwtHelper.createToken(1L,"admin",0L, 1,40000);
+    }
+
     @Test
     void getRefundTest() throws Exception
     {
@@ -74,15 +89,6 @@ public class TransactionControllerTest {
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         String expected = "{\"errno\":504,\"errmsg\":\"操作的资源id不存在\"}";
         JSONAssert.assertEquals(expected, responseString, true);
-    }
-    private static String adminToken;
-    private static final JwtHelper jwtHelper = new JwtHelper();
-    private DateTimeFormatter df;
-    private static final Locale LOCALE=Locale.CHINA;
-    @BeforeEach
-    void init() {
-        df = DateTimeFormatter.ofPattern(MyDateTime.DATE_TIME_FORMAT, LOCALE);
-        adminToken =jwtHelper.createToken(1L,"admin",0L, 1,40000);
     }
 
     /**

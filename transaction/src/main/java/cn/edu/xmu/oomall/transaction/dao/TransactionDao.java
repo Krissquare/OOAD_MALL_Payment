@@ -3,8 +3,11 @@ package cn.edu.xmu.oomall.transaction.dao;
 import cn.edu.xmu.oomall.core.util.Common;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
-import cn.edu.xmu.oomall.transaction.mapper.PaymentPoMapper;import cn.edu.xmu.oomall.transaction.model.po.PaymentPo;
+import cn.edu.xmu.oomall.transaction.mapper.PaymentPoMapper;
+import cn.edu.xmu.oomall.transaction.model.bo.Payment;
+import cn.edu.xmu.oomall.transaction.model.po.PaymentPo;
 import cn.edu.xmu.oomall.transaction.model.po.PaymentPoExample;
+import cn.edu.xmu.oomall.transaction.model.vo.PaymentRetVo;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.slf4j.Logger;
@@ -19,12 +22,18 @@ import cn.edu.xmu.oomall.transaction.model.vo.RefundRetVo;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
+
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
+
 @Repository
 public class TransactionDao {
     private static final Logger logger = LoggerFactory.getLogger(TransactionDao.class);
+
     @Autowired
-    PaymentPoMapper paymentPoMapper;
+    private PaymentPoMapper paymentPoMapper;
+
+    @Autowired
+    private RefundPoMapper refundPoMapper;
 
     public ReturnObject listPayment(Long patternId,String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
     {
@@ -58,6 +67,8 @@ public class TransactionDao {
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
+
+
     public ReturnObject getPaymentDetails(Long id)
     {
         try{
@@ -75,15 +86,27 @@ public class TransactionDao {
         }
 
     }
-    private static final Logger logger = LoggerFactory.getLogger(TransactionDao.class);
-    @Autowired
-    PaymentPatternPoMapper paymentPatternPoMapper;
-    @Autowired
-    PaymentPoMapper paymentPoMapper;
-    @Autowired
-    RefundPoMapper refundPoMapper;
 
-    public ReturnObject listRefunds(String documentId, Byte state, Long patternId, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
+    /**
+     * 平台管理员修改支付信息
+     * @param payment
+     * @return
+     */
+    public ReturnObject updatePayment(Payment payment)
+    {
+        try {
+            PaymentPo paymentPo=cloneVo(payment,PaymentPo.class);
+            paymentPoMapper.updateByPrimaryKeySelective(paymentPo);
+            //TODO:删除redis
+            Payment payment1=cloneVo(paymentPo,Payment.class);
+            return new ReturnObject(payment1);
+
+        } catch (Exception e) {
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
+    public ReturnObject listRefund(String documentId, Byte state, Long patternId, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
         try {
             PageHelper.startPage(page, pageSize, true, true, true);
             RefundPoExample refundPoExample = new RefundPoExample();
@@ -115,24 +138,7 @@ public class TransactionDao {
         }
     }
 
-    /**
-     * 平台管理员修改支付信息
-     * @param payment
-     * @return
-     */
-    public ReturnObject updatePayment(Payment payment)
-    {
-        try {
-            PaymentPo paymentPo=cloneVo(payment,PaymentPo.class);
-            paymentPoMapper.updateByPrimaryKeySelective(paymentPo);
-            //TODO:删除redis
-            Payment payment1=cloneVo(paymentPo,Payment.class);
-            return new ReturnObject(payment1);
 
-        } catch (Exception e) {
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
-        }
-    }
     public ReturnObject getRefundById(Long id) {
         try {
             RefundPo refundPo = refundPoMapper.selectByPrimaryKey(id);

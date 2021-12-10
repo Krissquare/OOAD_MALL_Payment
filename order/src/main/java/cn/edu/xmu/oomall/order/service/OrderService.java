@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class OrderService {
@@ -45,6 +46,13 @@ public class OrderService {
     @Autowired
     ShopService shopService;
 
+    /**
+     * 新建订单
+     * @param simpleOrderVo
+     * @param userId
+     * @param userName
+     * @return
+     */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject insertOrder(SimpleOrderVo simpleOrderVo, Long userId, String userName) {
         if (simpleOrderVo.getGrouponId() != null) {
@@ -86,71 +94,128 @@ public class OrderService {
         return new ReturnObject();
     }
 
+    /**
+     * 买家逻辑删除订单
+     * created by  xiuchen lang
+     * @param id
+     * @param userId
+     * @param userName
+     * @return
+     */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject deleteOrderByCustomer(Long id, Long userId, String userName) {
-        //TODO:调用查询买家查询自己订单  有东西证明是自己的
-//      ReturnObject r = orderDao.selectById(order.getModifierId());
-//      if(r.getCode()!=ReturnNo.OK)
-//          return r;
+        ReturnObject returnObject = orderDao.getOrderById(id);
+        if (returnObject.getCode() != ReturnNo.OK) {
+            return returnObject;
+        }
+        Order data = (Order) returnObject.getData();
+        if (!Objects.equals(data.getCustomerId(), userId)) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        if (!(data.getState() == OrderState.COMPLETE_ORDER.getCode() || data.getState() == OrderState.CANCEL_ORDER.getCode())) {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
         Order order = new Order();
         order.setId(id);
         order.setBeDeleted((byte) 1);
         Common.setPoModifiedFields(order, userId, userName);
-        return orderDao.deleteOrder(order);
+        return orderDao.updateOrder(order);
     }
 
+    /**
+     * 买家取消订单
+     * create by xiuchen Lang
+     * @param id
+     * @param userId
+     * @param userName
+     * @return
+     */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject cancelOrderByCustomer(Long id, Long userId, String userName) {
-        //TODO:调用查询买家查询自己订单  有东西证明是自己的
-//        ReturnObject r = orderDao.selectById(order.getModifierId());
-//        if(r.getCode()!=ReturnNo.OK)
-//            return r;
+        ReturnObject returnObject = orderDao.getOrderById(id);
+        if (returnObject.getCode() != ReturnNo.OK) {
+            return returnObject;
+        }
+        Order data = (Order) returnObject.getData();
+        if (!Objects.equals(data.getCustomerId(), userId)) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        if (data.getState() == OrderState.COMPLETE_ORDER.getCode() || data.getState() == OrderState.CANCEL_ORDER.getCode()) {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
         Order order = new Order();
         order.setId(id);
         order.setState(OrderState.CANCEL_ORDER.getCode());
         Common.setPoModifiedFields(order, userId, userName);
-        return orderDao.cancelOrder(order);
+        return orderDao.updateOrder(order);
     }
 
+
+    /**
+     * 买家取消订单
+     * create by hty
+     */
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject confirmOrder(Long orderId) {
-        LocalDateTime nowTime = LocalDateTime.now();
-        return orderDao.confirmOrder(orderId, nowTime);
+    public ReturnObject confirmOrder(Long orderId,Long loginUserId,String loginUserName) {
+        ReturnObject ret=orderDao.getOrderById(orderId);
+        if(ret.getData()==null) {
+            return ret;
+        }
+        Order order=(Order) ret.getData();
+        if(!order.getState().equals(OrderState.SEND_GOODS.getCode()))
+        {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
+        order.setState(OrderState.COMPLETE_ORDER.getCode());
+        Common.setPoModifiedFields(order,loginUserId,loginUserName);
+        return orderDao.updateOrder(order);
     }
 
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
-        return orderDao.listBriefOrdersByShopId(shopId, pageNumber, pageSize);
+    public ReturnObject listBriefOrdersByShopId(Long shopId,Long customerId,String orderSn,LocalDateTime beginTime,LocalDateTime endTime, Integer pageNumber, Integer pageSize) {
+        return orderDao.listBriefOrdersByShopId(shopId,customerId,orderSn,beginTime,endTime, pageNumber, pageSize);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject updateOrderComment(Long shopId, Long orderId, OrderVo orderVo, Long loginUserId, String loginUserName) {
-        Order order = Common.cloneVo(orderVo, Order.class);
-        order.setShopId(shopId);
-        order.setId(orderId);
+        ReturnObject ret=orderDao.getOrderById(orderId);
+        if(!ret.getCode().equals(ReturnNo.OK))
+        {
+            return ret;
+        }
+        Order order = (Order) ret.getData();
+        if(!order.getShopId().equals(shopId))
+        {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        order.setMessage(orderVo.getMessage());
         Common.setPoModifiedFields(order, loginUserId, loginUserName);
-        return orderDao.updateOrderComment(order);
+        return orderDao.updateOrder(order);
     }
 
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject getOrderDetail(Long shopId, Long orderId) {
-        ReturnObject ret = orderDao.getOrderDetail(shopId, orderId);
-        if (ret.getData() != null) {
-            Order order = (Order) ret.getData();
-            SimpleVo customerVo = customService.getCustomerById(order.getCustomerId()).getData();
-            SimpleVo shopVo = shopService.getShopById(order.getShopId()).getData();
-            DetailOrderVo orderVo = (DetailOrderVo) Common.cloneVo(order, DetailOrderVo.class);
-            orderVo.setCustomerVo(customerVo);
-            orderVo.setShopVo(shopVo);
-            return new ReturnObject(orderVo);
-        } else {
+        ReturnObject ret = orderDao.getOrderById(orderId);
+        if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;
         }
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public ReturnObject confirmGrouponActivity(Long shopId, Long grouponActivityId, String loginUserId, String loginUserName) {
-
+        Order order = (Order) ret.getData();
+        if (!order.getShopId().equals(shopId)) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        SimpleVo customerVo = customService.getCustomerById(order.getCustomerId()).getData();
+        SimpleVo shopVo = shopService.getShopById(order.getShopId()).getData();
+        DetailOrderVo orderVo = Common.cloneVo(order, DetailOrderVo.class);
+        orderVo.setCustomerVo(customerVo);
+        orderVo.setShopVo(shopVo);
+        List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();
+        List<SimpleOrderItemVo> simpleOrderItemVos = new ArrayList<>();
+        for (OrderItem orderItem : orderItemList) {
+            SimpleOrderItemVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderItemVo.class);
+            simpleOrderItemVos.add(simpleOrderItemVo);
+        }
+        orderVo.setOrderItems(simpleOrderItemVos);
+        return new ReturnObject(orderVo);
     }
 
 }

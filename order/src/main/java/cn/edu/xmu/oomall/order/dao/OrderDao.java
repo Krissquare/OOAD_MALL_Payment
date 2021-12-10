@@ -13,19 +13,20 @@ import cn.edu.xmu.oomall.order.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.model.po.OrderPoExample;
 import cn.edu.xmu.oomall.order.model.vo.BriefOrderVo;
+import cn.edu.xmu.privilegegateway.annotation.util.RedisUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
-import static cn.edu.xmu.privilegegateway.annotation.util.Common.setPoModifiedFields;
 
 
 @Repository
@@ -37,6 +38,15 @@ public class OrderDao {
 
     @Autowired
     OrderItemPoMapper orderItemPoMapper;
+
+    @Value("${oomall.order.expiretime}")
+    private long orderExpireTime;
+
+    @Autowired
+    RedisUtil redisUtil;
+
+    final static private String ORDER_KEY="order_%d";
+
 
     public ReturnObject getOrderById(Long id) {
         try {
@@ -69,9 +79,24 @@ public class OrderDao {
         }
     }
 
-    public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
+
+    public ReturnObject listOrderItemsByOrderId(Long orderId)
+    {
+        OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
+        OrderItemPoExample.Criteria cr=orderItemPoExample.createCriteria();
+        cr.andOrderIdEqualTo(orderId);
+        List<OrderItemPo> orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
+        List<OrderItem> orderItemList=new ArrayList<>(orderItemPos.size());
+        for(OrderItemPo orderItemPo:orderItemPos)
+        {
+            orderItemList.add(cloneVo(orderItemPo,OrderItem.class));
+        }
+        return new ReturnObject(orderItemList);
+    }
+
+    public ReturnObject listBriefOrdersByShopId(Long shopId,Long customerId,String orderSn,LocalDateTime beginTime,LocalDateTime endTime, Integer pageNumber, Integer pageSize) {
         try {
-            PageHelper.startPage(pageNumber, pageSize);
+            PageHelper.startPage(pageNumber, pageSize, true, true, true);
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria cr = orderPoExample.createCriteria();
             cr.andShopIdEqualTo(shopId);
@@ -102,22 +127,4 @@ public class OrderDao {
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-
-
-    public ReturnObject getOrderItemByOrderId(Long orderId)
-    {
-        OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
-        OrderItemPoExample.Criteria cr=orderItemPoExample.createCriteria();
-        cr.andOrderIdEqualTo(orderId);
-        List<OrderItemPo> orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
-        List<OrderItem> orderItemList=new ArrayList<>(orderItemPos.size());
-        for(OrderItemPo orderItemPo:orderItemPos)
-        {
-            orderItemList.add((OrderItem) cloneVo(orderItemPo,OrderItem.class));
-        }
-        return new ReturnObject(orderItemList);
-    }
-
-
-
 }

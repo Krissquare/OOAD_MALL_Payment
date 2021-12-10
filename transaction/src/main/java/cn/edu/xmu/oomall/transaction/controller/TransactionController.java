@@ -1,11 +1,13 @@
 package cn.edu.xmu.oomall.transaction.controller;
 
 import cn.edu.xmu.oomall.core.util.ReturnNo;
+import cn.edu.xmu.oomall.core.util.ReturnObject;
+import cn.edu.xmu.oomall.transaction.model.vo.PaymentModifyVo;
 import cn.edu.xmu.oomall.transaction.service.TransactionService;
+import cn.edu.xmu.oomall.transaction.util.MyDateTime;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
-import cn.edu.xmu.privilegegateway.annotation.util.ReturnObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.BindingResult;
@@ -105,8 +107,9 @@ public class TransactionController {
         if (object != null) {
             return object;
         }
-        return transactionService.updatePayment(id,loginUserId,loginUserName,paymentModifyVo);
+        return transactionService.updatePayment(id,loginUserId,loginUserName, paymentModifyVo);
     }
+
 
     @Audit(departName="transaction")
     @GetMapping("shops/{shopId}/refund")
@@ -125,7 +128,7 @@ public class TransactionController {
         {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
-        return Common.decorateReturnObject(transactionService.listRefunds(documentId,state,beginTime,endTime,page, pageSize));
+        return Common.decorateReturnObject(transactionService.listRefund(documentId,state,beginTime,endTime,page, pageSize));
     }
     @Audit(departName = "payment")
     @GetMapping("shops/{shopId}/refund/{id}")
