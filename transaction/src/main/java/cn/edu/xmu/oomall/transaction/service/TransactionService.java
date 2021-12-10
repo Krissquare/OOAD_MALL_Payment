@@ -8,7 +8,6 @@ import cn.edu.xmu.oomall.transaction.model.bo.PaymentState;
 import cn.edu.xmu.oomall.transaction.model.vo.PaymentDetailRetVo;
 import cn.edu.xmu.oomall.transaction.model.vo.PaymentModifyVo;
 import org.springframework.beans.factory.annotation.Autowired;
-import cn.edu.xmu.oomall.core.util.Common;
 import cn.edu.xmu.oomall.transaction.model.bo.Refund;
 import cn.edu.xmu.oomall.transaction.model.bo.RefundState;
 import cn.edu.xmu.oomall.transaction.model.vo.RefundDetailVo;
@@ -121,7 +120,7 @@ public class TransactionService {
         {
             return ret;
         }
-        RefundDetailVo returnDetailVo=(RefundDetailVo) Common.cloneVo(ret.getData(), RefundDetailVo.class);
+        RefundDetailVo returnDetailVo=cloneVo(ret.getData(), RefundDetailVo.class);
         return new ReturnObject(returnDetailVo);
     }
 
@@ -149,13 +148,13 @@ public class TransactionService {
         }
         refund1.setState(refundRecVo.getState());
         refund1.setDescr(refundRecVo.getDescr());
-        Common.setPoModifiedFields(refund1, loginUserId, loginUserName);
+        setPoModifiedFields(refund1, loginUserId, loginUserName);
         refund1.setAdjustId(loginUserId);
         refund1 .setAdjustName(loginUserName);
         ReturnObject returnObject = transactionDao.updateRefund(refund1);
         if (!returnObject.getCode().equals(ReturnNo.OK.getCode())) {
             return returnObject;
         }
-        return new ReturnObject(Common.cloneVo(refund1,RefundDetailVo.class));
+        return new ReturnObject(cloneVo(refund1,RefundDetailVo.class));
     }
 }

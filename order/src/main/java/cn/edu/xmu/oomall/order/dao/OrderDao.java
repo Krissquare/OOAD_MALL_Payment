@@ -7,7 +7,6 @@ import cn.edu.xmu.oomall.order.mapper.OrderItemPoMapper;
 import cn.edu.xmu.oomall.order.mapper.OrderPoMapper;
 import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderItem;
-import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.po.OrderItemPo;
 import cn.edu.xmu.oomall.order.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
@@ -22,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,13 +50,18 @@ public class OrderDao {
 
     public ReturnObject getOrderById(Long id) {
         try {
+            String key = String.format(ORDER_KEY, id);
+            Order order = (Order) redisUtil.get(key);
+            if(order!=null){
+                return new ReturnObject(order);
+            }
             OrderPo po = orderPoMapper.selectByPrimaryKey(id);
             if (po == null||po.getBeDeleted()!=null&&po.getBeDeleted()==1) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            Order order = cloneVo(po, Order.class);
-            redisUtil.set(String.format(ORDER_KEY, id),order,orderExpireTime);
-            return new ReturnObject<>(order);
+            Order order1 = cloneVo(po, Order.class);
+            redisUtil.set(key,order1,orderExpireTime);
+            return new ReturnObject<>(order1);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
@@ -82,16 +87,21 @@ public class OrderDao {
 
     public ReturnObject listOrderItemsByOrderId(Long orderId)
     {
-        OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
-        OrderItemPoExample.Criteria cr=orderItemPoExample.createCriteria();
-        cr.andOrderIdEqualTo(orderId);
-        List<OrderItemPo> orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
-        List<OrderItem> orderItemList=new ArrayList<>(orderItemPos.size());
-        for(OrderItemPo orderItemPo:orderItemPos)
-        {
-            orderItemList.add(cloneVo(orderItemPo,OrderItem.class));
+        try {
+            OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
+            OrderItemPoExample.Criteria cr=orderItemPoExample.createCriteria();
+            cr.andOrderIdEqualTo(orderId);
+            List<OrderItemPo> orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
+            List<OrderItem> orderItemList=new ArrayList<>(orderItemPos.size());
+            for(OrderItemPo orderItemPo:orderItemPos)
+            {
+                orderItemList.add(cloneVo(orderItemPo,OrderItem.class));
+            }
+            return new ReturnObject(orderItemList);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
         }
-        return new ReturnObject(orderItemList);
     }
 
     public ReturnObject listBriefOrdersByShopId(Long shopId,Long customerId,String orderSn,LocalDateTime beginTime,LocalDateTime endTime, Integer pageNumber, Integer pageSize) {

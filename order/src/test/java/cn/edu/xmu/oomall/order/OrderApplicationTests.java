@@ -61,10 +61,10 @@ class OrderApplicationTests {
         String responseString = mvc.perform(delete("/orders/1")
                 .header("authorization", token)
                 .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isOk())
+                .andExpect(status().isForbidden())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectString = "{\"errno\":507,\"errmsg\":\"当前状态禁止此操作\"}";
+        String expectString = "{\"errno\":505,\"errmsg\":\"操作的资源id不是自己的对象\"}";
         JSONAssert.assertEquals(expectString, responseString, true);
 
         String responseString1 = mvc.perform(delete("/orders/10")
@@ -84,10 +84,10 @@ class OrderApplicationTests {
         String responseString = mvc.perform(put("/orders/1/cancel")
                 .header("authorization", token)
                 .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isOk())
+                .andExpect(status().isForbidden())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectString = "{\"errno\":507,\"errmsg\":\"当前状态禁止此操作\"}";
+        String expectString = "{\"errno\":505,\"errmsg\":\"操作的资源id不是自己的对象\"}";
         JSONAssert.assertEquals(expectString, responseString, true);
 
         String responseString1 = mvc.perform(put("/orders/9/cancel")
