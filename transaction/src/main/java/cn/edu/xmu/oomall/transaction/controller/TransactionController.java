@@ -21,6 +21,9 @@ import static cn.edu.xmu.oomall.core.util.Common.processFieldErrors;
 import cn.edu.xmu.oomall.core.util.Common;
 import cn.edu.xmu.oomall.transaction.model.vo.RefundRecVo;
 
+import cn.edu.xmu.oomall.transaction.model.vo.AlipayNotifyVo;
+import cn.edu.xmu.oomall.transaction.model.vo.WechatPaymentNotifyVo;
+import cn.edu.xmu.oomall.transaction.model.vo.WechatRefundNotifyVo;
 
 @RestController
 @RequestMapping(value = "", produces = "application/json;charset=UTF-8")
@@ -107,7 +110,7 @@ public class TransactionController {
         if (object != null) {
             return object;
         }
-        return transactionService.updatePayment(id,loginUserId,loginUserName, paymentModifyVo);
+        return transactionService.updatePayment(id,loginUserId,loginUserName,paymentModifyVo);
     }
 
     /**
@@ -186,4 +189,33 @@ public class TransactionController {
         return Common.decorateReturnObject(transactionService.updateRefund(id,refundRecVo,loginUserId,loginUserName));
     }
 
+    /**
+     * /wechat/payment/notify微信支付通知API
+     * @param signature
+     * @param wechatPaymentNotifyVo
+     * @return
+     */
+    @PostMapping("/wechat/payment/notify")
+    private Object paymentNotifyByWechat(@RequestHeader("Wechatpay-Signature")String signature,
+                                         @RequestBody WechatPaymentNotifyVo wechatPaymentNotifyVo){
+        transactionService.paymentNotifyByWechat(wechatPaymentNotifyVo);
+        return wechatPaymentNotifyVo;
+    }
+
+    /**
+     * /wechat/refund/notify微信退款通知API
+     * @param signature
+     * @param wechatRefundNotifyVo
+     * @return
+     */
+    @PostMapping("/wechat/refund/notify")
+    public Object refundNotifyByWechat(@RequestHeader("Wechatpay-Signature")String signature,
+                                       @RequestBody WechatRefundNotifyVo wechatRefundNotifyVo){
+        return null;
+    }
+
+    @PostMapping("/alipay/notify")
+    public Object notifyByAlipay(@RequestBody AlipayNotifyVo alipayNotifyVo){
+        return null;
+    }
 }
