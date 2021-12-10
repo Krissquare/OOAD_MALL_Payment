@@ -19,8 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
@@ -43,16 +41,16 @@ public class OrderDao {
     @Autowired
     RedisUtil redisUtil;
 
-    final static private String ORDER_KEY="order_%d";
+    final static private String ORDER_KEY = "order_%d";
 
     public ReturnObject getOrderById(Long id) {
         try {
             OrderPo po = orderPoMapper.selectByPrimaryKey(id);
-            if (po == null||po.getBeDeleted()==1) {
+            if (po == null || po.getBeDeleted() == 1) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
             Order order = cloneVo(po, Order.class);
-            redisUtil.set(String.format(ORDER_KEY, id),order,orderExpireTime);
+            redisUtil.set(String.format(ORDER_KEY, id), order, orderExpireTime);
             return new ReturnObject<>(order);
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -68,7 +66,7 @@ public class OrderDao {
             if (flag == 0) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             } else {
-                redisUtil.del(String.format(ORDER_KEY,order.getId()));
+                redisUtil.del(String.format(ORDER_KEY, order.getId()));
                 return new ReturnObject<>(ReturnNo.OK);
             }
         } catch (Exception e) {
