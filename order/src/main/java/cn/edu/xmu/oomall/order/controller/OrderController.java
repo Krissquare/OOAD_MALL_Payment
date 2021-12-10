@@ -11,12 +11,14 @@ import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping(value = "/", produces = "application/json;charset=UTF-8")
@@ -101,8 +103,8 @@ public class OrderController {
     })
     @PutMapping("orders/{id}/confirm")
     @Audit(departName = "order")
-    public Object confirmOrder(@PathVariable("id") Long id) {
-        return Common.decorateReturnObject(orderService.confirmOrder(id));
+    public Object confirmOrder(@PathVariable("id") Long id,@LoginUser Long loginUserId,@LoginName String loginName) {
+        return Common.decorateReturnObject(orderService.confirmOrder(id,loginUserId,loginName));
     }
 
 
@@ -121,9 +123,18 @@ public class OrderController {
     })
     @GetMapping("shops/{shopId}/orders")
     @Audit(departName = "order")
-    public Object listBriefOrdersByShopId(@PathVariable("shopId") Long shopId, @RequestParam(value = "page", required = false) Integer page,
+    public Object listBriefOrdersByShopId(@PathVariable("shopId") Long shopId,
+                                          @RequestParam(value="customerId",required = false)Long customerId,
+                                          @RequestParam(value="orderSn",required = false) String orderSn,
+                                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime beginTime,
+                                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime endTime,
+                                          @RequestParam(value = "page", required = false) Integer page,
                                    @RequestParam(value = "pageSize", required = false) Integer pageSize) {
-        return Common.decorateReturnObject(orderService.listBriefOrdersByShopId(shopId, page, pageSize));
+        if(beginTime!=null&&endTime!=null&&beginTime.isAfter(endTime))
+        {
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
+        }
+        return Common.decorateReturnObject(orderService.listBriefOrdersByShopId(shopId, customerId,orderSn,beginTime,endTime,page, pageSize));
     }
 
 
@@ -143,7 +154,7 @@ public class OrderController {
     })
     @PutMapping("shops/{shopId}/orders/{id}")
     @Audit(departName = "order")
-    public Object updateOrder(@PathVariable("shopId") Long shopId, @PathVariable("id") Long orderId, @Validated @RequestBody OrderVo orderVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName) {
+    public Object updateOrderComment(@PathVariable("shopId") Long shopId, @PathVariable("id") Long orderId, @Validated @RequestBody OrderVo orderVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName) {
         if (bindingResult.hasErrors()) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
         }
@@ -157,11 +168,5 @@ public class OrderController {
     }
 
 
-    @PutMapping("/internal/shops/{shopId}/grouponorders/{id}/confirm")
-    @Audit(departName = "order")
-    public Object confirmGrouponActivity(@PathVariable("shopId") Long shopId, @PathVariable("shopId") Long grouponActivityId,
-                                         @LoginUser Long loginUserId, @LoginName String loginUserName) {
-        return Common.decorateReturnObject(orderService.confirmGrouponActivity(shopId, grouponActivityId, loginUserId, loginUserName));
-    }
 
 }
