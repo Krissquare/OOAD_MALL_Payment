@@ -1,13 +1,13 @@
 package cn.edu.xmu.oomall.transaction.controller;
 
 import cn.edu.xmu.oomall.core.util.ReturnNo;
+import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.transaction.model.vo.PaymentModifyVo;
 import cn.edu.xmu.oomall.transaction.service.TransactionService;
 import cn.edu.xmu.oomall.transaction.util.MyDateTime;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
-import cn.edu.xmu.privilegegateway.annotation.util.ReturnObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.BindingResult;
@@ -18,12 +18,15 @@ import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 
 import static cn.edu.xmu.oomall.core.util.Common.processFieldErrors;
+import cn.edu.xmu.oomall.core.util.Common;
+import cn.edu.xmu.oomall.transaction.model.vo.RefundRecVo;
+
 import cn.edu.xmu.oomall.transaction.model.vo.AlipayNotifyVo;
 import cn.edu.xmu.oomall.transaction.model.vo.WechatPaymentNotifyVo;
 import cn.edu.xmu.oomall.transaction.model.vo.WechatRefundNotifyVo;
 
 @RestController
-@RequestMapping(value = "/", produces = "application/json;charset=UTF-8")
+@RequestMapping(value = "", produces = "application/json;charset=UTF-8")
 public class TransactionController {
     @Autowired
     TransactionService transactionService;
@@ -109,6 +112,52 @@ public class TransactionController {
         }
         return transactionService.updatePayment(id,loginUserId,loginUserName,paymentModifyVo);
     }
+
+
+    @Audit(departName="transaction")
+    @GetMapping("shops/{shopId}/refund")
+    public Object getRefund(@PathVariable("shopId") Long shopId, @RequestParam(value="documentId",required = false)String documentId,
+                            @RequestParam(value="state",required = false)Byte state,
+                            @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime beginTime,
+                            @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime endTime,
+                            @RequestParam(value = "page", required = false) Integer page,
+                            @RequestParam(value = "pageSize", required = false) Integer pageSize)
+    {
+        if(beginTime!=null&&endTime!=null&&beginTime.isAfter(endTime))
+        {
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
+        }
+        if(shopId!=0)
+        {
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
+        }
+        return Common.decorateReturnObject(transactionService.listRefund(documentId,state,beginTime,endTime,page, pageSize));
+    }
+    @Audit(departName = "payment")
+    @GetMapping("shops/{shopId}/refund/{id}")
+    public Object getRefundDetail(@PathVariable("shopId")Long shopId,@PathVariable("id")Long id)
+    {
+        if(shopId!=0)
+        {
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
+        }
+        return Common.decorateReturnObject(transactionService.getRefundDetail(id));
+    }
+
+    @Audit(departName = "payment")
+    @PutMapping("shops/{shopId}/refund/{id}")
+    public Object updateRefund(@PathVariable("shopId") Long shopId, @PathVariable("id")Long id, @Validated @RequestBody RefundRecVo refundRecVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName)
+    {
+        if (bindingResult.hasErrors()) {
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
+        }
+        if(shopId!=0)
+        {
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
+        }
+        return Common.decorateReturnObject(transactionService.updateRefund(id,refundRecVo,loginUserId,loginUserName));
+    }
+
     /**
      * /wechat/payment/notify微信支付通知API
      * @param signature

@@ -105,10 +105,10 @@ class OrderApplicationTests {
         adminToken = jwtHelper.createToken(1L, "admin", 0L, 3600, 0);
         String responseString = this.mvc.perform(MockMvcRequestBuilders.put("/orders/1/confirm").header("authorization", adminToken)
                 .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isOk())
+                .andExpect(status().isForbidden())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":507,\"errmsg\":\"当前货品状态不支持进行该操作\"}";
+        String expected = "{\"errno\":505,\"errmsg\":\"操作的资源id不是自己的对象\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
@@ -145,7 +145,7 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":0,\"data\":{\"id\":2,\"orderSn\":\"20216487652635231002\",\"customerVo\":{\"id\":1,\"name\":\"aaa\"},\"shopVo\":{\"id\":1,\"name\":\"aaa\"},\"pid\":1,\"state\":null,\"confirmTime\":null,\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"message\":\"好耶\",\"regionId\":1,\"address\":\"临沂\"},\"errmsg\":\"成功\"}";
+        String expected = "{\"errno\":0,\"data\":{\"id\":2,\"orderSn\":\"20216487652635231002\",\"customerVo\":{\"id\":1,\"name\":\"aaa\"},\"shopVo\":{\"id\":1,\"name\":\"aaa\"},\"pid\":1,\"state\":null,\"confirmTime\":null,\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"message\":\"好耶\",\"regionId\":1,\"address\":\"临沂\",\"mobile\":\"16253645342\",\"consignee\":\"gyt\",\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null,\"orderItems\":[{\"productId\":1,\"onsaleId\":1,\"quantity\":1,\"couponActId\":null,\"couponId\":1,\"price\":50,\"name\":\"巧克力\"}]},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
