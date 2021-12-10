@@ -10,11 +10,13 @@ import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.model.po.OrderPoExample;
 import cn.edu.xmu.oomall.order.model.vo.BriefOrderVo;
+import cn.edu.xmu.privilegegateway.annotation.util.RedisUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -37,66 +39,49 @@ public class OrderDao {
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     OrderItemPoMapper orderItemPoMapper;
 
-    final static private List<Integer> CANCEL_COMPLETE_LIST = Arrays.asList(OrderState.CANCEL_ORDER.getCode(), OrderState.COMPLETE_ORDER.getCode());
+    @Value("${oomall.order.expiretime}")
+    private long orderExpireTime;
 
-    public ReturnObject deleteByCustomer(Order order) {
+    @Autowired
+    RedisUtil redisUtil;
+
+    final static private String ORDER_KEY="order_%d";
+
+    public ReturnObject getOrderById(Long id) {
         try {
-            OrderPo orderPo = cloneVo(order, OrderPo.class);
-            OrderPoExample orderPoExample = new OrderPoExample();
-            OrderPoExample.Criteria criteria = orderPoExample.createCriteria();
-            criteria.andIdEqualTo(orderPo.getId())
-                    .andCustomerIdEqualTo(orderPo.getModifierId())
-                    .andBeDeletedIsNull()
-                    .andStateIn(CANCEL_COMPLETE_LIST);
-            int ret = orderPoMapper.updateByExampleSelective(orderPo, orderPoExample);
-            if (ret == 1) {
-                return new ReturnObject();
+            OrderPo po = orderPoMapper.selectByPrimaryKey(id);
+            if (po == null||po.getBeDeleted()==1) {
+                return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            return new ReturnObject(ReturnNo.STATENOTALLOW);
+            Order order = cloneVo(po, Order.class);
+            redisUtil.set(String.format(ORDER_KEY, id),order,orderExpireTime);
+            return new ReturnObject<>(order);
         } catch (Exception e) {
             logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+            return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
 
-    public ReturnObject cancelOrderByCustomer(Order order) {
+
+    public ReturnObject updateOrder(Order order) {
         try {
             OrderPo orderPo = cloneVo(order, OrderPo.class);
-            OrderPoExample orderPoExample = new OrderPoExample();
-            OrderPoExample.Criteria criteria = orderPoExample.createCriteria();
-            criteria.andIdEqualTo(orderPo.getId())
-                    .andCustomerIdEqualTo(orderPo.getModifierId())
-                    .andStateNotIn(CANCEL_COMPLETE_LIST);
-            int ret = orderPoMapper.updateByExampleSelective(orderPo, orderPoExample);
-            if (ret == 1) {
-                return new ReturnObject();
-            }
-            return new ReturnObject(ReturnNo.STATENOTALLOW);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
-        }
-    }
-
-    public ReturnObject confirmOrder(Long orderId, LocalDateTime nowTime) {
-        try {
-            OrderPo orderPo = orderPoMapper.selectByPrimaryKey(orderId);
-            if (orderPo.getState() == OrderState.SEND_GOODS.getCode()) {
-                orderPo.setState(OrderState.COMPLETE_ORDER.getCode());
-                orderPo.setConfirmTime(nowTime);
-                return new ReturnObject<>(ReturnNo.OK);
+            int flag = orderPoMapper.updateByPrimaryKeySelective(orderPo);
+            if (flag == 0) {
+                return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             } else {
-                return new ReturnObject(ReturnNo.STATENOTALLOW, "当前货品状态不支持进行该操作");
+                redisUtil.del(String.format(ORDER_KEY,order.getId()));
+                return new ReturnObject<>(ReturnNo.OK);
             }
         } catch (Exception e) {
             logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+            return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
 
-    public ReturnObject searchBriefOrderByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
+    public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
         try {
-            PageHelper.startPage(pageNumber, pageSize, true, true, true);
+            PageHelper.startPage(pageNumber, pageSize);
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria cr = orderPoExample.createCriteria();
             cr.andShopIdEqualTo(shopId);
@@ -111,6 +96,7 @@ public class OrderDao {
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
+
 
     public ReturnObject updateOrderComment(Order order) {
         try {

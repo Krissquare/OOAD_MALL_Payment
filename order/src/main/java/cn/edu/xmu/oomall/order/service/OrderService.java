@@ -11,7 +11,6 @@ import cn.edu.xmu.oomall.order.microservice.vo.ProductVo;
 import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.vo.*;
-import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import cn.edu.xmu.privilegegateway.annotation.util.Common;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.Objects;
 
 @Service
 public class OrderService {
@@ -44,8 +44,15 @@ public class OrderService {
     @Autowired
     ShopService shopService;
 
+    /**
+     * 新建订单
+     * @param simpleOrderVo
+     * @param userId
+     * @param userName
+     * @return
+     */
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject addOrder(SimpleOrderVo simpleOrderVo, Long userId, String userName) {
+    public ReturnObject insertOrder(SimpleOrderVo simpleOrderVo, Long userId, String userName) {
         if (simpleOrderVo.getGrouponId() != null) {
             InternalReturnObject<GrouponActivityVo> grouponsById = activityService.getGrouponsById(simpleOrderVo.getGrouponId());
             if (grouponsById.getErrno() != 0) {
@@ -62,7 +69,6 @@ public class OrderService {
             }
             //团购通过onsale去算 每一件就的价钱是onsale的价钱
             Long price = onsaleById.getData().getPrice();
-
 
         } else if (simpleOrderVo.getAdvancesaleId() != null) {
             InternalReturnObject<AdvanceVo> advanceSaleById = activityService.getAdvanceSaleById(simpleOrderVo.getAdvancesaleId());
@@ -86,30 +92,60 @@ public class OrderService {
         return new ReturnObject();
     }
 
+    /**
+     * 买家逻辑删除订单
+     * created by  xiuchen lang
+     * @param id
+     * @param userId
+     * @param userName
+     * @return
+     */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject deleteOrderByCustomer(Long id, Long userId, String userName) {
-        //TODO:调用查询买家查询自己订单  有东西证明是自己的
-//      ReturnObject r = orderDao.selectById(order.getModifierId());
-//      if(r.getCode()!=ReturnNo.OK)
-//          return r;
+        ReturnObject returnObject = orderDao.getOrderById(id);
+        if (returnObject.getCode() != ReturnNo.OK) {
+            return returnObject;
+        }
+        Order data = (Order) returnObject.getData();
+        if (!Objects.equals(data.getCustomerId(), userId)) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        if (!(data.getState() == OrderState.COMPLETE_ORDER.getCode() || data.getState() == OrderState.CANCEL_ORDER.getCode())) {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
         Order order = new Order();
         order.setId(id);
         order.setBeDeleted((byte) 1);
         Common.setPoModifiedFields(order, userId, userName);
-        return orderDao.deleteByCustomer(order);
+        return orderDao.updateOrder(order);
     }
 
+    /**
+     * 买家取消订单
+     * create by xiuchen Lang
+     * @param id
+     * @param userId
+     * @param userName
+     * @return
+     */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject cancelOrderByCustomer(Long id, Long userId, String userName) {
-        //TODO:调用查询买家查询自己订单  有东西证明是自己的
-//        ReturnObject r = orderDao.selectById(order.getModifierId());
-//        if(r.getCode()!=ReturnNo.OK)
-//            return r;
+        ReturnObject returnObject = orderDao.getOrderById(id);
+        if (returnObject.getCode() != ReturnNo.OK) {
+            return returnObject;
+        }
+        Order data = (Order) returnObject.getData();
+        if (!Objects.equals(data.getCustomerId(), userId)) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        if (data.getState() == OrderState.COMPLETE_ORDER.getCode() || data.getState() == OrderState.CANCEL_ORDER.getCode()) {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
         Order order = new Order();
         order.setId(id);
         order.setState(OrderState.CANCEL_ORDER.getCode());
         Common.setPoModifiedFields(order, userId, userName);
-        return orderDao.cancelOrderByCustomer(order);
+        return orderDao.updateOrder(order);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -119,13 +155,13 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject searchBriefOrderByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
-        return orderDao.searchBriefOrderByShopId(shopId, pageNumber, pageSize);
+    public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
+        return orderDao.listBriefOrdersByShopId(shopId, pageNumber, pageSize);
     }
 
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject updateOrderComment(Long shopId, Long orderId, OrderVo orderVo, Long loginUserId, String loginUserName) {
-        Order order = (Order) Common.cloneVo(orderVo, Order.class);
+        Order order = Common.cloneVo(orderVo, Order.class);
         order.setShopId(shopId);
         order.setId(orderId);
         Common.setPoModifiedFields(order, loginUserId, loginUserName);
