@@ -60,20 +60,12 @@ public class OrderService {
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject insertOrder(SimpleOrderVo simpleOrderVo, Long userId, String userName) {
         // 订单的orderItem不能为空
-        if (simpleOrderVo.getOrderItems().size() == 0) {
+        List<SimpleOrderItemVo> orderItems = simpleOrderVo.getOrderItems();
+        if (orderItems.size() == 0) {
             return new ReturnObject(ReturnNo.FIELD_NOTVALID);
         }
-
-        if (simpleOrderVo.getGrouponId() == null && simpleOrderVo.getAdvancesaleId() == null) {
-            // 普通订单
-            // TODO：都没有 传到3-1计算钱
-        } else {
-            // 团购、预售订单的orderItem必须为1
-            if (simpleOrderVo.getOrderItems().size() != 1) {
-                return new ReturnObject(ReturnNo.FIELD_NOTVALID);
-            }
-
-            SimpleOrderItemVo simpleOrderItemVo = simpleOrderVo.getOrderItems().get(0);
+        //验证orderItem的所有可能会不存在的id
+        for(SimpleOrderItemVo simpleOrderItemVo:orderItems){
             // 判断productId是否存在
             InternalReturnObject<ProductVo> productVo = goodsService.getProductById(simpleOrderItemVo.getProductId());
             if (productVo.getErrno() != 0) {
@@ -88,6 +80,22 @@ public class OrderService {
             if (onSaleVo.getData().getId().equals(productVo.getData().getOnSaleId())) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
             }
+            if(simpleOrderItemVo.getCouponActId()!=null){
+
+            }
+        }
+
+        if (simpleOrderVo.getGrouponId() == null && simpleOrderVo.getAdvancesaleId() == null) {
+            // 普通订单
+            // TODO：都没有 传到3-1计算钱
+        } else {
+            // 团购、预售订单的orderItem必须为1
+            if (simpleOrderVo.getOrderItems().size() != 1) {
+                return new ReturnObject(ReturnNo.FIELD_NOTVALID);
+            }
+
+            SimpleOrderItemVo simpleOrderItemVo = simpleOrderVo.getOrderItems().get(0);
+
 
             // 验证完毕，开始算钱
             if (simpleOrderVo.getGrouponId() != null) {

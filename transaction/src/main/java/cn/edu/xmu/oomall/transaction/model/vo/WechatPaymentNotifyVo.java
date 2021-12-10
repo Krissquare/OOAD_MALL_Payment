@@ -19,6 +19,94 @@ public class WechatPaymentNotifyVo {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    public class WechatRefundNotifyVo {
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public class Amount{
+            private Integer total;
+            private Integer refund;
+            private Integer payer_total;
+            private Integer payer_refund;
+        }
+
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public class Ciphertext{
+            private String mchid;
+            private String outTrade_no;
+            private String transaction_id;
+            private String out_refund_no;
+            private String refund_id;
+            private String refund_status;
+            private String user_received_account;
+            private Amount amount;
+        }
+
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public class Resource{
+            private String algorithm;
+            private String original_type;
+            private Ciphertext ciphertext;
+            private String nonce;
+        }
+
+        private String id;
+        @JsonFormat(pattern = MyDateTime.DATE_TIME_FORMAT,timezone = "GMT+8")
+        private LocalDateTime create_time;
+        private String event_type;
+        private String resource_type;
+        private Resource resource;
+
+    }
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class WeChatTransactionVo {
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public class TransactionAmountRetVo{
+            private Integer total;
+            private Integer payer_total;
+            private String currency;
+            private String payer_currency;
+        }
+
+        @Data
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public class PayerRetVo{
+            private String openid;
+        }
+
+        private String appid;
+
+        private String mchid;
+
+        private String out_trade_no;
+
+        private String transaction_id;
+
+        private String trade_type;
+
+        private String trade_state;
+
+        private String trade_state_desc;
+
+        private TransactionAmountRetVo amount;
+
+        private PayerRetVo payer;
+
+        @JsonFormat(pattern = MyDateTime.DATE_TIME_FORMAT,timezone = "GMT+8")
+        private LocalDateTime success_time;
+    }
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public class Resource{
         private String algorithm;
         private String original_type;
