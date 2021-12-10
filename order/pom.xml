@@ -169,12 +169,6 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <mainClass>cn.edu.xmu.oomall.order.OrderApplication</mainClass>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
                     <classifier>exec</classifier>
                 </configuration>
             </plugin>
