@@ -7,6 +7,7 @@ import cn.edu.xmu.oomall.order.mapper.OrderItemPoMapper;
 import cn.edu.xmu.oomall.order.mapper.OrderPoMapper;
 import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderItem;
+import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.po.OrderItemPo;
 import cn.edu.xmu.oomall.order.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
@@ -44,17 +45,23 @@ public class OrderDao {
     @Autowired
     RedisUtil redisUtil;
 
-    final static private String ORDER_KEY = "order_%d";
+    final static private String ORDER_KEY="order_%d";
+
 
     public ReturnObject getOrderById(Long id) {
         try {
+            String key = String.format(ORDER_KEY, id);
+            Order order = (Order) redisUtil.get(key);
+            if(order!=null){
+                return new ReturnObject(order);
+            }
             OrderPo po = orderPoMapper.selectByPrimaryKey(id);
-            if (po == null || po.getBeDeleted() == 1) {
+            if (po == null||po.getBeDeleted()!=null&&po.getBeDeleted()==1) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            Order order = cloneVo(po, Order.class);
-            redisUtil.set(String.format(ORDER_KEY, id), order, orderExpireTime);
-            return new ReturnObject<>(order);
+            Order order1 = cloneVo(po, Order.class);
+            redisUtil.set(key,order1,orderExpireTime);
+            return new ReturnObject<>(order1);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
@@ -69,7 +76,6 @@ public class OrderDao {
             if (flag == 0) {
                 return new ReturnObject<>(ReturnNo.RESOURCE_ID_NOTEXIST);
             } else {
-                redisUtil.del(String.format(ORDER_KEY, order.getId()));
                 return new ReturnObject<>(ReturnNo.OK);
             }
         } catch (Exception e) {

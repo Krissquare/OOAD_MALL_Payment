@@ -13,7 +13,6 @@ import com.github.pagehelper.PageInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import cn.edu.xmu.oomall.transaction.mapper.PaymentPatternPoMapper;
 import cn.edu.xmu.oomall.transaction.mapper.RefundPoMapper;
 import cn.edu.xmu.oomall.transaction.model.bo.Refund;
 import cn.edu.xmu.oomall.transaction.model.po.RefundPo;
@@ -145,7 +144,7 @@ public class TransactionDao {
             if (refundPo == null) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            return new ReturnObject((Refund) Common.cloneVo(refundPo, Refund.class));
+            return new ReturnObject(cloneVo(refundPo, Refund.class));
         } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
@@ -154,7 +153,7 @@ public class TransactionDao {
 
 
     public ReturnObject updateRefund(Refund refund) {
-        RefundPo refundPo = (RefundPo) Common.cloneVo(refund, RefundPo.class);
+        RefundPo refundPo = cloneVo(refund, RefundPo.class);
         int flag = refundPoMapper.updateByPrimaryKeySelective(refundPo);
         if (flag == 0) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);

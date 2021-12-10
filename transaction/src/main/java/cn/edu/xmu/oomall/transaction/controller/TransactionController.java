@@ -110,13 +110,25 @@ public class TransactionController {
         return transactionService.updatePayment(id,loginUserId,loginUserName, paymentModifyVo);
     }
 
+    /**
+     * hty
+     * 管理员获取退款记录
+     * @param shopId
+     * @param documentId
+     * @param state
+     * @param beginTime
+     * @param endTime
+     * @param page
+     * @param pageSize
+     * @return
+     */
 
     @Audit(departName="transaction")
     @GetMapping("shops/{shopId}/refund")
     public Object getRefund(@PathVariable("shopId") Long shopId, @RequestParam(value="documentId",required = false)String documentId,
                             @RequestParam(value="state",required = false)Byte state,
-                            @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime beginTime,
-                            @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime endTime,
+                            @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
+                            @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
                             @RequestParam(value = "page", required = false) Integer page,
                             @RequestParam(value = "pageSize", required = false) Integer pageSize)
     {
@@ -130,6 +142,14 @@ public class TransactionController {
         }
         return Common.decorateReturnObject(transactionService.listRefund(documentId,state,beginTime,endTime,page, pageSize));
     }
+
+    /**
+     * hty
+     * 平台管理员获取退款详情
+     * @param shopId
+     * @param id
+     * @return
+     */
     @Audit(departName = "payment")
     @GetMapping("shops/{shopId}/refund/{id}")
     public Object getRefundDetail(@PathVariable("shopId")Long shopId,@PathVariable("id")Long id)
@@ -141,6 +161,17 @@ public class TransactionController {
         return Common.decorateReturnObject(transactionService.getRefundDetail(id));
     }
 
+    /**
+     * hty
+     * 平台管理员修改退款单状态
+     * @param shopId
+     * @param id
+     * @param refundRecVo
+     * @param bindingResult
+     * @param loginUserId
+     * @param loginUserName
+     * @return
+     */
     @Audit(departName = "payment")
     @PutMapping("shops/{shopId}/refund/{id}")
     public Object updateRefund(@PathVariable("shopId") Long shopId, @PathVariable("id")Long id, @Validated @RequestBody RefundRecVo refundRecVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName)
