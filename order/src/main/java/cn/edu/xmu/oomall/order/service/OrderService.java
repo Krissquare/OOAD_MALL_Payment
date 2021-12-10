@@ -453,6 +453,9 @@ public class OrderService {
         if (!oldOrder.getCustomerId().equals(userId)){
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
+        if (oldOrder.getState() < OrderState.SEND_GOODS.getCode()){
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
         Order newOrder = Common.cloneVo(updateOrderVo, Order.class);
         newOrder.setId(orderId);
         return orderDao.updateOrder(newOrder);
