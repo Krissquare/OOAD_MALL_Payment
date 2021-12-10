@@ -13,8 +13,8 @@ import javax.validation.constraints.Pattern;
 @Data
 @NoArgsConstructor
 public class UpdateOrderVo {
-    @NotNull @NotBlank String consignee;
-    @NotNull Long regionId;
+    String consignee;
+    Long regionId;
     String address;
     @Pattern(regexp = "^(13[0-9]|14[5|7]|15[0|1|2|3|5|6|7|8|9]|18[0|1|2|3|5|6|7|8|9])\\d{8}$",
              message = "电话号码不符合格式") String mobile;

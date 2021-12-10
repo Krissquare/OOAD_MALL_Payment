@@ -281,8 +281,8 @@ public class OrderService {
         if (!ret.getCode().equals(ReturnNo.OK)){
             return ret;
         }
-        Order order = (Order) ret.getData();
-        if (!order.getCustomerId().equals(userId)){
+        Order oldOrder = (Order) ret.getData();
+        if (!oldOrder.getCustomerId().equals(userId)){
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
         Order newOrder = Common.cloneVo(updateOrderVo, Order.class);
