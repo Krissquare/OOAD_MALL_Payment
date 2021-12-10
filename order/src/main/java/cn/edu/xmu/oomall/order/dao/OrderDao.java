@@ -134,6 +134,10 @@ public class OrderDao {
         }
     }
 
+    /**
+     * a-1
+     * @Auther Fang Zheng
+     * */
     public ReturnObject listBriefOrderByUserId(Long userId,
                                                String orderSn,
                                                Integer state,
@@ -148,6 +152,7 @@ public class OrderDao {
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria cr = orderPoExample.createCriteria();
             cr.andCustomerIdEqualTo(userId);
+            cr.andBeDeletedNotEqualTo((byte) 1);
             if (orderSn != null) {
                 cr.andOrderSnEqualTo(orderSn);
             }

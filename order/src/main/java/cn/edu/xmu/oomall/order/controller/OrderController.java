@@ -88,24 +88,24 @@ public class OrderController {
     }
 
 
-    @ApiOperation(value = "买家标记确认收货")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "订单id", required = true, dataType = "Long", paramType = "path"),
-            @ApiImplicitParam(name = "loginUser", value = "用户登录账号(id)", required = true, dataType = "Long", paramType = "query"),
-            @ApiImplicitParam(name = "loginUser", value = "用户登录名", required = true, dataType = "String", paramType = "query")
-    })
-    @ApiResponses({
-            @ApiResponse(code = 0, message = "成功"),
-            @ApiResponse(code = 504, message = "资源不存在"),
-            @ApiResponse(code = 503, message = "字段不合法"),
-            @ApiResponse(code = 500, message = "服务器内部错误"),
-            @ApiResponse(code = 505, message = "操作的资源id不是自己的对象")
-    })
-    @PutMapping("orders/{id}/confirm")
-    @Audit(departName = "order")
-    public Object confirmOrder(@PathVariable("id") Long id) {
-        return Common.decorateReturnObject(orderService.confirmOrder(id));
-    }
+//    @ApiOperation(value = "买家标记确认收货")
+//    @ApiImplicitParams({
+//            @ApiImplicitParam(name = "id", value = "订单id", required = true, dataType = "Long", paramType = "path"),
+//            @ApiImplicitParam(name = "loginUser", value = "用户登录账号(id)", required = true, dataType = "Long", paramType = "query"),
+//            @ApiImplicitParam(name = "loginUser", value = "用户登录名", required = true, dataType = "String", paramType = "query")
+//    })
+//    @ApiResponses({
+//            @ApiResponse(code = 0, message = "成功"),
+//            @ApiResponse(code = 504, message = "资源不存在"),
+//            @ApiResponse(code = 503, message = "字段不合法"),
+//            @ApiResponse(code = 500, message = "服务器内部错误"),
+//            @ApiResponse(code = 505, message = "操作的资源id不是自己的对象")
+//    })
+//    @PutMapping("orders/{id}/confirm")
+//    @Audit(departName = "order")
+//    public Object confirmOrder(@PathVariable("id") Long id) {
+//        return Common.decorateReturnObject(orderService.confirmOrder(id));
+//    }
 
 
     @ApiOperation(value = "店家查询商户所有订单（概要）")
@@ -167,6 +167,10 @@ public class OrderController {
         return Common.decorateReturnObject(orderService.listAllOrderState());
     }
 
+    /**
+     * a-1
+     * @Auther Fang Zheng
+     * */
     @GetMapping("orders")
     @Audit(departName = "order")
     public Object listCustomerBriefOrders(@LoginUser Long userId,

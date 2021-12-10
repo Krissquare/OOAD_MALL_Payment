@@ -148,11 +148,11 @@ public class OrderService {
         return orderDao.updateOrder(order);
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public ReturnObject confirmOrder(Long orderId) {
-        LocalDateTime nowTime = LocalDateTime.now();
-        return orderDao.confirmOrder(orderId, nowTime);
-    }
+//    @Transactional(rollbackFor = Exception.class)
+//    public ReturnObject confirmOrder(Long orderId) {
+//        LocalDateTime nowTime = LocalDateTime.now();
+//        return orderDao.confirmOrder(orderId, nowTime);
+//    }
 
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject listBriefOrdersByShopId(Long shopId, Integer pageNumber, Integer pageSize) {
@@ -184,6 +184,10 @@ public class OrderService {
         }
     }
 
+    /**
+     * a-1
+     * @Auther Fang Zheng
+     * */
     public ReturnObject listAllOrderState(){
         HashMap<Integer, String> ret = new HashMap<>();
         for (OrderState item: OrderState.values()){
@@ -192,6 +196,10 @@ public class OrderService {
         return new ReturnObject(ret);
     }
 
+    /**
+     * a-1
+     * @Auther Fang Zheng
+     * */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject listCustomerBriefOrder(Long userId,
                                                String orderSn,
