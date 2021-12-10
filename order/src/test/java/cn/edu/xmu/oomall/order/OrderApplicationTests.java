@@ -1,7 +1,10 @@
 package cn.edu.xmu.oomall.order;
 
+import cn.edu.xmu.oomall.core.util.JacksonUtil;
 import cn.edu.xmu.oomall.order.microservice.CustomService;
 import cn.edu.xmu.oomall.order.microservice.ShopService;
+import cn.edu.xmu.oomall.order.microservice.TransactionService;
+import cn.edu.xmu.oomall.order.model.vo.MarkShipmentVo;
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import cn.edu.xmu.privilegegateway.annotation.util.JwtHelper;
@@ -38,6 +41,8 @@ class OrderApplicationTests {
 
     @MockBean
     private CustomService customService;
+    @MockBean
+    private TransactionService transactionService;
     @Autowired
     private MockMvc mvc;
 
@@ -140,7 +145,8 @@ class OrderApplicationTests {
     @Test
     public void getOrderDetailTest() throws Exception {
         adminToken = jwtHelper.createToken(1L, "admin", 0L, 3600, 0);
-        String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/shops/1/orders/2").header("authorization", adminToken)
+        String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/shops/1/orders/2")
+                .header("authorization", adminToken)
                 .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
@@ -148,6 +154,74 @@ class OrderApplicationTests {
         String expected = "{\"errno\":0,\"data\":{\"id\":2,\"orderSn\":\"20216487652635231002\",\"customerVo\":{\"id\":1,\"name\":\"aaa\"},\"shopVo\":{\"id\":1,\"name\":\"aaa\"},\"pid\":1,\"state\":null,\"confirmTime\":null,\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"message\":\"好耶\",\"regionId\":1,\"address\":\"临沂\",\"mobile\":\"16253645342\",\"consignee\":\"gyt\",\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null,\"orderItems\":[{\"productId\":1,\"onsaleId\":1,\"quantity\":1,\"couponActId\":null,\"couponId\":1,\"price\":50,\"name\":\"巧克力\"}]},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
+
+    /**
+     * 管理员取消本店铺订单
+     * @throws Exception
+     */
+    @Test
+    public void cancelOrderByShop() throws Exception
+    {
+        String responseString = this.mvc.perform(delete("/shops/2/orders/4")
+                .contentType("application/json;charset=UTF-8")
+                .header("authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectedResponse = "{\"errno\":0,\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, true);
+    }
+    /**
+     * 店家对订单标记发货。（a-4）
+     * @throws Exception
+     */
+    @Test
+    public void markShipment() throws Exception
+    {
+        MarkShipmentVo markShipmentVo=new MarkShipmentVo();
+        markShipmentVo.setShipmentSn("123456");
+        String requestJSON = JacksonUtil.toJson(markShipmentVo);
+        String responseString = this.mvc.perform(put("/shops/3/orders/5/deliver")
+                .contentType("application/json;charset=UTF-8")
+                .header("authorization", token)
+                .content(requestJSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectedResponse = "{\"errno\":0,\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, true);
+    }
+
+    /**
+     * 查询自己订单的支付信息（a-4）
+     * @throws Exception
+     */
+    @Test
+    public void getPaymentByOrderId() throws Exception
+    {
+        String responseString = this.mvc.perform(get("/orders/1/payment")
+                .contentType("application/json;charset=UTF-8")
+                .header("authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectedResponse = "{\"errno\":0,\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, true);
+    }
+
+    @Test
+    public void confirmGrouponOrder() throws Exception
+    {
+        String responseString = this.mvc.perform(put("/internal/shops/3/grouponorders/6/confirm")
+                .contentType("application/json;charset=UTF-8")
+                .header("authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectedResponse = "{\"errno\":0,\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, true);
+    }
+
 
     @Test
     public void getTokens(){

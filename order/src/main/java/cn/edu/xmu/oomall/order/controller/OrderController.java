@@ -3,6 +3,7 @@ package cn.edu.xmu.oomall.order.controller;
 import cn.edu.xmu.oomall.core.util.Common;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
+import cn.edu.xmu.oomall.order.model.vo.MarkShipmentVo;
 import cn.edu.xmu.oomall.order.model.vo.OrderVo;
 import cn.edu.xmu.oomall.order.model.vo.SimpleOrderVo;
 import cn.edu.xmu.oomall.order.model.vo.UpdateOrderVo;
@@ -21,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
+
+import static cn.edu.xmu.oomall.core.util.Common.processFieldErrors;
 
 @RestController
 @RequestMapping(value = "/", produces = "application/json;charset=UTF-8")
@@ -194,6 +197,82 @@ public class OrderController {
     public Object getOrderDetail(@PathVariable("shopId") Long shopId, @PathVariable("id") Long id) {
         return Common.decorateReturnObject(orderService.getOrderDetail(shopId, id));
     }
+    /**
+     * gyt
+     * 管理员取消本店铺订单。（a-4）
+     * @param shopId
+     * @param id
+     * @return
+     */
+    @Audit(departName = "shops")
+    @DeleteMapping("/shops/{shopId}/orders/{id}")
+    public Object cancelOrderByShop(@LoginUser Long userId,
+                              @LoginName String userName,
+                              @PathVariable(value = "shopId") Long shopId,
+                              @PathVariable(value = "id") Long id) {
+        return Common.decorateReturnObject(orderService.cancelOrderByShop(shopId, id, userId, userName));
+    }
+
+    /**
+     * gyt
+     * 店家对订单标记发货。（a-4）
+     * @param loginUserId
+     * @param loginUserName
+     * @param shopId
+     * @param id
+     * @param markShipmentVo
+     * @param bindingResult
+     * @return
+     */
+    @Audit(departName = "shops")
+    @PutMapping("/shops/{shopId}/orders/{id}/deliver")
+    public Object deliverByShop(@LoginUser Long loginUserId,
+                               @LoginName String loginUserName,
+                               @PathVariable(value = "shopId") Long shopId,
+                               @PathVariable(value = "id") Long id,
+                               @Validated @RequestBody MarkShipmentVo markShipmentVo,
+                               BindingResult bindingResult) {
+        Object object = processFieldErrors(bindingResult, httpServletResponse);
+        if (object != null) {
+            return object;
+        }
+        return Common.decorateReturnObject(orderService.deliverByShop(shopId, id, markShipmentVo, loginUserId, loginUserName));
+    }
+    /**
+     * gyt
+     * 查询自己订单的支付信息（a-4）
+     * @param id
+     * @return
+     */
+    @Audit(departName = "shops")
+    @GetMapping("/orders/{id}/payment")
+    public Object getPaymentByOrderId(@LoginUser Long loginUserId,
+                                      @LoginName String loginUserName,
+                                      @PathVariable(value = "id") Long id) {
+        return Common.decorateReturnObject(orderService.getPaymentByOrderId(id,loginUserId,loginUserName));
+    }
+
+    /**
+     * author:hqg
+     * modified by:gyt
+     * 确认团购订单
+     * @param loginUserId
+     * @param loginUserName
+     * @param shopId
+     * @param id
+     * @return
+     */
+    @Audit(departName = "shops")
+    @PutMapping("/internal/shops/{shopId}/grouponorders/{id}/confirm")
+    public Object confirmGrouponOrder(@LoginUser Long loginUserId,
+                                      @LoginName String loginUserName,
+                                      @PathVariable(value = "shopId")Long shopId,
+                                      @PathVariable(value = "id")Long id
+                                      ){
+        return Common.decorateReturnObject(orderService.confirmGrouponOrder(shopId,id,loginUserId,loginUserName));
+    }
+
+
 
     /**
      * task a-1

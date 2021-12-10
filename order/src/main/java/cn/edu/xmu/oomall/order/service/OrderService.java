@@ -4,14 +4,12 @@ import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.dao.OrderDao;
 import cn.edu.xmu.oomall.order.microservice.*;
-import cn.edu.xmu.oomall.order.microservice.vo.AdvanceVo;
-import cn.edu.xmu.oomall.order.microservice.vo.GrouponActivityVo;
-import cn.edu.xmu.oomall.order.microservice.vo.OnSaleVo;
-import cn.edu.xmu.oomall.order.microservice.vo.ProductVo;
+import cn.edu.xmu.oomall.order.microservice.vo.*;
 import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderItem;
 import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.vo.*;
+import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import cn.edu.xmu.privilegegateway.annotation.util.Common;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.Objects;
+
+import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
+import static cn.edu.xmu.privilegegateway.annotation.util.Common.setPoModifiedFields;
 
 @Service
 public class OrderService {
@@ -46,6 +48,8 @@ public class OrderService {
 
     @Autowired
     ShopService shopService;
+    @Autowired
+    TransactionService transactionService;
 
     /**
      * 新建订单
@@ -263,10 +267,10 @@ public class OrderService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject confirmGrouponOrder(Long shopId, Long grouponActivityId, Long loginUserId, String loginUserName) {
-        ReturnObject<Order> retOrder = orderDao.getOrderById(grouponActivityId);
+    public ReturnObject confirmGrouponOrder(Long shopId, Long id, Long loginUserId, String loginUserName) {
+        ReturnObject<Order> retOrder = orderDao.getOrderById(id);
         // 判断订单存在与否
-        if (retOrder.getCode().equals(ReturnNo.OK)) {
+        if (!retOrder.getCode().equals(ReturnNo.OK)) {
             return retOrder;
         }
         // 判断订单是否为团购订单
@@ -274,19 +278,100 @@ public class OrderService {
         if (newOrder.getGrouponId() == null) {
             return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
-
+        if(!newOrder.getShopId().equals(shopId)){
+            return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
         // 设置订单状态为付款成功
         newOrder.setState(OrderState.FINISH_PAY.getCode());
         Common.setPoModifiedFields(newOrder, loginUserId, loginUserName);
         ReturnObject returnObject = orderDao.updateOrder(newOrder);
-
-//        TODO: 需根据团购规则退款
+        //TODO:解析团购规则json信息，计算退款价格
+//        TODO: 退款
 //        if (!returnObject.getCode().equals(ReturnNo.OK)) {
 //            return returnObject;
 //        }
 
         return returnObject;
     }
+    /**
+     * gyt
+     * 管理员取消本店铺订单。（a-4）
+     * @param id
+     * @param userId
+     * @param userName
+     * @return
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject cancelOrderByShop(Long shopId, Long id, Long userId, String userName) {
+        ReturnObject returnObject = orderDao.getOrderById(id);
+        if (returnObject.getCode() != ReturnNo.OK) {
+            return returnObject;
+        }
+        Order data = (Order) returnObject.getData();
+        if (!Objects.equals(data.getShopId(), shopId)) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        if (data.getState() == OrderState.COMPLETE_ORDER.getCode() || data.getState() == OrderState.CANCEL_ORDER.getCode()) {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
+        Order order = new Order();
+        order.setId(id);
+        order.setState(OrderState.CANCEL_ORDER.getCode());
+        Common.setPoModifiedFields(order, userId, userName);
+        return orderDao.updateOrder(order);
+    }
+    /**
+     * gyt
+     * 店家对订单标记发货。
+     * @param shopId
+     * @param id
+     * @param markShipmentVo
+     * @param loginUserId
+     * @param loginUserName
+     * @return
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject deliverByShop(Long shopId, Long id, MarkShipmentVo markShipmentVo, Long loginUserId, String loginUserName) {
+
+        ReturnObject returnObject = orderDao.getOrderById(id);
+        if (returnObject.getCode() != ReturnNo.OK) {
+            return returnObject;
+        }
+        Order order = (Order) returnObject.getData();
+        if (!order.getShopId().equals(shopId)) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        if (!order.getState().equals(OrderState.FINISH_PAY.getCode())) {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
+        LocalDateTime nowTime=LocalDateTime.now();
+        Order order1 = cloneVo(markShipmentVo, Order.class);
+        order1.setId(id);
+        order1.setConfirmTime(nowTime);
+        order1.setState(OrderState.SEND_GOODS.getCode());
+        setPoModifiedFields(order1, loginUserId, loginUserName);
+        return orderDao.updateOrder(order1);
+    }
+    /**
+     * gyt
+     * 查询自己订单的支付信息（a-4）
+     * @param id
+     * @return
+     */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject getPaymentByOrderId(Long id,Long loginUserId,String loginUserName) {
+        ReturnObject returnObject1 = orderDao.getOrderById(id);
+        if (returnObject1.getCode() != ReturnNo.OK) {
+            return returnObject1;
+        }
+        Order order = (Order) returnObject1.getData();
+        String ducumentId = order.getOrderSn();
+        ReturnObject returnObject = transactionService.listPayment(0L, ducumentId, null, null, null, 1, 10);
+        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
+        List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
+        return new ReturnObject(list);
+    }
+
     /**
      * a-1
      * @author Fang Zheng
