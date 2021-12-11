@@ -81,41 +81,84 @@ public class OrderService {
             if (onSaleVo.getData().getId().equals(productVo.getData().getOnSaleId())) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
             }
+            //判断couponActId;
             if(simpleOrderItemVo.getCouponActId()!=null){
-
+                InternalReturnObject couponActivityById = couponService.getCouponActivityById(onSaleVo.getData().getShop().getId(), simpleOrderItemVo.getCouponId());
+                if(couponActivityById.getErrno()!=0){
+                    return new ReturnObject(ReturnNo.getByCode(couponActivityById.getErrno()));
+                }
+            }
+            //
+            if(simpleOrderItemVo.getCouponId()!=null){
+                InternalReturnObject couponById = customService.getCouponById(simpleOrderItemVo.getCouponId());
+                if(couponById.getErrno()!=0){
+                    return new ReturnObject(ReturnNo.getByCode(couponById.getErrno()));
+                }
             }
         }
+        //验证除了orderItem的字段
+        if (simpleOrderVo.getGrouponId() != null) {
+            // 团购订单
+            //团购的list只能为1
+            if(orderItems.size()!=1){
+                return new ReturnObject(ReturnNo.FIELD_NOTVALID);
+            }
+            InternalReturnObject<GrouponActivityVo> grouponsById = activityService.getGrouponsById(simpleOrderVo.getGrouponId());
+            if (grouponsById.getErrno() != 0) {
+                return new ReturnObject(ReturnNo.getByCode(grouponsById.getErrno()));
+            }
+            SimpleOrderItemVo simpleOrderItemVo = orderItems.get(0);
+            OnSaleVo onSaleVo = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId()).getData();
+            //上面也判断过所以肯定存在
+            //判断onsaleid里的activity是不是couponid
+            if(!(onSaleVo.getType()==(byte)2&& onSaleVo.getActivityId().equals(simpleOrderVo.getGrouponId()))){
+                return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+            }
+            //得到价格
+            Long price = onSaleVo.getPrice();//单价*数量=总价
 
-        if (simpleOrderVo.getGrouponId() == null && simpleOrderVo.getAdvancesaleId() == null) {
-            // 普通订单
-            // TODO：都没有 传到3-1计算钱
-        } else {
-            // 团购、预售订单的orderItem必须为1
+        } else if(simpleOrderVo.getAdvancesaleId()!=null){
+            // 预售订单
+            InternalReturnObject<AdvanceVo> advanceSaleById = activityService.getAdvanceSaleById(simpleOrderVo.getAdvancesaleId());
             if (simpleOrderVo.getOrderItems().size() != 1) {
                 return new ReturnObject(ReturnNo.FIELD_NOTVALID);
             }
-
-            SimpleOrderItemVo simpleOrderItemVo = simpleOrderVo.getOrderItems().get(0);
-
-
-            // 验证完毕，开始算钱
-            if (simpleOrderVo.getGrouponId() != null) {
-                // 团购订单
-                InternalReturnObject<GrouponActivityVo> grouponsById = activityService.getGrouponsById(simpleOrderVo.getGrouponId());
-                if (grouponsById.getErrno() != 0) {
-                    return new ReturnObject(ReturnNo.getByCode(grouponsById.getErrno()));
-                }
-                // TODO：团购通过onsale去算 每一件就的价钱是onsale的价钱
-
-            } else if (simpleOrderVo.getAdvancesaleId() != null) {
-                // 预售订单
-                InternalReturnObject<AdvanceVo> advanceSaleById = activityService.getAdvanceSaleById(simpleOrderVo.getAdvancesaleId());
-                if (advanceSaleById.getErrno() != 0) {
-                    return new ReturnObject(ReturnNo.getByCode(advanceSaleById.getErrno()));
-                }
-                // TODO: 根据预售去算钱
+            if (advanceSaleById.getErrno()!=0){
+                return new ReturnObject(ReturnNo.getByCode(advanceSaleById.getErrno()));
             }
+            //钱
+            AdvanceVo data = advanceSaleById.getData();//单价*数量
+            Long price = data.getPrice();
+            Long advancePayPrice = data.getAdvancePayPrice();
+
+        }else {
+            //普通或者优惠订单
+            List<ProductPostVo> commonList = new ArrayList<>();
+            List<ProductPostVo> disList = new ArrayList<>();
+            for (SimpleOrderItemVo simpleOrderItemVo:simpleOrderVo.getOrderItems()){
+                OnSaleVo data = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId()).getData();
+                //价格*数量
+                Long price = data.getPrice();
+                ProductPostVo productPostVo = new ProductPostVo(simpleOrderItemVo.getProductId(), simpleOrderItemVo.getOnsaleId(), simpleOrderItemVo.getQuantity()
+                        , simpleOrderItemVo.getCouponActId(), price);
+                if (productPostVo.getActivityId()!=null){
+                    disList.add(productPostVo);
+                }else {
+                    commonList.add(productPostVo);
+                }
+            }
+            if (disList.size()!=0){
+                InternalReturnObject internalReturnObject = couponService.calculateDiscoutprices(disList);
+                if (internalReturnObject.getErrno()!=0){
+                    return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
+                }
+                //得到优惠钱
+                ProductRetVo productRetVo = (ProductRetVo) internalReturnObject.getData();
+                //TODO:计算普通的钱
+            }
+
         }
+        //TODO：组装vo
         return new ReturnObject();
     }
 

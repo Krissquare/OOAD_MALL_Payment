@@ -11,4 +11,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface CustomService {
     @GetMapping("/customers/{id}")
     InternalReturnObject<SimpleVo> getCustomerById(@PathVariable("id") Long id);
+
+    //TODO: 暂未做，可能会改
+    @GetMapping("/customers/couponId/{id}")
+    InternalReturnObject getCouponById(@PathVariable("id") Long id);
+
 }

@@ -6,15 +6,12 @@ import lombok.NoArgsConstructor;
 
 /**
  * @author xiuchen lang 22920192204222
- * @date 2021/12/07 17:29
- * 3-1返回内容
+ * @date 2021/12/10 21:57
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductRetVo {
-    private Long productId;
-    private Long onsaleId;
-    private Long discountPrice;
-    private Long activityId;
+public class CouponVo {
+    //TODO:等他们写全
+    Long id;
 }
