@@ -134,7 +134,7 @@ public class OrderController {
             @ApiResponse(code = 505, message = "操作的资源id不是自己的对象")
     })
     @GetMapping("shops/{shopId}/orders")
-    @Audit(departName = "order")
+    @Audit(departName = "shop")
     public Object listBriefOrdersByShopId(@PathVariable("shopId") Long shopId,
                                           @RequestParam(value="customerId",required = false)Long customerId,
                                           @RequestParam(value="orderSn",required = false) String orderSn,
@@ -176,7 +176,7 @@ public class OrderController {
             @ApiResponse(code = 505, message = "操作的资源id不是自己的对象")
     })
     @PutMapping("shops/{shopId}/orders/{id}")
-    @Audit(departName = "order")
+    @Audit(departName = "shop")
     public Object updateOrderComment(@PathVariable("shopId") Long shopId, @PathVariable("id") Long orderId, @Validated @RequestBody OrderVo orderVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName) {
         if (bindingResult.hasErrors()) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
@@ -192,7 +192,7 @@ public class OrderController {
      * @return
      */
     @GetMapping("shops/{shopId}/orders/{id}")
-    @Audit(departName = "order")
+    @Audit(departName = "shop")
     public Object getOrderDetail(@PathVariable("shopId") Long shopId, @PathVariable("id") Long id) {
         return Common.decorateReturnObject(orderService.getOrderDetail(shopId, id));
     }
@@ -271,8 +271,25 @@ public class OrderController {
         return Common.decorateReturnObject(orderService.confirmGrouponOrder(shopId,id,loginUserId,loginUserName));
     }
 
+    @Audit(departName = "order")
+    @GetMapping("orders/{id}/refund")
+    public Object listOrderRefunds(@PathVariable("id")Long id)
+    {
+        ReturnObject ret=orderService.listOrderRefunds(id);
+        return Common.decorateReturnObject(ret);
+    }
 
+    @Audit(departName = "order")
+    @GetMapping("internal/orderitems/{id}")
+    public Object getOrderItem(@PathVariable("id") Long id)
+    {
+        return Common.decorateReturnObject(orderService.getOrderItemById(id));
+    }
 
-
-
+    @Audit(departName="shop")
+    @PutMapping("internal/shops/{shopId}/orders/{id}/cancel")
+    public Object cancelOrderByShop(@PathVariable("shopId")Long shopId,@PathVariable("id") Long id,@LoginUser Long loginUserId,@LoginName String loginUserName)
+    {
+        return Common.decorateReturnObject(orderService.internalcancelOrderByShop(shopId,id,loginUserId,loginUserName));
+    }
 }

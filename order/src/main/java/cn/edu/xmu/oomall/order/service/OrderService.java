@@ -166,6 +166,46 @@ public class OrderService {
         return orderDao.updateOrder(order);
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject internalcancelOrderByShop(Long shopId,Long orderId,Long loginUserId,String loginUserName)
+    {
+        ReturnObject ret=orderDao.getOrderById(orderId);
+        if(!ret.getCode().equals(ReturnNo.OK))
+        {
+            return ret;
+        }
+        Order order=(Order) ret.getData();
+        if(!order.getShopId().equals(shopId))
+        {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        if(order.getState()==OrderState.CANCEL_ORDER.getCode()||order.getState()==OrderState.COMPLETE_ORDER.getCode())
+        {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
+        String documentId=order.getOrderSn();
+        ReturnObject returnObject = transactionService.listPayment(0L, documentId, null, null, null, 1, 10);
+        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
+        List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
+        if(list.size()==0)
+        {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+        }
+        for(PaymentRetVo paymentVo:list)
+        {
+            RefundRecVo refundRecVo=cloneVo(paymentVo,RefundRecVo.class);
+            refundRecVo.setPaymentId(paymentVo.getId());
+            InternalReturnObject<RefundRetVo> retRefund= transactionService.Refund(refundRecVo,1L,"admin");
+            if(retRefund.getData()==null)
+            {
+                return new ReturnObject(retRefund);
+            }
+        }
+        order.setState(OrderState.CANCEL_ORDER.getCode());
+        Common.setPoModifiedFields(order, loginUserId, loginUserName);
+        return orderDao.updateOrder(order);
+    }
+
 
     /**
      * 买家取消订单
@@ -369,6 +409,35 @@ public class OrderService {
         Map<String, Object> data = (Map<String, Object>) returnObject.getData();
         List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
         return new ReturnObject(list);
+    }
+
+    @Transactional(readOnly = true,rollbackFor = Exception.class)
+    public ReturnObject listOrderRefunds(Long id)
+    {
+        ReturnObject ret=orderDao.getOrderById(id);
+        if(!ret.getCode().equals(ReturnNo.OK))
+        {
+            return ret;
+        }
+        Order order=(Order)ret.getData();
+        String documentId=order.getOrderSn();
+        ReturnObject returnObject = transactionService.listRefund(0L, documentId, null, null, null, 1, 10);
+        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
+        List<RefundRetVo> list = (List<RefundRetVo>) data.get("list");
+        return new ReturnObject(list);
+    }
+
+    @Transactional(readOnly = true,rollbackFor = Exception.class)
+    public ReturnObject getOrderItemById(Long id)
+    {
+        ReturnObject ret=orderDao.getOrderItemById(id);
+        if(!ret.getCode().equals(ReturnNo.OK))
+        {
+            return ret;
+        }
+        OrderItem orderItem=(OrderItem) ret.getData();
+        OrderItemRetVo retVo=cloneVo(orderItem,OrderItemRetVo.class);
+        return new ReturnObject(retVo);
     }
 
 }

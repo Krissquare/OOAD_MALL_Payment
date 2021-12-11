@@ -136,4 +136,22 @@ public class OrderDao {
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
+
+    public ReturnObject getOrderItemById(Long id)
+    {
+        try
+        {
+            OrderItemPo orderItemPo=orderItemPoMapper.selectByPrimaryKey(id);
+            if(orderItemPo==null)
+            {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            OrderItem orderItem=cloneVo(orderItemPo,OrderItem.class);
+            return new ReturnObject(orderItem);
+        }catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+
+    }
 }
