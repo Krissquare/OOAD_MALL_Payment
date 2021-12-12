@@ -6,6 +6,7 @@ import cn.edu.xmu.oomall.transaction.model.vo.*;
 import cn.edu.xmu.oomall.transaction.service.TransactionService;
 import cn.edu.xmu.oomall.transaction.util.MyDateTime;
 import cn.edu.xmu.oomall.transaction.util.PaymentBill;
+import cn.edu.xmu.oomall.transaction.util.RefundBill;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
@@ -175,18 +176,6 @@ public class TransactionController {
     }
 
 
-
-    /**
-     * 内部API退款
-     * @param refundVo
-     * @return
-     */
-    @PostMapping("/internal/refunds")
-    public Object refund(@RequestBody RefundVo refundVo){
-        return transactionService.refund(refundVo);
-    }
-
-
     /**
      * 顾客请求支付
      */
@@ -199,6 +188,22 @@ public class TransactionController {
 
         PaymentBill paymentBill = requestPaymentVo.createPaymentBill();
         return Common.decorateReturnObject(transactionService.requestPayment(paymentBill, loginUserId, loginUserName));
+    }
+
+
+    /**
+     * 内部API退款
+     * @param refundVo
+     * @return
+     */
+    @PostMapping("/internal/refunds")
+    public Object requestRefund(@Validated @RequestBody RefundVo refundVo, BindingResult bindingResult){
+        if (bindingResult.hasErrors()) {
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
+        }
+
+        RefundBill refundBill = refundVo.createRefundBill();
+        return transactionService.requestRefund(refundBill);
     }
 
 }

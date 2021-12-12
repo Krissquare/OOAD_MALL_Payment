@@ -122,11 +122,14 @@ public class TransactionDao {
         }
     }
 
-    public ReturnObject listRefund(String documentId, Byte state, Byte documentType, Long patternId, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
+    public ReturnObject listRefund(Long paymentId, String documentId, Byte state, Byte documentType, Long patternId, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
         try {
             PageHelper.startPage(page, pageSize);
             RefundPoExample refundPoExample = new RefundPoExample();
             RefundPoExample.Criteria cr = refundPoExample.createCriteria();
+            if (paymentId != null) {
+                cr.andPaymentIdEqualTo(paymentId);
+            }
             if (documentId != null) {
                 cr.andDocumentIdEqualTo(documentId);
             }
@@ -182,16 +185,15 @@ public class TransactionDao {
             return new ReturnObject(ReturnNo.OK);
         }
     }
-    public ReturnObject insertRefund(Refund refund){
-        try{
-        RefundPo refundPo=cloneVo(refund,RefundPo.class);
-        refundPoMapper.insertSelective(refundPo);
-        return new ReturnObject(cloneVo(refundPo,Refund.class));}
-        catch (Exception e) {
+    public ReturnObject insertRefund(Refund refund) {
+        try {
+            RefundPo refundPo = cloneVo(refund, RefundPo.class);
+            refundPoMapper.insertSelective(refundPo);
+            return new ReturnObject(cloneVo(refundPo, Refund.class));
+        } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
-
     }
 
     public ReturnObject getPaymentPatternById(Long id) {
