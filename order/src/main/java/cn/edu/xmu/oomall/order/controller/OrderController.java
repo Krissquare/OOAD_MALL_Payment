@@ -281,7 +281,7 @@ public class OrderController {
 
     @Audit(departName = "order")
     @GetMapping("internal/orderitems/{id}")
-    public Object getOrderItem(@PathVariable("id") Long id)
+    public Object getOrderItemById(@PathVariable("id") Long id)
     {
         return Common.decorateReturnObject(orderService.getOrderItemById(id));
     }
@@ -292,4 +292,16 @@ public class OrderController {
     {
         return Common.decorateReturnObject(orderService.internalcancelOrderByShop(shopId,id,loginUserId,loginUserName));
     }
+
+    @Audit(departName = "order")
+    @GetMapping("internal/orderitems/{id}/payment")
+    public Object getPaymentByOrderItem(@PathVariable("id") Long id)
+    {
+        return Common.decorateReturnObject(orderService.getPaymentByOrderitem(id));
+    }
+
+//    @Audit(departName = "shop")
+//    @PostMapping("internal/shops/{shopId}/orders")
+//    public Object createAftersaleOrder()
+
 }

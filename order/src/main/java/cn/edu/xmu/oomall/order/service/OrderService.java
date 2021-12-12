@@ -4,6 +4,10 @@ import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.dao.OrderDao;
 import cn.edu.xmu.oomall.order.microservice.*;
+import cn.edu.xmu.oomall.order.microservice.bo.PaymentState;
+import cn.edu.xmu.oomall.order.microservice.bo.PaymentType;
+import cn.edu.xmu.oomall.order.microservice.bo.RefundState;
+import cn.edu.xmu.oomall.order.microservice.bo.RefundType;
 import cn.edu.xmu.oomall.order.microservice.vo.*;
 import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderItem;
@@ -12,6 +16,7 @@ import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import cn.edu.xmu.privilegegateway.annotation.util.Common;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
+import net.bytebuddy.asm.Advice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -184,18 +189,19 @@ public class OrderService {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
         String documentId=order.getOrderSn();
-        ReturnObject returnObject = transactionService.listPayment(0L, documentId, null, null, null, 1, 10);
+        ReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        if(!returnObject.getCode().equals(ReturnNo.OK))
+        {
+            return returnObject;
+        }
         Map<String, Object> data = (Map<String, Object>) returnObject.getData();
         List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
-        if(list.size()==0)
-        {
-            return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
-        }
         for(PaymentRetVo paymentVo:list)
         {
             RefundRecVo refundRecVo=cloneVo(paymentVo,RefundRecVo.class);
             refundRecVo.setPaymentId(paymentVo.getId());
-            InternalReturnObject<RefundRetVo> retRefund= transactionService.Refund(refundRecVo,1L,"admin");
+            refundRecVo.setDocumentType(RefundType.ORDER.getCode());
+            InternalReturnObject<RefundRetVo> retRefund= transactionService.Refund(refundRecVo,loginUserId,loginUserName);
             if(retRefund.getData()==null)
             {
                 return new ReturnObject(retRefund);
@@ -405,7 +411,11 @@ public class OrderService {
         }
         Order order = (Order) returnObject1.getData();
         String ducumentId = order.getOrderSn();
-        ReturnObject returnObject = transactionService.listPayment(0L, ducumentId, null, null, null, 1, 10);
+        ReturnObject returnObject = transactionService.listPayment(0L, ducumentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        if(!returnObject.getCode().equals(ReturnNo.OK))
+        {
+            return returnObject;
+        }
         Map<String, Object> data = (Map<String, Object>) returnObject.getData();
         List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
         return new ReturnObject(list);
@@ -421,7 +431,11 @@ public class OrderService {
         }
         Order order=(Order)ret.getData();
         String documentId=order.getOrderSn();
-        ReturnObject returnObject = transactionService.listRefund(0L, documentId, null, null, null, 1, 10);
+        ReturnObject returnObject = transactionService.listRefund(0L, documentId, RefundState.FINISH_REFUND.getCode(), null, null, 1, 10);
+        if(!returnObject.getCode().equals(ReturnNo.OK))
+        {
+            return returnObject;
+        }
         Map<String, Object> data = (Map<String, Object>) returnObject.getData();
         List<RefundRetVo> list = (List<RefundRetVo>) data.get("list");
         return new ReturnObject(list);
@@ -437,7 +451,49 @@ public class OrderService {
         }
         OrderItem orderItem=(OrderItem) ret.getData();
         OrderItemRetVo retVo=cloneVo(orderItem,OrderItemRetVo.class);
+        ReturnObject ret1=orderDao.getOrderById(orderItem.getOrderId());
+        if(!ret1.getCode().equals(ReturnNo.OK))
+        {
+            return ret1;
+        }
+        Order order=(Order) ret1.getData();
+        retVo.setCustomerId(order.getCustomerId());
         return new ReturnObject(retVo);
+    }
+
+    @Transactional(readOnly = true,rollbackFor = Exception.class)
+    public ReturnObject getPaymentByOrderitem(Long id)
+    {
+        ReturnObject ret=orderDao.getOrderItemById(id);
+        if(!ret.getCode().equals(ReturnNo.OK))
+        {
+            return ret;
+        }
+        OrderItem orderItem=(OrderItem) ret.getData();
+        ReturnObject ret1=orderDao.getOrderById(orderItem.getOrderId());
+        if(!ret1.getCode().equals(ReturnNo.OK))
+        {
+            return ret1;
+        }
+        Order order=(Order) ret1.getData();
+        String documentId=order.getOrderSn();
+        ReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        if(!returnObject.getCode().equals(ReturnNo.OK))
+        {
+            return returnObject;
+        }
+        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
+        List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
+        PaymentRetVo retPayment=null;
+        for(PaymentRetVo paymentRetVo:list)
+        {
+            if(paymentRetVo.getDocumentType().equals(PaymentType.ORDER_ADVANCE.getCode()))
+            {
+                continue;
+            }
+            retPayment=paymentRetVo;
+        }
+        return new ReturnObject(retPayment);
     }
 
 }

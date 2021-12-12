@@ -13,4 +13,5 @@ public class RefundRecVo {
     private Long paymentId;
     private String descr;
     private Long amount;
+    private Byte documentType;
 }

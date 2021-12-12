@@ -1,6 +1,7 @@
 package cn.edu.xmu.oomall.order.util;
 
 import cn.edu.xmu.oomall.core.util.ReturnObject;
+import cn.edu.xmu.oomall.order.microservice.bo.PaymentType;
 import cn.edu.xmu.oomall.order.microservice.vo.PaymentRetVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRetVo;
 
@@ -30,10 +31,12 @@ public class CreateObject {
         PaymentRetVo retVo=new PaymentRetVo();
         retVo.setId(1L);
         retVo.setAmount(500L);
+        retVo.setDocumentType(PaymentType.ORDER_ADVANCE.getCode());
         paymentList.add(retVo);
         PaymentRetVo retVo1=new PaymentRetVo();
         retVo1.setId(2L);
         retVo1.setAmount(100L);
+        retVo1.setDocumentType(PaymentType.ORDER_REST.getCode());
         paymentList.add(retVo1);
         Map<String,Object> map=new HashMap<>();
         map.put("list",paymentList);
