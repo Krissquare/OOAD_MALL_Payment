@@ -5,25 +5,23 @@ package cn.edu.xmu.oomall.transaction.model.bo;
  * @date 2021/12/09 20:32
  */
 public enum PaymentState {
-    WAIT_PAY((byte) 0, "待支付"),
-    ALREADY_PAY((byte) 1, "已支付"),
-    ALREADY_RECONCILIATION((byte) 2, "已对账"),
-    ALREADY_LIQUIDATION((byte) 3, "已清算"),
-    CANCLE((byte) 4, "已取消"),
-    FAIL((byte) 5, "失败");
+    WAIT_PAY((byte)0,"待支付"),
+    ALREADY_PAY((byte)1,"已支付"),
+    ALREADY_RECONCILIATION((byte)2,"已对账"),
+    ALREADY_LIQUIDATION((byte)3,"已清算"),
+    CANCEL((byte)4,"取消"),
+    FAIL((byte)5,"支付失败");
     private Byte code;
     private String state;
-
-    PaymentState(Byte code, String state) {
+    PaymentState(Byte code, String state){
         this.code = code;
         this.state = state;
     }
-
     public Byte getCode() {
         return code;
     }
 
-    public String getState() {
+    public String getState(){
         return state;
     }
 }

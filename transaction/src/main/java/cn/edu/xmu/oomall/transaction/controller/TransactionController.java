@@ -176,33 +176,47 @@ public class TransactionController {
     }
 
     /**
-     * /wechat/payment/notify微信支付通知API
-     * @param signature
+     * gyt
+     * 微信支付通知API
      * @param wechatPaymentNotifyVo
      * @return
      */
     @PostMapping("/wechat/payment/notify")
-    private Object paymentNotifyByWechat(@RequestHeader("Wechatpay-Signature")String signature,
-                                         @RequestBody WechatPaymentNotifyVo wechatPaymentNotifyVo){
-        transactionService.paymentNotifyByWechat(wechatPaymentNotifyVo);
-        return wechatPaymentNotifyVo;
+    public Object paymentNotifyByWechat(@RequestBody WechatPaymentNotifyVo wechatPaymentNotifyVo){
+        return transactionService.paymentNotifyByWechat(wechatPaymentNotifyVo);
     }
 
     /**
-     * /wechat/refund/notify微信退款通知API
-     * @param signature
+     * gyt
+     * 微信退款通知API
      * @param wechatRefundNotifyVo
      * @return
      */
     @PostMapping("/wechat/refund/notify")
-    public Object refundNotifyByWechat(@RequestHeader("Wechatpay-Signature")String signature,
-                                       @RequestBody WechatRefundNotifyVo wechatRefundNotifyVo){
-        return null;
+    public Object refundNotifyByWechat(@RequestBody WechatRefundNotifyVo wechatRefundNotifyVo){
+        return transactionService.refundNotifyByWechat(wechatRefundNotifyVo);
     }
 
+    /**
+     * gyt
+     * 阿里异步t通知API
+     * @param alipayNotifyVo
+     * @return
+     */
     @PostMapping("/alipay/notify")
     public Object notifyByAlipay(@RequestBody AlipayNotifyVo alipayNotifyVo){
-        return null;
+
+        return transactionService.notifyByAlipay(alipayNotifyVo);
+    }
+
+    /**
+     * 内部API退款
+     * @param refundVo
+     * @return
+     */
+    @PostMapping("/internal/refunds")
+    public Object refund(@RequestBody RefundVo refundVo){
+        return transactionService.refund(refundVo);
     }
 
     /**
