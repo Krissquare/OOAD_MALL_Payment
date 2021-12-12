@@ -3,11 +3,12 @@ package cn.edu.xmu.oomall.transaction.dao;
 import cn.edu.xmu.oomall.core.util.Common;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
+import cn.edu.xmu.oomall.transaction.mapper.PaymentPatternPoMapper;
 import cn.edu.xmu.oomall.transaction.mapper.PaymentPoMapper;
 import cn.edu.xmu.oomall.transaction.model.bo.Payment;
-import cn.edu.xmu.oomall.transaction.model.po.PaymentPo;
-import cn.edu.xmu.oomall.transaction.model.po.PaymentPoExample;
+import cn.edu.xmu.oomall.transaction.model.po.*;
 import cn.edu.xmu.oomall.transaction.model.vo.PaymentRetVo;
+import cn.edu.xmu.oomall.transaction.model.vo.SimpleVo;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.slf4j.Logger;
@@ -15,11 +16,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import cn.edu.xmu.oomall.transaction.mapper.RefundPoMapper;
 import cn.edu.xmu.oomall.transaction.model.bo.Refund;
-import cn.edu.xmu.oomall.transaction.model.po.RefundPo;
-import cn.edu.xmu.oomall.transaction.model.po.RefundPoExample;
 import cn.edu.xmu.oomall.transaction.model.vo.RefundRetVo;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
@@ -29,10 +29,16 @@ public class TransactionDao {
     private static final Logger logger = LoggerFactory.getLogger(TransactionDao.class);
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private PaymentPoMapper paymentPoMapper;
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private RefundPoMapper refundPoMapper;
+
+    @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+    private PaymentPatternPoMapper paymentPatternPoMapper;
 
     public ReturnObject listPayment(Long patternId,String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
     {
@@ -159,6 +165,17 @@ public class TransactionDao {
             return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
         } else {
             return new ReturnObject(ReturnNo.OK);
+        }
+    }
+
+    public ReturnObject listAllPayPattern(){
+        try {
+            PaymentPatternPoExample paymentPatternPoExample = new PaymentPatternPoExample();
+            List<PaymentPatternPo> validPayPatterns = paymentPatternPoMapper.selectByExample(paymentPatternPoExample);
+            return new ReturnObject(validPayPatterns);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
 

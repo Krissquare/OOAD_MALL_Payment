@@ -219,9 +219,36 @@ public class TransactionController {
         return null;
     }
 
-    @GetMapping("/payments/states")
-    public Object listAllPaymentStates(){
+    /**
+     * @author fz
+     * 获得所有支付渠道状态
+     * */
+    @GetMapping("/paypatterns/states")
+    public Object listAllPayPatternsStates(){
         return Common.decorateReturnObject(transactionService.listAllPaymentState());
+    }
+
+    /**
+     * @author fz
+     * 获取当前有效的支付渠道
+     * */
+    @GetMapping("/paypatterns")
+    @Audit(departName = "payment")
+    public Object listAllValidPayPatterns(@LoginUser Long userId){
+        return Common.decorateReturnObject(transactionService.listAllValidPayPatterns());
+    }
+
+    /**
+     * fz
+     * 获得所有的支付渠道
+     * */
+    @GetMapping("/shops/{shopId}/paypatterns")
+    @Audit(departName = "payment")
+    public Object listAllPayPatterns(@PathVariable("shopId") Long shopId){
+        if (!shopId.equals(0)){
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
+        }
+        return transactionService.listAllPayPatterns();
     }
 
 }
