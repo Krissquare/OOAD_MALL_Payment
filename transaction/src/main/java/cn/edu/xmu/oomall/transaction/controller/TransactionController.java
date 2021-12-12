@@ -2,7 +2,7 @@ package cn.edu.xmu.oomall.transaction.controller;
 
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
-import cn.edu.xmu.oomall.transaction.model.vo.PaymentModifyVo;
+import cn.edu.xmu.oomall.transaction.model.vo.*;
 import cn.edu.xmu.oomall.transaction.service.TransactionService;
 import cn.edu.xmu.oomall.transaction.util.MyDateTime;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
@@ -19,11 +19,6 @@ import java.time.LocalDateTime;
 
 import static cn.edu.xmu.oomall.core.util.Common.processFieldErrors;
 import cn.edu.xmu.oomall.core.util.Common;
-import cn.edu.xmu.oomall.transaction.model.vo.RefundRecVo;
-
-import cn.edu.xmu.oomall.transaction.model.vo.AlipayNotifyVo;
-import cn.edu.xmu.oomall.transaction.model.vo.WechatPaymentNotifyVo;
-import cn.edu.xmu.oomall.transaction.model.vo.WechatRefundNotifyVo;
 
 @RestController
 @RequestMapping(value = "", produces = "application/json;charset=UTF-8")
@@ -190,32 +185,46 @@ public class TransactionController {
     }
 
     /**
-     * /wechat/payment/notify微信支付通知API
-     * @param signature
+     * gyt
+     * 微信支付通知API
      * @param wechatPaymentNotifyVo
      * @return
      */
     @PostMapping("/wechat/payment/notify")
-    private Object paymentNotifyByWechat(@RequestHeader("Wechatpay-Signature")String signature,
-                                         @RequestBody WechatPaymentNotifyVo wechatPaymentNotifyVo){
-        transactionService.paymentNotifyByWechat(wechatPaymentNotifyVo);
-        return wechatPaymentNotifyVo;
+    public Object paymentNotifyByWechat(@RequestBody WechatPaymentNotifyVo wechatPaymentNotifyVo){
+        return transactionService.paymentNotifyByWechat(wechatPaymentNotifyVo);
     }
 
     /**
-     * /wechat/refund/notify微信退款通知API
-     * @param signature
+     * gyt
+     * 微信退款通知API
      * @param wechatRefundNotifyVo
      * @return
      */
     @PostMapping("/wechat/refund/notify")
-    public Object refundNotifyByWechat(@RequestHeader("Wechatpay-Signature")String signature,
-                                       @RequestBody WechatRefundNotifyVo wechatRefundNotifyVo){
-        return null;
+    public Object refundNotifyByWechat(@RequestBody WechatRefundNotifyVo wechatRefundNotifyVo){
+        return transactionService.refundNotifyByWechat(wechatRefundNotifyVo);
     }
 
+    /**
+     * gyt
+     * 阿里异步t通知API
+     * @param alipayNotifyVo
+     * @return
+     */
     @PostMapping("/alipay/notify")
     public Object notifyByAlipay(@RequestBody AlipayNotifyVo alipayNotifyVo){
-        return null;
+
+        return transactionService.notifyByAlipay(alipayNotifyVo);
+    }
+
+    /**
+     * 内部API退款
+     * @param refundVo
+     * @return
+     */
+    @PostMapping("/internal/refunds")
+    public Object refund(@RequestBody RefundVo refundVo){
+        return transactionService.refund(refundVo);
     }
 }

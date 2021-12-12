@@ -161,5 +161,16 @@ public class TransactionDao {
             return new ReturnObject(ReturnNo.OK);
         }
     }
+    public ReturnObject insertRefund(Refund refund){
+        try{
+        RefundPo refundPo=cloneVo(refund,RefundPo.class);
+        refundPoMapper.insertSelective(refundPo);
+        return new ReturnObject(cloneVo(refundPo,Refund.class));}
+        catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+
+    }
 
 }

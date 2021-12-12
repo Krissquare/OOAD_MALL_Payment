@@ -9,7 +9,8 @@ public enum PaymentState {
     ALREADY_PAY((byte)1,"已支付"),
     ALREADY_RECONCILIATION((byte)2,"已对账"),
     ALREADY_LIQUIDATION((byte)3,"已清算"),
-    FAIL((byte)5,"失败");
+    CANCEL((byte)4,"取消"),
+    FAIL((byte)5,"支付失败");
     private Byte code;
     private String state;
     PaymentState(Byte code, String state){
