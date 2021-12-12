@@ -20,8 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
-import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
-import static cn.edu.xmu.privilegegateway.annotation.util.Common.setPoModifiedFields;
+import static cn.edu.xmu.privilegegateway.annotation.util.Common.*;
 
 @Service
 public class TransactionService {
@@ -213,6 +212,18 @@ public class TransactionService {
         TransactionPattern pattern = transactionPatternFactory.getPatternInstance(paymentBill.getPatternId());
         if (validExistedPayment == null) {
             // 不存在匹配的流水，则需要新建
+            Payment payment = cloneVo(paymentBill, Payment.class);
+            setPoCreatedFields(payment, loginUserId, loginUserName);
+            setPoModifiedFields(payment, loginUserId, loginUserName);
+            ReturnObject<Payment> retPayment = transactionDao.insertPayment(payment);
+
+            if (!retPayment.getCode().equals(ReturnNo.OK)) {
+                return retPayment;
+            }
+
+            // 然后请求支付宝
+            ReturnObject ret = pattern.requestPayment(retPayment.getData().getId(), paymentBill);
+
 
         } else {
             // 存在匹配的流水，则需要更新

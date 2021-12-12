@@ -1,5 +1,6 @@
 package cn.edu.xmu.oomall.transaction.util;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 public class PaymentBill {
+
     @NotNull
     private Long patternId;
 
@@ -29,4 +31,5 @@ public class PaymentBill {
 
     @NotNull
     private LocalDateTime endTime;
+
 }

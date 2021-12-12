@@ -36,6 +36,17 @@ public class TransactionDao {
     @Autowired
     private PaymentPatternPoMapper paymentPatternPoMapper;
 
+    public ReturnObject insertPayment(Payment payment) {
+        try {
+            PaymentPo po = cloneVo(payment, PaymentPo.class);
+            paymentPoMapper.insert(po);
+            return new ReturnObject<>(cloneVo(po, Payment.class));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
 
     public ReturnObject listPayment(Long patternId,String documentId, Byte documentType, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
     {

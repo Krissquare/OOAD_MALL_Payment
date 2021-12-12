@@ -12,7 +12,7 @@ public class AlipayTransaction extends TransactionPattern {
 
 
     @Override
-    public ReturnObject requestPayment(PaymentBill bill) {
+    public ReturnObject requestPayment(Long requestNo, PaymentBill bill) {
         return null;
     }
 }
