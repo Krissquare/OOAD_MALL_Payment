@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
  * @date 2021/12/09 21:14
  */
 public class NotifyRetVo {
-    String code="success";
-    String message="成功";
+    String code = "success";
+
+    String message = "成功";
 }

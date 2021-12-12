@@ -6,6 +6,10 @@ import cn.edu.xmu.oomall.transaction.dao.TransactionDao;
 import cn.edu.xmu.oomall.transaction.model.bo.Payment;
 import cn.edu.xmu.oomall.transaction.model.bo.PaymentState;
 import cn.edu.xmu.oomall.transaction.model.vo.*;
+import cn.edu.xmu.oomall.transaction.util.PaymentBill;
+import cn.edu.xmu.oomall.transaction.util.TransactionPattern;
+import cn.edu.xmu.oomall.transaction.util.TransactionPatternFactory;
+import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import cn.edu.xmu.oomall.transaction.model.bo.Refund;
 import cn.edu.xmu.oomall.transaction.model.bo.RefundState;
@@ -13,14 +17,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.setPoModifiedFields;
 
 @Service
 public class TransactionService {
+
     @Autowired
     private TransactionDao transactionDao;
+
+    @Autowired
+    private TransactionPatternFactory transactionPatternFactory;
 
     /**
      * gyt
@@ -36,7 +46,7 @@ public class TransactionService {
      */
     @Transactional(readOnly = true)
     public ReturnObject listPayment(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
-        return transactionDao.listPayment(null, documentId, state, beginTime, endTime, page, pageSize);
+        return transactionDao.listPayment(null, documentId, null, state, beginTime, endTime, page, pageSize);
 
     }
 
@@ -49,7 +59,7 @@ public class TransactionService {
      */
     @Transactional(readOnly = true)
     public ReturnObject getPaymentDetails(Long id) {
-        ReturnObject returnObject = transactionDao.getPaymentDetails(id);
+        ReturnObject returnObject = transactionDao.getPaymentById(id);
         if (!returnObject.getCode().equals(ReturnNo.OK)) {
             return returnObject;
         }
@@ -69,7 +79,7 @@ public class TransactionService {
      */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject updatePayment(Long id, Long loginUserId, String loginUserName, PaymentModifyVo paymentModifyVo) {
-        ReturnObject returnObject = transactionDao.getPaymentDetails(id);
+        ReturnObject returnObject = transactionDao.getPaymentById(id);
         if (!returnObject.getCode().equals(ReturnNo.OK)) {
             return returnObject;
         }
@@ -102,7 +112,7 @@ public class TransactionService {
      * @return
      */
     public ReturnObject listRefund(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
-        return transactionDao.listRefund(documentId, state, null, beginTime, endTime, page, pageSize);
+        return transactionDao.listRefund(documentId, state, null,null, beginTime, endTime, page, pageSize);
     }
 
     /**
@@ -154,6 +164,60 @@ public class TransactionService {
     }
 
     public ReturnObject paymentNotifyByWechat(WechatPaymentNotifyVo wechatPaymentNotifyVo) {
+
+        return null;
+    }
+
+
+    public ReturnObject requestPayment(PaymentBill paymentBill, Long loginUserId, String loginUserName) {
+        // 根据documentId, documentType去查payment
+        ReturnObject<PageInfo<Payment>> retPaymentPageInfo =
+                transactionDao.listPayment(paymentBill.getPatternId(), null, paymentBill.getDocumentType(), null, null, null, 1, 100);
+        if (!retPaymentPageInfo.getCode().equals(ReturnNo.OK)) {
+            return retPaymentPageInfo;
+        }
+
+        // 获取paymentList
+        Map<String, Object> retMap = (Map<String, Object>) retPaymentPageInfo.getData();
+        List<Payment> paymentList = (List<Payment>) retMap.get("list");
+
+        Payment validExistedPayment = null;
+        for (Payment payment : paymentList) {
+            // 判断是否存在已支付、已对账、已清算的流水
+            if (payment.getState().equals(PaymentState.ALREADY_PAY.getCode()) ||
+                payment.getState().equals(PaymentState.ALREADY_RECONCILIATION.getCode()) ||
+                payment.getState().equals(PaymentState.ALREADY_LIQUIDATION.getCode())) {
+                return new ReturnObject(ReturnNo.STATENOTALLOW);
+            }
+
+            // TODO: 判断是否在beginTime和endTime内
+
+            // 判断是否存在待支付超时流水，不在这里判断
+//            if (LocalDateTime.now().isAfter(payment.getEndTime()) &&
+//                payment.getState().equals(PaymentState.WAIT_PAY.getCode())) {
+//                payment.setState(PaymentState.CANCLE.getCode());
+//                setPoModifiedFields(payment, loginUserId, loginUserName);
+//
+//
+//                transactionDao.updatePayment(payment);
+//            }
+
+            // 判断是否存在匹配支付渠道的待支付流水
+            if (paymentBill.getPatternId().equals(payment.getPatternId()) &&
+                payment.getState().equals(PaymentState.WAIT_PAY.getCode())) {
+                validExistedPayment = payment;
+            }
+        }
+
+        // 开始请求支付
+        TransactionPattern pattern = transactionPatternFactory.getPatternInstance(paymentBill.getPatternId());
+        if (validExistedPayment == null) {
+            // 不存在匹配的流水，则需要新建
+
+        } else {
+            // 存在匹配的流水，则需要更新
+        }
+
         return null;
     }
 
