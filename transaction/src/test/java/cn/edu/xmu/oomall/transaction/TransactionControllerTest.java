@@ -1,14 +1,17 @@
 package cn.edu.xmu.oomall.transaction;
 
 import cn.edu.xmu.oomall.core.util.JacksonUtil;
-import cn.edu.xmu.oomall.transaction.microservice.AlipayService;
-import cn.edu.xmu.oomall.transaction.microservice.WeChatPayService;
-import cn.edu.xmu.oomall.transaction.model.bo.AlipayMethod;
-import cn.edu.xmu.oomall.transaction.model.bo.AlipayTradeState;
-import cn.edu.xmu.oomall.transaction.model.bo.WechatRefundState;
-import cn.edu.xmu.oomall.transaction.model.bo.WechatTradeState;
+import cn.edu.xmu.oomall.transaction.util.alipay.microservice.AlipayMicroService;
+import cn.edu.xmu.oomall.transaction.util.alipay.model.vo.WechatPaymentNotifyVo;
+import cn.edu.xmu.oomall.transaction.util.alipay.model.vo.WechatRefundNotifyVo;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.WeChatMicroService;
+import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayMethod;
+import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayTradeState;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatRefundState;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatTradeState;
 import cn.edu.xmu.oomall.transaction.model.vo.*;
 import cn.edu.xmu.oomall.transaction.util.MyDateTime;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.AlipayNotifyVo;
 import cn.edu.xmu.privilegegateway.annotation.util.JwtHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,10 +32,8 @@ import java.nio.charset.StandardCharsets;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.security.Key;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
@@ -45,9 +46,9 @@ public class TransactionControllerTest {
     @Autowired
     private RedisTemplate redisTemplate;
     @Autowired
-    private AlipayService alipayService;
+    private AlipayMicroService alipayService;
     @Autowired
-    private WeChatPayService weChatPayService;
+    private WeChatMicroService weChatPayService;
     @Value("${oomall.transaction.expiretime}")
     private long transactionExpireTime;
     private static String adminToken;

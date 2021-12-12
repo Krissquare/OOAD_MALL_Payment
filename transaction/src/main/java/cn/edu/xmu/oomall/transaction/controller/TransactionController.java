@@ -15,18 +15,17 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 
-import static cn.edu.xmu.oomall.core.util.Common.processFieldErrors;
+
 import cn.edu.xmu.oomall.core.util.Common;
 
 @RestController
 @RequestMapping(value = "", produces = "application/json;charset=UTF-8")
 public class TransactionController {
+
     @Autowired
     private TransactionService transactionService;
-
 
     /**
      * gyt
@@ -175,39 +174,7 @@ public class TransactionController {
         return Common.decorateReturnObject(transactionService.updateRefund(id, refundRecVo, loginUserId, loginUserName));
     }
 
-    /**
-     * gyt
-     * 微信支付通知API
-     * @param wechatPaymentNotifyVo
-     * @return
-     */
-    @PostMapping("/wechat/payment/notify")
-    public Object paymentNotifyByWechat(@RequestBody WechatPaymentNotifyVo wechatPaymentNotifyVo){
-        return transactionService.paymentNotifyByWechat(wechatPaymentNotifyVo);
-    }
 
-    /**
-     * gyt
-     * 微信退款通知API
-     * @param wechatRefundNotifyVo
-     * @return
-     */
-    @PostMapping("/wechat/refund/notify")
-    public Object refundNotifyByWechat(@RequestBody WechatRefundNotifyVo wechatRefundNotifyVo){
-        return transactionService.refundNotifyByWechat(wechatRefundNotifyVo);
-    }
-
-    /**
-     * gyt
-     * 阿里异步t通知API
-     * @param alipayNotifyVo
-     * @return
-     */
-    @PostMapping("/alipay/notify")
-    public Object notifyByAlipay(@RequestBody AlipayNotifyVo alipayNotifyVo){
-
-        return transactionService.notifyByAlipay(alipayNotifyVo);
-    }
 
     /**
      * 内部API退款
@@ -219,8 +186,9 @@ public class TransactionController {
         return transactionService.refund(refundVo);
     }
 
+
     /**
-     * 请求支付
+     * 顾客请求支付
      */
     @PostMapping("/payments")
     public Object requestPayment(@Validated @RequestBody RequestPaymentVo requestPaymentVo, BindingResult bindingResult,

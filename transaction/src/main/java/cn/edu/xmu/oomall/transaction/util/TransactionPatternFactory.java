@@ -4,7 +4,7 @@ import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.transaction.dao.TransactionDao;
 import cn.edu.xmu.oomall.transaction.util.alipay.AlipayTransaction;
-import cn.edu.xmu.oomall.transaction.util.wechatpay.WechatpayTransaction;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.WechatTransaction;
 import cn.edu.xmu.oomall.transaction.model.bo.PaymentPattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ public class TransactionPatternFactory {
     private AlipayTransaction alipayTransaction;
 
     @Autowired
-    private WechatpayTransaction wechatpayTransaction;
+    private WechatTransaction wechatpayTransaction;
 
     @Autowired
     private TransactionDao transactionDao;

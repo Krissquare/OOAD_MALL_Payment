@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.transaction.model.bo;
+package cn.edu.xmu.oomall.transaction.util.alipay.model.bo;
 
 /**
  * @author 高艺桐 22920192204199

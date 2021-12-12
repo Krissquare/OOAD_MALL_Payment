@@ -6,6 +6,7 @@ import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.model.vo.MarkShipmentVo;
 import cn.edu.xmu.oomall.order.model.vo.OrderVo;
 import cn.edu.xmu.oomall.order.model.vo.SimpleOrderVo;
+import cn.edu.xmu.oomall.order.model.vo.UpdateOrderVo;
 import cn.edu.xmu.oomall.order.service.OrderService;
 import cn.edu.xmu.oomall.order.util.MyDateTime;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;

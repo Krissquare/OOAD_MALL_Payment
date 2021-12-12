@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.transaction.microservice.vo;
+package cn.edu.xmu.oomall.transaction.util.alipay.microservice.vo;
 
 import cn.edu.xmu.oomall.transaction.util.AlipayReturnNo;
 import com.fasterxml.jackson.annotation.JsonInclude;

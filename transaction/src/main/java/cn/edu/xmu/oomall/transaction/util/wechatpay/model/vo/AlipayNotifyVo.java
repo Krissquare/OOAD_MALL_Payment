@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.transaction.model.vo;
+package cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo;
 
 import cn.edu.xmu.oomall.transaction.util.MyDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
