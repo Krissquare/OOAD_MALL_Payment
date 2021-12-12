@@ -68,7 +68,7 @@ public class TransactionDao {
     }
 
 
-    public ReturnObject getPaymentDetails(Long id)
+    public ReturnObject getPaymentById(Long id)
     {
         try{
             PaymentPo paymentPo=paymentPoMapper.selectByPrimaryKey(id);
