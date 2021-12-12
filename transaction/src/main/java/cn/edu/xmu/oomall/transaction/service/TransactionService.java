@@ -53,7 +53,7 @@ public class TransactionService {
      */
     @Transactional(readOnly = true)
     public ReturnObject getPaymentDetails(Long id) {
-        ReturnObject returnObject = transactionDao.getPaymentDetails(id);
+        ReturnObject returnObject = transactionDao.getPaymentById(id);
         if (!returnObject.getCode().equals(ReturnNo.OK)) {
             return returnObject;
         }
@@ -73,7 +73,7 @@ public class TransactionService {
      */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject updatePayment(Long id, Long loginUserId, String loginUserName, PaymentModifyVo paymentModifyVo) {
-        ReturnObject returnObject = transactionDao.getPaymentDetails(id);
+        ReturnObject returnObject = transactionDao.getPaymentById(id);
         if (!returnObject.getCode().equals(ReturnNo.OK)) {
             return returnObject;
         }
