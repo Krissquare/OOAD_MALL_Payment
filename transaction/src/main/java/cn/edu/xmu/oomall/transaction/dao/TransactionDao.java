@@ -3,10 +3,12 @@ package cn.edu.xmu.oomall.transaction.dao;
 import cn.edu.xmu.oomall.core.util.Common;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
+import cn.edu.xmu.oomall.transaction.mapper.ErrorAccountPoMapper;
 import cn.edu.xmu.oomall.transaction.mapper.PaymentPatternPoMapper;
 import cn.edu.xmu.oomall.transaction.mapper.PaymentPoMapper;
 import cn.edu.xmu.oomall.transaction.model.bo.Payment;
 import cn.edu.xmu.oomall.transaction.model.po.*;
+import cn.edu.xmu.oomall.transaction.model.vo.ErrorAccountVo;
 import cn.edu.xmu.oomall.transaction.model.vo.PaymentRetVo;
 import cn.edu.xmu.oomall.transaction.model.vo.SimpleVo;
 import com.github.pagehelper.PageHelper;
@@ -39,6 +41,10 @@ public class TransactionDao {
     @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private PaymentPatternPoMapper paymentPatternPoMapper;
+
+    @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+    private ErrorAccountPoMapper errorAccountPoMapper;
 
     public ReturnObject listPayment(Long patternId,String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
     {
@@ -173,6 +179,37 @@ public class TransactionDao {
             PaymentPatternPoExample paymentPatternPoExample = new PaymentPatternPoExample();
             List<PaymentPatternPo> validPayPatterns = paymentPatternPoMapper.selectByExample(paymentPatternPoExample);
             return new ReturnObject(validPayPatterns);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
+    public ReturnObject listErrorAccountsVoByConditions(String documentId,
+                                                        Byte state,
+                                                        LocalDateTime beginTime,
+                                                        LocalDateTime endTime,
+                                                        Integer page,
+                                                        Integer pageSize){
+        try {
+            ErrorAccountPoExample errorAccountPoExample = new ErrorAccountPoExample();
+            ErrorAccountPoExample.Criteria criteria = errorAccountPoExample.createCriteria();
+            if (documentId != null){
+//                criteria.andDocumentIdEqualTo(documentId);
+            }
+            if (state != null){
+                criteria.andStateEqualTo(state);
+            }
+            if (beginTime != null){
+                criteria.andTimeGreaterThanOrEqualTo(beginTime);
+            }
+            if (beginTime != null){
+                criteria.andTimeLessThanOrEqualTo(endTime);
+            }
+            PageHelper.startPage(page, pageSize, true, true, true);
+            List<ErrorAccountPo> errorAccountPoList = errorAccountPoMapper.selectByExample(errorAccountPoExample);
+            ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo<>(errorAccountPoList));
+            return Common.getPageRetVo(ret, ErrorAccountVo.class);
         }catch (Exception e){
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());

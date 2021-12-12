@@ -263,6 +263,45 @@ public class TransactionController {
 
     /**
      * b-3 fz
+     * 平台管理员查询错账信息
+     * */
+    @GetMapping("/shops/{shopId}/erroraccounts")
+    @Audit(departName = "payment")
+    public Object listAllErrorAccountsByAdmin(@PathVariable("shopId") Long shopId,
+                                              @LoginUser Long adminId,
+                                              @RequestParam(value = "documentId", required = false) String documentId,
+                                              @RequestParam(value = "state", required = false) Byte state,
+                                              @RequestParam(value = "beginTime", required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
+                                              @RequestParam(value = "endTime", required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime endTime,
+                                              @RequestParam(value = "page", required = false) Integer page,
+                                              @RequestParam(value = "pageSize", required = false) Integer pageSize){
+        if (shopId != 0){
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
+        }
+        if (beginTime.isAfter(endTime)){
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
+        }
+        return Common.decorateReturnObject(transactionService.listErrorAccountsByConditions(documentId,state,beginTime,endTime,page,pageSize));
+    }
+
+    /**
+     * b-3 fz
+     * 平台管理员查询错账信息详情
+     * */
+    @GetMapping("/shops/{shopId}/erroraccounts/{id}")
+    @Audit(departName = "payment")
+    public Object getDetailedErrorAccountByAdmin(@PathVariable("shopId") Long shopId,
+                                                 @PathVariable("id") Long id,
+                                                 @LoginUser Long userId){
+        if (shopId!=0){
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        return Common.decorateReturnObject(transactionService.getDetailedErrorAccount(id));
+    }
+
+    /**
+     * b-3 fz
+     * 平台管理员修改错账信息
      * */
 
 

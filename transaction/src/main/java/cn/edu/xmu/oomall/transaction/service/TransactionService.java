@@ -212,4 +212,21 @@ public class TransactionService {
         return new ReturnObject(tarList);
     }
 
+    /**
+     * fz
+     * */
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject listErrorAccountsByConditions(String documentId,
+                                                      Byte state,
+                                                      LocalDateTime beginTime,
+                                                      LocalDateTime endTime,
+                                                      Integer page,
+                                                      Integer pageSize){
+        return transactionDao.listErrorAccountsVoByConditions(documentId,state,beginTime,endTime,page,pageSize);
+    }
+
+    public ReturnObject getDetailedErrorAccount(Long id){
+        return null;
+    }
+
 }
