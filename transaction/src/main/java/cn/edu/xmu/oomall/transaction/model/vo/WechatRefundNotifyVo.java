@@ -29,7 +29,7 @@ public class WechatRefundNotifyVo {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public class Ciphertext{
+    public static class Ciphertext{
         private String mchid;
         private String outTrade_no;
         private String transaction_id;
@@ -43,7 +43,7 @@ public class WechatRefundNotifyVo {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public class Resource{
+    public static class Resource{
         private String algorithm;
         private String original_type;
         private Ciphertext ciphertext;

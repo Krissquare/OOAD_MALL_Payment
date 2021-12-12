@@ -68,7 +68,7 @@ public class TransactionDao {
     }
 
 
-    public ReturnObject getPaymentDetails(Long id)
+    public ReturnObject getPaymentById(Long id)
     {
         try{
             PaymentPo paymentPo=paymentPoMapper.selectByPrimaryKey(id);
@@ -160,6 +160,17 @@ public class TransactionDao {
         } else {
             return new ReturnObject(ReturnNo.OK);
         }
+    }
+    public ReturnObject insertRefund(Refund refund){
+        try{
+        RefundPo refundPo=cloneVo(refund,RefundPo.class);
+        refundPoMapper.insertSelective(refundPo);
+        return new ReturnObject(cloneVo(refundPo,Refund.class));}
+        catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+
     }
 
 }

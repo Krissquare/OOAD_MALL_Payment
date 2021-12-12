@@ -55,6 +55,7 @@ LOCK TABLES `oomall_order_item` WRITE;
 
 INSERT INTO `oomall_order_item` VALUES (1, 2, 1, 1, 1, 1, 50, 5, 3, '巧克力', 1, 1, NULL, 1, 'gyt', NULL, NULL, '2021-12-2 17:33:33', NULL);
 INSERT INTO `oomall_order_item` VALUES (2, 3, 2, 2, 2, 1, 50, 5, 3, '薯片', 2, 2, NULL, 1, 'gyt', NULL, NULL, '2021-12-2 17:34:20', NULL);
+INSERT INTO `oomall_order_item` VALUES (3, 4, 2, 2, 2, 1, 50, 5, 3, '薯片', 2, 2, NULL, 1, 'gyt', NULL, NULL, '2021-12-2 17:34:20', NULL);
 
 UNLOCK TABLES;
 
@@ -85,6 +86,9 @@ UNLOCK TABLES;
 LOCK TABLES `oomall_payment_pattern` WRITE;
 /*!40000 ALTER TABLE `oomall_payment_pattern` DISABLE KEYS */;
 /*!40000 ALTER TABLE `oomall_payment_pattern` ENABLE KEYS */;
+INSERT INTO `oomall_payment_pattern` (`id`, `name`, `state`, `begin_time`, `end_time`, `class_name`, `creator_id`, `creator_name`, `modifier_id`, `modifier_name`, `gmt_create`, `gmt_modified`) VALUES (1, '支付宝', NULL, NULL, NULL, 'AlipayTransaction', NULL, NULL, NULL, NULL, '2021-12-10 22:33:58', NULL);
+INSERT INTO `oomall_payment_pattern` (`id`, `name`, `state`, `begin_time`, `end_time`, `class_name`, `creator_id`, `creator_name`, `modifier_id`, `modifier_name`, `gmt_create`, `gmt_modified`) VALUES (2, '微信', NULL, NULL, NULL, 'WechatpayTransaction', NULL, NULL, NULL, NULL, '2021-12-10 22:33:58', NULL);
+
 UNLOCK TABLES;
 
 --
@@ -94,6 +98,7 @@ UNLOCK TABLES;
 LOCK TABLES `oomall_refund` WRITE;
 /*!40000 ALTER TABLE `oomall_refund` DISABLE KEYS */;
 /*!40000 ALTER TABLE `oomall_refund` ENABLE KEYS */;
+INSERT INTO `oomall_refund` VALUES (1, '34564322', 1, 1, 5, '20216453652635231006', 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2021-12-11 16:31:44', NULL);
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

@@ -6,6 +6,7 @@ import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.model.vo.MarkShipmentVo;
 import cn.edu.xmu.oomall.order.model.vo.OrderVo;
 import cn.edu.xmu.oomall.order.model.vo.SimpleOrderVo;
+import cn.edu.xmu.oomall.order.model.vo.UpdateOrderVo;
 import cn.edu.xmu.oomall.order.service.OrderService;
 import cn.edu.xmu.oomall.order.util.MyDateTime;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
@@ -292,6 +293,14 @@ public class OrderController {
     {
         return Common.decorateReturnObject(orderService.internalcancelOrderByShop(shopId,id,loginUserId,loginUserName));
     }
+    /**
+     * task a-1
+     * @author Fang Zheng
+     * */
+    @GetMapping("orders/states")
+    public Object listAllOrderStateController(){
+        return Common.decorateReturnObject(orderService.listAllOrderState());
+    }
 
     @Audit(departName = "order")
     @GetMapping("internal/orderitems/{id}/payment")
@@ -303,5 +312,62 @@ public class OrderController {
 //    @Audit(departName = "shop")
 //    @PostMapping("internal/shops/{shopId}/orders")
 //    public Object createAftersaleOrder()
+    /**
+     * a-1
+     * @author Fang Zheng
+     * */
+    @GetMapping("orders")
+    @Audit(departName = "order")
+    public Object listCustomerBriefOrdersController(@LoginUser Long userId,
+                                          @RequestParam(value = "orderSn", required = false) String orderSn,
+                                          @RequestParam(value = "state", required = false) Integer state,
+                                          @RequestParam(value = "beginTime", required = false) @DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
+                                          @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime endTime,
+                                          @RequestParam(value = "page", required = false) Integer pageNumber,
+                                          @RequestParam(value = "pageSize", required = false) Integer pageSize){
+        if (beginTime != null && endTime != null){
+            if (beginTime.isAfter(endTime)){
+                return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
+            }
+        }
+        return Common.decorateReturnObject(orderService.listCustomerBriefOrder(userId,orderSn,state,beginTime,endTime,pageNumber,pageSize)) ;
+    }
 
+    /**
+     * a-1
+     * @author Fang Zheng
+     * */
+    @GetMapping("orders/{id}")
+    @Audit(departName = "order")
+    public Object listCustomerWholeOrderController(@PathVariable("id") Long orderId,
+                                                   @LoginUser Long userId){
+        return Common.decorateReturnObject(orderService.listCustomerWholeOrder(userId,orderId));
+    }
+
+    /**
+     * a-1
+     * @author Fang Zheng
+     * */
+    @PutMapping("orders/{id}")
+    @Audit(departName = "order")
+    public Object updateCustomerOrderController(@PathVariable("id") Long orderId,
+                                                @LoginUser Long userId,
+                                                @RequestBody @Valid UpdateOrderVo updateOrderVo,
+                                                BindingResult bindingResult){
+        Object object = Common.processFieldErrors(bindingResult, httpServletResponse);
+        if (object != null) {
+            return object;
+        }
+        return Common.decorateReturnObject(orderService.updateCustomerOrder(userId,orderId,updateOrderVo));
+    }
+    /**
+     * gyt
+     * orderId查item
+     * @param id
+     * @return
+     */
+    @GetMapping("/internal/order/{id}")
+    public Object listOrderItemsByOrderId(@PathVariable(value = "id")Long id){
+        return orderService.listOrderItemsByOrderId(id);
+    }
 }

@@ -12,6 +12,7 @@ import cn.edu.xmu.oomall.order.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.model.po.OrderPoExample;
 import cn.edu.xmu.oomall.order.model.vo.BriefOrderVo;
+import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import cn.edu.xmu.privilegegateway.annotation.util.RedisUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -33,9 +34,11 @@ public class OrderDao {
     private static final Logger logger = LoggerFactory.getLogger(OrderDao.class);
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     OrderPoMapper orderPoMapper;
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     OrderItemPoMapper orderItemPoMapper;
 
     @Value("${oomall.order.expiretime}")
@@ -154,4 +157,75 @@ public class OrderDao {
         }
 
     }
+
+    /**
+     * a-1
+     * @author Fang Zheng
+     * */
+    public ReturnObject listBriefOrderByUserId(Long userId,
+                                               String orderSn,
+                                               Integer state,
+                                               LocalDateTime beginTime,
+                                               LocalDateTime endTime,
+                                               Integer pageNumber,
+                                               Integer pageSize){
+        try{
+            if (pageNumber!=null && pageSize!=null) {
+                PageHelper.startPage(pageNumber, pageSize, true, true, true);
+            }
+            OrderPoExample orderPoExample = new OrderPoExample();
+            OrderPoExample.Criteria cr = orderPoExample.createCriteria();
+            cr.andCustomerIdEqualTo(userId);
+            cr.andBeDeletedIsNull();
+            if (orderSn != null) {
+                cr.andOrderSnEqualTo(orderSn);
+            }
+            if (state != null){
+                cr.andStateEqualTo(state);
+            }
+            if (beginTime != null) {
+                cr.andConfirmTimeGreaterThanOrEqualTo(beginTime);
+            }
+            if (endTime != null){
+                cr.andConfirmTimeLessThanOrEqualTo(endTime);
+            }
+            List<OrderPo> orderPoList = orderPoMapper.selectByExample(orderPoExample);
+            ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo(orderPoList));
+            return Common.getPageRetVo(ret, BriefOrderVo.class);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+    public InternalReturnObject listOrderItemsByPOrderId(Long id){
+        try{
+            OrderPoExample example = new OrderPoExample();
+            OrderPoExample.Criteria criteria = example.createCriteria();
+            criteria.andPidEqualTo(id);
+            List<OrderPo> list = orderPoMapper.selectByExample(example);
+            List<OrderItemPo>orderItemPos=new ArrayList<>();
+            //没有子订单
+            if (list.size()==0) {
+                OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
+                OrderItemPoExample.Criteria orderItemPoExampleCriteria=orderItemPoExample.createCriteria();
+                orderItemPoExampleCriteria.andOrderIdEqualTo(id);
+                orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
+            }
+            //有子订单
+            else{
+                for(OrderPo orderPo:list){
+                    OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
+                    OrderItemPoExample.Criteria orderItemPoExampleCriteria=orderItemPoExample.createCriteria();
+                    orderItemPoExampleCriteria.andOrderIdEqualTo(orderPo.getId());
+                    orderItemPos.addAll(orderItemPoMapper.selectByExample(orderItemPoExample));
+                }
+            }
+            return new InternalReturnObject(orderItemPos);}
+        catch (Exception e){
+            logger.error(e.getMessage());
+            return new InternalReturnObject(ReturnNo.INTERNAL_SERVER_ERR);
+        }
+
+    }
+
 }
