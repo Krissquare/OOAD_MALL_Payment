@@ -1,7 +1,7 @@
 package cn.edu.xmu.oomall.transaction.util.wechatpay.controller;
 
-import cn.edu.xmu.oomall.transaction.util.alipay.model.vo.WechatPaymentNotifyVo;
-import cn.edu.xmu.oomall.transaction.util.alipay.model.vo.WechatRefundNotifyVo;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatPaymentNotifyVo;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatRefundNotifyVo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.service.WechatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;

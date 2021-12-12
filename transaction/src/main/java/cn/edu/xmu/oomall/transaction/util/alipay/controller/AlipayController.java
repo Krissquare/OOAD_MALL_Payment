@@ -1,6 +1,6 @@
 package cn.edu.xmu.oomall.transaction.util.alipay.controller;
 
-import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.AlipayNotifyVo;
+import cn.edu.xmu.oomall.transaction.util.alipay.model.vo.AlipayNotifyVo;
 import cn.edu.xmu.oomall.transaction.util.alipay.service.AlipayService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;

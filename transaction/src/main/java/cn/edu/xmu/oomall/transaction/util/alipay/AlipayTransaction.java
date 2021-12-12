@@ -2,6 +2,7 @@ package cn.edu.xmu.oomall.transaction.util.alipay;
 
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.transaction.util.PaymentBill;
+import cn.edu.xmu.oomall.transaction.util.RefundBill;
 import cn.edu.xmu.oomall.transaction.util.TransactionPattern;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,11 @@ public class AlipayTransaction extends TransactionPattern {
 
     @Override
     public ReturnObject requestPayment(Long requestNo, PaymentBill bill) {
+        return null;
+    }
+
+    @Override
+    public ReturnObject requestRefund(Long requestNo, RefundBill bill) {
         return null;
     }
 }

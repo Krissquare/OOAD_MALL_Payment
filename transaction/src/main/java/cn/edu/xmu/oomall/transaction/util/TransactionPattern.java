@@ -8,4 +8,6 @@ public abstract class TransactionPattern {
 
     public abstract ReturnObject requestPayment(Long request, PaymentBill bill);
 
+    public abstract ReturnObject requestRefund(Long requestNo, RefundBill bill);
+
 }
