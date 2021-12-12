@@ -293,6 +293,7 @@ public class OrderService {
 
         return returnObject;
     }
+
     /**
      * gyt
      * 管理员取消本店铺订单。（a-4）
@@ -459,6 +460,10 @@ public class OrderService {
         Order newOrder = Common.cloneVo(updateOrderVo, Order.class);
         newOrder.setId(orderId);
         return orderDao.updateOrder(newOrder);
+    }
+    @Transactional(readOnly = true)
+    public InternalReturnObject listOrderItemsByOrderId(Long id){
+        return orderDao.listOrderItemsByPOrderId(id);
     }
 
 }

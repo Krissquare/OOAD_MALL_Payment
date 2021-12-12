@@ -272,5 +272,21 @@ class OrderApplicationTests {
                 "}";
         JSONAssert.assertEquals(expected, response, true);
     }
+    /**
+     * orderId查item
+     * @throws Exception
+     */
+    @Test
+    public void listOrderItemsByOrderId() throws Exception {
+        String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/internal/order/1")
+                .header("authorization", token4)
+                .contentType("application/json;charset=UTF-8"))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+
+        String expected="{\"errno\":0,\"errmsg\":\"成功\",\"data\":[{\"id\":1,\"orderId\":2,\"shopId\":1,\"productId\":1,\"onsaleId\":1,\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"name\":\"巧克力\",\"couponActivityId\":1,\"couponId\":1,\"commented\":null,\"creatorId\":1,\"creatorName\":\"gyt\",\"modifierBy\":null,\"modifierName\":null,\"gmtCreate\":\"2021-12-02T17:33:33\",\"gmtModified\":null},{\"id\":2,\"orderId\":3,\"shopId\":2,\"productId\":2,\"onsaleId\":2,\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"name\":\"薯片\",\"couponActivityId\":2,\"couponId\":2,\"commented\":null,\"creatorId\":1,\"creatorName\":\"gyt\",\"modifierBy\":null,\"modifierName\":null,\"gmtCreate\":\"2021-12-02T17:34:20\",\"gmtModified\":null}]}";
+        JSONAssert.assertEquals(expected, responseString, true);
+    }
 
 }

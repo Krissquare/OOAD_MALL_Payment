@@ -331,4 +331,14 @@ public class OrderController {
         }
         return Common.decorateReturnObject(orderService.updateCustomerOrder(userId,orderId,updateOrderVo));
     }
+    /**
+     * gyt
+     * orderId查item
+     * @param id
+     * @return
+     */
+    @GetMapping("/internal/order/{id}")
+    public Object listOrderItemsByOrderId(@PathVariable(value = "id")Long id){
+        return orderService.listOrderItemsByOrderId(id);
+    }
 }

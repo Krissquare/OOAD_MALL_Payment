@@ -1,16 +1,27 @@
 package cn.edu.xmu.oomall.transaction;
 
 import cn.edu.xmu.oomall.core.util.JacksonUtil;
-import cn.edu.xmu.oomall.transaction.model.vo.PaymentModifyVo;
+import cn.edu.xmu.oomall.transaction.util.alipay.microservice.AlipayMicroService;
+import cn.edu.xmu.oomall.transaction.util.alipay.model.vo.WechatPaymentNotifyVo;
+import cn.edu.xmu.oomall.transaction.util.alipay.model.vo.WechatRefundNotifyVo;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.WeChatMicroService;
+import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayMethod;
+import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayTradeState;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatRefundState;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatTradeState;
+import cn.edu.xmu.oomall.transaction.model.vo.*;
 import cn.edu.xmu.oomall.transaction.util.MyDateTime;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.AlipayNotifyVo;
 import cn.edu.xmu.privilegegateway.annotation.util.JwtHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.skyscreamer.jsonassert.JSONAssert;
-import cn.edu.xmu.oomall.transaction.model.vo.RefundRecVo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -18,13 +29,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @SpringBootTest(classes = TransactionApplication.class)
@@ -33,7 +43,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TransactionControllerTest {
     @Autowired
     private MockMvc mvc;
-
+    @Autowired
+    private RedisTemplate redisTemplate;
+    @Autowired
+    private AlipayMicroService alipayService;
+    @Autowired
+    private WeChatMicroService weChatPayService;
+    @Value("${oomall.transaction.expiretime}")
+    private long transactionExpireTime;
     private static String adminToken;
 
     private static final JwtHelper jwtHelper = new JwtHelper();
@@ -180,6 +197,133 @@ public class TransactionControllerTest {
         String expectedResponse="{\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":{\"id\":1,\"tradeSn\":null,\"patternId\":null,\"amount\":null,\"actualAmount\":null,\"documentId\":null,\"documentType\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null,\"state\":2,\"descr\":\"已对账噢\",\"adjust\":{\"id\":null,\"name\":null},\"adjustTime\":null,\"creator\":{\"id\":null,\"name\":null},\"gmtCreate\":null,\"gmtModified\":\"2021-12-09T22:44:29.1910273\",\"modifier\":{\"id\":1,\"name\":\"admin\"}}}";
         JSONAssert.assertEquals(expectedResponse, responseString, true);
     }
+    /**
+     * 微信支付通知API
+     * @throws Exception
+     */
+    @Test
+    public void paymentNotifyByWechat() throws Exception
+    {
+        WechatPaymentNotifyVo wechatPaymentNotifyVo=new WechatPaymentNotifyVo();
+        WechatPaymentNotifyVo.Resource resource = new WechatPaymentNotifyVo.Resource();
+        WeChatTransactionVo weChatTransactionVo=new WeChatTransactionVo();
+        weChatTransactionVo.setTransaction_id("是交易流水号");
+        weChatTransactionVo.setTrade_state(WechatTradeState.SUCCESS.getState());
+        weChatTransactionVo.setOut_trade_no("1");
+        resource.setCiphertext(weChatTransactionVo);
+        wechatPaymentNotifyVo.setResource(resource);
+        String requestJSON = JacksonUtil.toJson(wechatPaymentNotifyVo);
+        String responseString = this.mvc.perform(post("/wechat/payment/notify")
+                .contentType("application/json;charset=UTF-8")
+                .content(requestJSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectedResponse="{\"code\":\"success\",\"message\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, true);
+    }
+
+    /**
+     * 微信退款通知API
+     * @throws Exception
+     */
+    @Test
+    public void refundNotifyByWechat() throws Exception
+    {
+        WechatRefundNotifyVo wechatRefundNotifyVo=new WechatRefundNotifyVo();
+        WechatRefundNotifyVo.Resource resource = new WechatRefundNotifyVo.Resource();
+        WechatRefundNotifyVo.Ciphertext ciphertext=new WechatRefundNotifyVo.Ciphertext();
+        ciphertext.setRefund_status(WechatRefundState.SUCCESS.getState());
+        ciphertext.setTransaction_id("是交易流水号");
+        ciphertext.setOutTrade_no("1");
+        ciphertext.setOut_refund_no("1");
+        resource.setCiphertext(ciphertext);
+        wechatRefundNotifyVo.setResource(resource);
+        String requestJSON = JacksonUtil.toJson( wechatRefundNotifyVo);
+        String responseString = this.mvc.perform(post("/wechat/refund/notify")
+                .contentType("application/json;charset=UTF-8")
+                .content(requestJSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectedResponse="{\"code\":\"success\",\"message\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, true);
+    }
+
+    /**
+     * 阿里异步t通知API
+     * @throws Exception
+     */
+    @Test
+    public void notifyByAlipay() throws Exception
+    {
+        AlipayNotifyVo alipayNotifyVo=new AlipayNotifyVo();
+        alipayNotifyVo.setOut_biz_no(null);
+        alipayNotifyVo.setOut_trade_no("1");
+        alipayNotifyVo.setTrade_status(AlipayTradeState.TRADE_SUCCESS.getDescription());
+        alipayNotifyVo.setTrade_no("交易流水号");
+        String requestJSON = JacksonUtil.toJson(alipayNotifyVo);
+        String responseString = this.mvc.perform(post("/alipay/notify")
+                .contentType("application/json;charset=UTF-8")
+                .content(requestJSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectedResponse="{\"code\":\"success\",\"message\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, true);
+    }
+
+    /**
+     * 退款内部API(调支付宝）
+     * @throws Exception
+     */
+    @Test
+    public void refund() throws Exception
+    {
+        Mockito.when(alipayService.gatewayDo(null, AlipayMethod.REFUND.getMethod(), null, null, null, null, null, null, "vo转json")).thenReturn(null);
+        RefundVo refundVo=new RefundVo();
+        refundVo.setAmount(100L);
+        refundVo.setDescr("售后退款噢");
+        refundVo.setDocumentId("订单号噢");
+        refundVo.setDocumentType((byte)0);
+        refundVo.setPatternId(0L);
+        refundVo.setPaymentId(1L);
+        String requestJSON = JacksonUtil.toJson(refundVo);
+        String responseString = this.mvc.perform(post("/internal/refunds")
+                .contentType("application/json;charset=UTF-8")
+                .content(requestJSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectedResponse="{\"code\":\"success\",\"message\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, true);
+    }
+    /**
+     * 退款内部API(调微信支付）
+     * @throws Exception
+     */
+    @Test
+    public void refund1() throws Exception
+    {
+        Mockito.when(weChatPayService.createRefund(Mockito.any())).thenReturn(null);
+        RefundVo refundVo=new RefundVo();
+        refundVo.setAmount(100L);
+        refundVo.setDescr("售后退款噢");
+        refundVo.setDocumentId("订单号噢");
+        refundVo.setDocumentType((byte)0);
+        refundVo.setPatternId(1L);
+        refundVo.setPaymentId(1L);
+        String requestJSON = JacksonUtil.toJson(refundVo);
+        String responseString = this.mvc.perform(post("/internal/refunds")
+                .contentType("application/json;charset=UTF-8")
+                .content(requestJSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectedResponse="{\"code\":\"success\",\"message\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, true);
+    }
+
 
     @Test
     public void listAllPaymentStateTest() throws Exception{

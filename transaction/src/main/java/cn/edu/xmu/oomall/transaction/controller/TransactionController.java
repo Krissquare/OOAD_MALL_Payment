@@ -2,9 +2,10 @@ package cn.edu.xmu.oomall.transaction.controller;
 
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
-import cn.edu.xmu.oomall.transaction.model.vo.PaymentModifyVo;
+import cn.edu.xmu.oomall.transaction.model.vo.*;
 import cn.edu.xmu.oomall.transaction.service.TransactionService;
 import cn.edu.xmu.oomall.transaction.util.MyDateTime;
+import cn.edu.xmu.oomall.transaction.util.PaymentBill;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
@@ -14,24 +15,18 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 
-import static cn.edu.xmu.oomall.core.util.Common.processFieldErrors;
-import cn.edu.xmu.oomall.core.util.Common;
-import cn.edu.xmu.oomall.transaction.model.vo.RefundRecVo;
 
-import cn.edu.xmu.oomall.transaction.model.vo.AlipayNotifyVo;
-import cn.edu.xmu.oomall.transaction.model.vo.WechatPaymentNotifyVo;
-import cn.edu.xmu.oomall.transaction.model.vo.WechatRefundNotifyVo;
+import cn.edu.xmu.oomall.core.util.Common;
 
 @RestController
 @RequestMapping(value = "", produces = "application/json;charset=UTF-8")
 public class TransactionController {
+
     @Autowired
-    TransactionService transactionService;
-    @Autowired
-    private HttpServletResponse httpServletResponse;
+    private TransactionService transactionService;
+
     /**
      * gyt
      * 平台管理员查询支付信息
@@ -51,18 +46,16 @@ public class TransactionController {
                               @RequestParam(value = "state",required = false)Byte state,
                               @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
                               @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
-                              @RequestParam(value="page",required = false)Integer page,
+                              @RequestParam(value = "page",required = false)Integer page,
                               @RequestParam(value = "pageSize",required = false)Integer pageSize) {
-        if(shopId!=0)
-        {
+        if (shopId != 0) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
-        if(beginTime!=null&&endTime!=null)
-        {
-            if(beginTime.isAfter(endTime))
+        if (beginTime != null && endTime != null) {
+            if (beginTime.isAfter(endTime))
                 return new ReturnObject(ReturnNo.LATE_BEGINTIME);
         }
-        return transactionService.listPayment(documentId,state,beginTime,endTime,page,pageSize);
+        return transactionService.listPayment(documentId, state, beginTime, endTime, page, pageSize);
     }
 
     /**
@@ -76,8 +69,7 @@ public class TransactionController {
     @GetMapping("/shops/{shopId}/payment/{id}")
     public Object getPaymentDetails(@PathVariable(value = "shopId") Long shopId,
                                     @PathVariable(value = "id")Long id) {
-        if(shopId!=0)
-        {
+        if (shopId != 0) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
         return transactionService.getPaymentDetails(id);
@@ -102,15 +94,15 @@ public class TransactionController {
                                 @PathVariable(value = "id")Long id,
                                 @Validated @RequestBody PaymentModifyVo paymentModifyVo,
                                 BindingResult bindingResult) {
-        if(shopId!=0)
-        {
+        if (shopId != 0) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
-        Object object = processFieldErrors(bindingResult, httpServletResponse);
-        if (object != null) {
-            return object;
+
+        if (bindingResult.hasErrors()) {
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
         }
-        return transactionService.updatePayment(id,loginUserId,loginUserName,paymentModifyVo);
+
+        return transactionService.updatePayment(id, loginUserId, loginUserName, paymentModifyVo);
     }
 
     /**
@@ -133,17 +125,14 @@ public class TransactionController {
                             @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
                             @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
                             @RequestParam(value = "page", required = false) Integer page,
-                            @RequestParam(value = "pageSize", required = false) Integer pageSize)
-    {
-        if(beginTime!=null&&endTime!=null&&beginTime.isAfter(endTime))
-        {
+                            @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+        if (beginTime != null && endTime != null && beginTime.isAfter(endTime)) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
         }
-        if(shopId!=0)
-        {
+        if (shopId != 0) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
-        return Common.decorateReturnObject(transactionService.listRefund(documentId,state,beginTime,endTime,page, pageSize));
+        return Common.decorateReturnObject(transactionService.listRefund(documentId, state, beginTime, endTime, page, pageSize));
     }
 
     /**
@@ -155,10 +144,8 @@ public class TransactionController {
      */
     @Audit(departName = "payment")
     @GetMapping("shops/{shopId}/refund/{id}")
-    public Object getRefundDetail(@PathVariable("shopId")Long shopId,@PathVariable("id")Long id)
-    {
-        if(shopId!=0)
-        {
+    public Object getRefundDetail(@PathVariable("shopId")Long shopId,@PathVariable("id")Long id) {
+        if (shopId != 0) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
         return Common.decorateReturnObject(transactionService.getRefundDetail(id));
@@ -177,47 +164,43 @@ public class TransactionController {
      */
     @Audit(departName = "payment")
     @PutMapping("shops/{shopId}/refund/{id}")
-    public Object updateRefund(@PathVariable("shopId") Long shopId, @PathVariable("id")Long id, @Validated @RequestBody RefundRecVo refundRecVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName)
-    {
+    public Object updateRefund(@PathVariable("shopId") Long shopId, @PathVariable("id")Long id, @Validated @RequestBody RefundRecVo refundRecVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName) {
         if (bindingResult.hasErrors()) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
         }
-        if(shopId!=0)
-        {
+        if (shopId != 0) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
-        return Common.decorateReturnObject(transactionService.updateRefund(id,refundRecVo,loginUserId,loginUserName));
+        return Common.decorateReturnObject(transactionService.updateRefund(id, refundRecVo, loginUserId, loginUserName));
     }
+
+
 
     /**
-     * /wechat/payment/notify微信支付通知API
-     * @param signature
-     * @param wechatPaymentNotifyVo
+     * 内部API退款
+     * @param refundVo
      * @return
      */
-    @PostMapping("/wechat/payment/notify")
-    private Object paymentNotifyByWechat(@RequestHeader("Wechatpay-Signature")String signature,
-                                         @RequestBody WechatPaymentNotifyVo wechatPaymentNotifyVo){
-        transactionService.paymentNotifyByWechat(wechatPaymentNotifyVo);
-        return wechatPaymentNotifyVo;
+    @PostMapping("/internal/refunds")
+    public Object refund(@RequestBody RefundVo refundVo){
+        return transactionService.refund(refundVo);
     }
+
 
     /**
-     * /wechat/refund/notify微信退款通知API
-     * @param signature
-     * @param wechatRefundNotifyVo
-     * @return
+     * 顾客请求支付
      */
-    @PostMapping("/wechat/refund/notify")
-    public Object refundNotifyByWechat(@RequestHeader("Wechatpay-Signature")String signature,
-                                       @RequestBody WechatRefundNotifyVo wechatRefundNotifyVo){
-        return null;
+    @PostMapping("/payments")
+    public Object requestPayment(@Validated @RequestBody RequestPaymentVo requestPaymentVo, BindingResult bindingResult,
+                                 @LoginUser Long loginUserId, @LoginName String loginUserName) {
+        if (bindingResult.hasErrors()) {
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
+        }
+
+        PaymentBill paymentBill = requestPaymentVo.createPaymentBill();
+        return Common.decorateReturnObject(transactionService.requestPayment(paymentBill, loginUserId, loginUserName));
     }
 
-    @PostMapping("/alipay/notify")
-    public Object notifyByAlipay(@RequestBody AlipayNotifyVo alipayNotifyVo){
-        return null;
-    }
 
     /**
      * @author fz
