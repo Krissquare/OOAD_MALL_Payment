@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.setPoModifiedFields;
@@ -361,11 +360,31 @@ public class TransactionService {
             return ret;
         }
         ErrorAccountPo ori = (ErrorAccountPo) ret.getData();
-        DetailedErrorAccountVo tar = cloneVo(ori, DetailedErrorAccountVo.class);
-        tar.setAdjust(new SimpleVo(ori.getAdjustId(), ori.getAdjustName()));
-        tar.setCreator(new SimpleVo(ori.getCreatorId(), ori.getCreatorName()));
-        tar.setModifier(new SimpleVo(ori.getModifierId(), ori.getModifierName()));
+        ErrorAccountDetailedVo tar = ErrorAccountDetailedVo.generateFromErrorAccountPo(ori);
         return new ReturnObject(tar);
+    }
+
+    /**
+     * fz
+     * */
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject updateErrorAccount(Long id, ErrorAccountUpdateVo updateVo){
+        ReturnObject ret = transactionDao.getErrorAccount(id);
+        if (!ret.getCode().equals(ReturnNo.OK)){
+            return ret;
+        }
+        ErrorAccountPo po = (ErrorAccountPo) ret.getData();
+        if (po.getState() != 0){
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
+        po.setDescr(updateVo.getDescr());
+        po.setState(updateVo.getState());
+        ReturnObject updRet = transactionDao.updateErrorAccount(po);
+        if (!updRet.getCode().equals(ReturnNo.OK)){
+            return ret;
+        }
+        ErrorAccountDetailedVo retData = ErrorAccountDetailedVo.generateFromErrorAccountPo(po);
+        return new ReturnObject(retData);
     }
 
 }

@@ -286,7 +286,12 @@ public class TransactionController {
      * b-3 fz
      * 平台管理员修改错账信息
      * */
-
+    @PostMapping("/shops/{shopId}/erroraccounts/{id}")
+    public Object updateErrorAccountByAdmin(@PathVariable("shopId") Long shopId,
+                                            @PathVariable("id") Long id,
+                                            @RequestBody ErrorAccountUpdateVo updateVo){
+        return Common.decorateReturnObject(transactionService.updateErrorAccount(id, updateVo));
+    }
 
 
 }

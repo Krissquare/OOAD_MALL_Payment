@@ -10,10 +10,7 @@ import cn.edu.xmu.oomall.transaction.mapper.PaymentPoMapper;
 import cn.edu.xmu.oomall.transaction.model.bo.Payment;
 import cn.edu.xmu.oomall.transaction.model.bo.PaymentPattern;
 import cn.edu.xmu.oomall.transaction.model.po.*;
-import cn.edu.xmu.oomall.transaction.model.po.*;
-import cn.edu.xmu.oomall.transaction.model.vo.ErrorAccountVo;
-import cn.edu.xmu.oomall.transaction.model.vo.PaymentRetVo;
-import cn.edu.xmu.oomall.transaction.model.vo.SimpleVo;
+import cn.edu.xmu.oomall.transaction.model.vo.*;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.slf4j.Logger;
@@ -21,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import cn.edu.xmu.oomall.transaction.mapper.RefundPoMapper;
 import cn.edu.xmu.oomall.transaction.model.bo.Refund;
-import cn.edu.xmu.oomall.transaction.model.vo.RefundRetVo;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -265,6 +261,19 @@ public class TransactionDao {
         try{
             ErrorAccountPo errorAccountPo = errorAccountPoMapper.selectByPrimaryKey(id);
             return new ReturnObject(errorAccountPo);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
+    public ReturnObject updateErrorAccount(ErrorAccountPo errorAccountPo){
+        try {
+            int result = errorAccountPoMapper.updateByPrimaryKeySelective(errorAccountPo);
+            if (result == 0){
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            else return new ReturnObject(ReturnNo.OK);
         }catch (Exception e){
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
