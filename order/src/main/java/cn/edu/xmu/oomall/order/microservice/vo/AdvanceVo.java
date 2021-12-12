@@ -1,5 +1,6 @@
 package cn.edu.xmu.oomall.order.microservice.vo;
 
+import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -223,4 +223,54 @@ class OrderApplicationTests {
     }
 
 
+    @Test
+    public void getTokens(){
+        System.out.println();
+        System.out.println();
+        System.out.println(token4);
+        System.out.println();
+        System.out.println();
+        System.out.println(token);
+        System.out.println();
+        System.out.println();
+        System.out.println(adminToken);
+        System.out.println();
+        System.out.println();
+    }
+
+    @Test
+    public void getOrderDetailByCustomerTest() throws Exception {
+        String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/orders/10")
+                            .header("authorization", token4)
+                            .contentType("application/json;charset=UTF-8"))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+
+        String expected = "{\"errno\":0,\"data\":{\"id\":10,\"orderSn\":\"20218987972635231004\",\"customerVo\":{\"id\":1,\"name\":\"aaa\"},\"shopVo\":{\"id\":1,\"name\":\"aaa\"},\"pid\":0,\"state\":400,\"confirmTime\":\"2021-11-11T17:24:20\",\"originPrice\":231,\"discountPrice\":12,\"expressFee\":8,\"point\":22,\"message\":\"啦啦\",\"regionId\":4,\"address\":\"福州\",\"mobile\":\"17276541624\",\"consignee\":\"hqg\",\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":\"65442635211\",\"orderItems\":[]},\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expected, responseString, true);
+    }
+
+    @Test
+    public void updateOrderByCustomerTest() throws Exception{
+        String voStr = "{\n" +
+                "  \"consignee\": \"update-test-consignee\",\n" +
+                "  \"regionId\": 6666,\n" +
+                "  \"address\": \"update-test-address\",\n" +
+                "  \"mobile\": \"13822223333\"\n" +
+                "}";
+        String response = this.mvc.perform(MockMvcRequestBuilders.put("/orders/10")
+                        .header("authorization",token4)
+                        .contentType("application/json;charset=UTF-8")
+                        .content(voStr))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        String expected = "{\n" +
+                "  \"errno\": 0,\n" +
+                "  \"errmsg\": \"成功\"\n" +
+                "}";
+        JSONAssert.assertEquals(expected, response, true);
+    }
+
 }
