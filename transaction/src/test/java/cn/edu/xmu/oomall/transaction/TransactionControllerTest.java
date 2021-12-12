@@ -210,7 +210,7 @@ public class TransactionControllerTest {
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
 
-        String expected = "{\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":[{\"id\":1,\"name\":\"支付宝\",\"state\":null,\"beginTime\":null,\"endTime\":null,\"className\":\"AlipayTransaction\",\"creator\":{\"id\":null,\"name\":null},\"gmtCreate\":null,\"gmtModified\":null,\"modifier\":{\"id\":null,\"name\":null}},{\"id\":2,\"name\":\"微信\",\"state\":null,\"beginTime\":null,\"endTime\":null,\"className\":\"WechatpayTransaction\",\"creator\":{\"id\":null,\"name\":null},\"gmtCreate\":null,\"gmtModified\":null,\"modifier\":{\"id\":null,\"name\":null}}]}";
+        String expected = "{\"errno\":0,\"data\":[{\"id\":1,\"name\":\"支付宝\",\"state\":null,\"beginTime\":null,\"endTime\":null,\"className\":\"AlipayTransaction\",\"creator\":{\"id\":null,\"name\":null},\"gmtCreate\":null,\"gmtModified\":null,\"modifier\":{\"id\":null,\"name\":null}},{\"id\":2,\"name\":\"微信\",\"state\":null,\"beginTime\":null,\"endTime\":null,\"className\":\"WechatpayTransaction\",\"creator\":{\"id\":null,\"name\":null},\"gmtCreate\":null,\"gmtModified\":null,\"modifier\":{\"id\":null,\"name\":null}}],\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, response, true);
     }
 

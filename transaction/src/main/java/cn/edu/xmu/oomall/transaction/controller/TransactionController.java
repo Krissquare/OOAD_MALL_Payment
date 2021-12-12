@@ -248,7 +248,7 @@ public class TransactionController {
         if (shopId != 0){
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
-        return transactionService.listAllPayPatterns();
+        return Common.decorateReturnObject(transactionService.listAllPayPatterns());
     }
 
     /**
