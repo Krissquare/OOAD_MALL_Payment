@@ -28,7 +28,7 @@ CREATE TABLE `oomall_error_account` (
   `pattern_id` bigint(20) DEFAULT NULL,
   `income` bigint(20) DEFAULT NULL,
   `expenditure` bigint(20) DEFAULT NULL,
-  `document_id` bigint(20) DEFAULT NULL,
+  `document_id` varchar(128) DEFAULT NULL,
   `state` tinyint(4) DEFAULT NULL,
   `time` datetime DEFAULT NULL,
   `descr` varchar(256) DEFAULT NULL,
