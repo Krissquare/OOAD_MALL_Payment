@@ -34,7 +34,7 @@ public class WechatTransaction extends TransactionPattern {
         WechatRequestRefundVo refundVo = new WechatRequestRefundVo();
         // 商家号那些都不用吗？
         refundVo.setOutRefundNo(requestNo.toString());
-        refundVo.setOutTradeNo(bill.getPaymentId());
+        refundVo.setOutTradeNo(bill.getPaymentId().toString());
         refundVo.setReason(bill.getReason());
     //    refundVo.getAmount().setTotal();
 

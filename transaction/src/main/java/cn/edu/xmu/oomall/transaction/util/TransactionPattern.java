@@ -6,7 +6,7 @@ import cn.edu.xmu.oomall.transaction.model.vo.RequestPaymentVo;
 
 public abstract class TransactionPattern {
 
-    public abstract ReturnObject requestPayment(Long request, PaymentBill bill);
+    public abstract ReturnObject requestPayment(Long requestNo, PaymentBill bill);
 
     public abstract ReturnObject requestRefund(Long requestNo, RefundBill bill);
 
