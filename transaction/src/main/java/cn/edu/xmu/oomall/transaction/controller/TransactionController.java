@@ -221,11 +221,11 @@ public class TransactionController {
 
     /**
      * @author fz
-     * 获得所有支付渠道状态
+     * 获得所有支付单状态
      * */
-    @GetMapping("/paypatterns/states")
-    public Object listAllPayPatternsStates(){
-        return Common.decorateReturnObject(transactionService.listAllPaymentState());
+    @GetMapping("/payments/states")
+    public Object listAllPaymentStates(){
+        return Common.decorateReturnObject(transactionService.listAllPaymentStates());
     }
 
     /**
@@ -249,6 +249,16 @@ public class TransactionController {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
         return transactionService.listAllPayPatterns();
+    }
+
+    /**
+     * fz
+     * 获得支付渠道的所有状态
+     * */
+    @GetMapping("/paypatterns/states")
+    public Object listAllPayPatternStates(){
+        //TODO: qm没给出支付渠道状态图，待补
+        return new ReturnObject<>();
     }
 
 }

@@ -164,7 +164,7 @@ public class TransactionService {
     /**
      * fz
      * */
-    public ReturnObject listAllPaymentState(){
+    public ReturnObject listAllPaymentStates(){
         HashMap<Byte, String> states = new HashMap<>();
         for (PaymentState item: PaymentState.values()){
             states.put(item.getCode(),item.getState());
@@ -198,9 +198,18 @@ public class TransactionService {
         List<PaymentPatternPo> oriList = (List<PaymentPatternPo>) ret.getData();
         List<PaymentPatternVo> tarList = new ArrayList<>();
         for (PaymentPatternPo item: oriList){
-            SimpleVo creator;
+            SimpleVo creator = new SimpleVo();
+            creator.setId(item.getCreatorId());
+            creator.setName(item.getCreatorName());
+            SimpleVo modifier = new SimpleVo();
+            modifier.setId(item.getModifierId());
+            modifier.setName(item.getModifierName());
+            PaymentPatternVo tarItem = cloneVo(item, PaymentPatternVo.class);
+            tarItem.setCreator(creator);
+            tarItem.setModifier(modifier);
+            tarList.add(tarItem);
         }
-        return null;
+        return new ReturnObject(tarList);
     }
 
 }
