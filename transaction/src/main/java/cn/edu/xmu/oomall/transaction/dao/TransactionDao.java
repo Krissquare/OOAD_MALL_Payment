@@ -240,7 +240,7 @@ public class TransactionDao {
             ErrorAccountPoExample errorAccountPoExample = new ErrorAccountPoExample();
             ErrorAccountPoExample.Criteria criteria = errorAccountPoExample.createCriteria();
             if (documentId != null){
-//                criteria.andDocumentIdEqualTo(documentId);
+                criteria.andDocumentIdEqualTo(documentId);
             }
             if (state != null){
                 criteria.andStateEqualTo(state);
@@ -255,6 +255,16 @@ public class TransactionDao {
             List<ErrorAccountPo> errorAccountPoList = errorAccountPoMapper.selectByExample(errorAccountPoExample);
             ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo<>(errorAccountPoList));
             return Common.getPageRetVo(ret, ErrorAccountVo.class);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
+    public ReturnObject getErrorAccount(Long id){
+        try{
+            ErrorAccountPo errorAccountPo = errorAccountPoMapper.selectByPrimaryKey(id);
+            return new ReturnObject(errorAccountPo);
         }catch (Exception e){
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());

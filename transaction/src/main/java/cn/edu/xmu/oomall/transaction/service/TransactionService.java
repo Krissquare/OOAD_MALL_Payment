@@ -6,6 +6,7 @@ import cn.edu.xmu.oomall.transaction.dao.TransactionDao;
 import cn.edu.xmu.oomall.transaction.model.bo.*;
 import cn.edu.xmu.oomall.transaction.model.bo.Payment;
 import cn.edu.xmu.oomall.transaction.model.bo.PaymentState;
+import cn.edu.xmu.oomall.transaction.model.po.ErrorAccountPo;
 import cn.edu.xmu.oomall.transaction.model.po.PaymentPatternPo;
 import cn.edu.xmu.oomall.transaction.model.vo.*;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
@@ -350,8 +351,21 @@ public class TransactionService {
         return transactionDao.listErrorAccountsVoByConditions(documentId,state,beginTime,endTime,page,pageSize);
     }
 
+    /**
+     * fz
+     * */
+    @Transactional(rollbackFor = Exception.class)
     public ReturnObject getDetailedErrorAccount(Long id){
-        return null;
+        ReturnObject ret = transactionDao.getErrorAccount(id);
+        if (!ret.getCode().equals(ReturnNo.OK)){
+            return ret;
+        }
+        ErrorAccountPo ori = (ErrorAccountPo) ret.getData();
+        DetailedErrorAccountVo tar = cloneVo(ori, DetailedErrorAccountVo.class);
+        tar.setAdjust(new SimpleVo(ori.getAdjustId(), ori.getAdjustName()));
+        tar.setCreator(new SimpleVo(ori.getCreatorId(), ori.getCreatorName()));
+        tar.setModifier(new SimpleVo(ori.getModifierId(), ori.getModifierName()));
+        return new ReturnObject(tar);
     }
 
 }
