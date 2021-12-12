@@ -42,6 +42,7 @@ public class TransactionDao {
     private RefundPoMapper refundPoMapper;
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private PaymentPatternPoMapper paymentPatternPoMapper;
 
     public ReturnObject insertPayment(Payment payment) {
@@ -55,17 +56,11 @@ public class TransactionDao {
         }
     }
 
-
-    public ReturnObject listPayment(Long patternId,String documentId, Byte documentType, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
-    @Autowired
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-    private PaymentPatternPoMapper paymentPatternPoMapper;
-
     @Autowired
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private ErrorAccountPoMapper errorAccountPoMapper;
 
-    public ReturnObject listPayment(Long patternId,String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
+    public ReturnObject listPayment(Long patternId,String documentId,Byte documentType, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
     {
         try {
             PaymentPoExample example = new PaymentPoExample();
