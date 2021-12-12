@@ -3,10 +3,11 @@ package cn.edu.xmu.oomall.transaction.dao;
 import cn.edu.xmu.oomall.core.util.Common;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
+import cn.edu.xmu.oomall.transaction.mapper.PaymentPatternPoMapper;
 import cn.edu.xmu.oomall.transaction.mapper.PaymentPoMapper;
 import cn.edu.xmu.oomall.transaction.model.bo.Payment;
-import cn.edu.xmu.oomall.transaction.model.po.PaymentPo;
-import cn.edu.xmu.oomall.transaction.model.po.PaymentPoExample;
+import cn.edu.xmu.oomall.transaction.model.bo.PaymentPattern;
+import cn.edu.xmu.oomall.transaction.model.po.*;
 import cn.edu.xmu.oomall.transaction.model.vo.PaymentRetVo;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -15,8 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import cn.edu.xmu.oomall.transaction.mapper.RefundPoMapper;
 import cn.edu.xmu.oomall.transaction.model.bo.Refund;
-import cn.edu.xmu.oomall.transaction.model.po.RefundPo;
-import cn.edu.xmu.oomall.transaction.model.po.RefundPoExample;
 import cn.edu.xmu.oomall.transaction.model.vo.RefundRetVo;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
@@ -34,7 +33,22 @@ public class TransactionDao {
     @Autowired
     private RefundPoMapper refundPoMapper;
 
-    public ReturnObject listPayment(Long patternId,String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
+    @Autowired
+    private PaymentPatternPoMapper paymentPatternPoMapper;
+
+    public ReturnObject insertPayment(Payment payment) {
+        try {
+            PaymentPo po = cloneVo(payment, PaymentPo.class);
+            paymentPoMapper.insert(po);
+            return new ReturnObject<>(cloneVo(po, Payment.class));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
+
+    public ReturnObject listPayment(Long patternId,String documentId, Byte documentType, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
     {
         try {
             PaymentPoExample example = new PaymentPoExample();
@@ -45,6 +59,9 @@ public class TransactionDao {
             }
             if(documentId!=null){
                 criteria.andDocumentIdEqualTo(documentId);
+            }
+            if (documentType != null) {
+                criteria.andDocumentTypeEqualTo(documentType);
             }
             if(state!=null)
             {
@@ -105,9 +122,9 @@ public class TransactionDao {
         }
     }
 
-    public ReturnObject listRefund(String documentId, Byte state, Long patternId, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
+    public ReturnObject listRefund(String documentId, Byte state, Byte documentType, Long patternId, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
         try {
-            PageHelper.startPage(page, pageSize, true, true, true);
+            PageHelper.startPage(page, pageSize);
             RefundPoExample refundPoExample = new RefundPoExample();
             RefundPoExample.Criteria cr = refundPoExample.createCriteria();
             if (documentId != null) {
@@ -115,6 +132,9 @@ public class TransactionDao {
             }
             if (state != null) {
                 cr.andStateEqualTo(state);
+            }
+            if (documentType != null) {
+                cr.andDocumentTypeEqualTo(documentType);
             }
             if(patternId!=null){
                 cr.andPatternIdEqualTo(patternId);
@@ -144,6 +164,7 @@ public class TransactionDao {
             if (refundPo == null) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
+            //TODO:redis
             return new ReturnObject(cloneVo(refundPo, Refund.class));
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -173,4 +194,17 @@ public class TransactionDao {
 
     }
 
+    public ReturnObject getPaymentPatternById(Long id) {
+        try {
+            PaymentPatternPo po = paymentPatternPoMapper.selectByPrimaryKey(id);
+            if (po == null) {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            //TODO:redis
+            return new ReturnObject((cloneVo(po, PaymentPattern.class)));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
 }

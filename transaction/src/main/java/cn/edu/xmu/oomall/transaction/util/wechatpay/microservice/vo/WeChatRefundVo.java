@@ -1,5 +1,6 @@
-package cn.edu.xmu.oomall.transaction.microservice.vo;
+package cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.vo;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,8 +13,16 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 @NoArgsConstructor
-public class WeChatPayRefundVo {
+public class WeChatRefundVo {
 
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class RefundAmountVo {
+        private Integer refund;
+        private Integer total;
+        private String currency;
+    }
     @NotBlank
     private String outTradeNo;
 
@@ -26,4 +35,6 @@ public class WeChatPayRefundVo {
 
     @NotNull
     private RefundAmountVo amount;
+
+
 }
