@@ -460,5 +460,9 @@ public class OrderService {
         newOrder.setId(orderId);
         return orderDao.updateOrder(newOrder);
     }
+    @Transactional(readOnly = true)
+    public InternalReturnObject listOrderItemsByOrderId(Long id){
+        return orderDao.listOrderItemsByPOrderId(id);
+    }
 
 }

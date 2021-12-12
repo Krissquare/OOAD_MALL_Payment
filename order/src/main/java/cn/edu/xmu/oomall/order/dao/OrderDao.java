@@ -12,6 +12,7 @@ import cn.edu.xmu.oomall.order.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.model.po.OrderPoExample;
 import cn.edu.xmu.oomall.order.model.vo.BriefOrderVo;
+import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import cn.edu.xmu.privilegegateway.annotation.util.RedisUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -177,6 +178,36 @@ public class OrderDao {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
+    }
+    public InternalReturnObject listOrderItemsByPOrderId(Long id){
+        try{
+            OrderPoExample example = new OrderPoExample();
+            OrderPoExample.Criteria criteria = example.createCriteria();
+            criteria.andPidEqualTo(id);
+            List<OrderPo> list = orderPoMapper.selectByExample(example);
+            List<OrderItemPo>orderItemPos=new ArrayList<>();
+            //没有子订单
+            if (list.size()==0) {
+                OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
+                OrderItemPoExample.Criteria orderItemPoExampleCriteria=orderItemPoExample.createCriteria();
+                orderItemPoExampleCriteria.andOrderIdEqualTo(id);
+                orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
+            }
+            //有子订单
+            else{
+                for(OrderPo orderPo:list){
+                    OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
+                    OrderItemPoExample.Criteria orderItemPoExampleCriteria=orderItemPoExample.createCriteria();
+                    orderItemPoExampleCriteria.andOrderIdEqualTo(orderPo.getId());
+                    orderItemPos.addAll(orderItemPoMapper.selectByExample(orderItemPoExample));
+                }
+            }
+            return new InternalReturnObject(orderItemPos);}
+        catch (Exception e){
+            logger.error(e.getMessage());
+            return new InternalReturnObject(ReturnNo.INTERNAL_SERVER_ERR);
+        }
+
     }
 
 }
