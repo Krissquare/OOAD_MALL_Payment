@@ -245,7 +245,7 @@ public class TransactionController {
     @GetMapping("/shops/{shopId}/paypatterns")
     @Audit(departName = "payment")
     public Object listAllPayPatterns(@PathVariable("shopId") Long shopId){
-        if (!shopId.equals(0)){
+        if (shopId != 0){
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
         return transactionService.listAllPayPatterns();
@@ -260,5 +260,10 @@ public class TransactionController {
         //TODO: qm没给出支付渠道状态图，待补
         return new ReturnObject<>();
     }
+
+    /**
+     * b-3 fz
+     * */
+
 
 }

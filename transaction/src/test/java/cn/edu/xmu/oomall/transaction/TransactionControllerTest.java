@@ -182,13 +182,35 @@ public class TransactionControllerTest {
     }
 
     @Test
-    public void listAllPaymentState() throws Exception{
+    public void listAllPaymentStateTest() throws Exception{
         String response = this.mvc.perform(get("/payments/states").contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
 
         String expected = "{\"errno\":0,\"data\":{\"0\":\"待支付\",\"1\":\"已支付\",\"2\":\"已对账\",\"3\":\"已清算\",\"5\":\"失败\"},\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expected, response, true);
+    }
+
+    @Test
+    public void listAllValidPayPatterns() throws Exception{
+        String response = this.mvc.perform(get("/paypatterns").contentType("application/json;charset=UTF-8").header("authorization", adminToken))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+
+        String expected = "{\"errno\":0,\"data\":[{\"id\":1,\"name\":\"支付宝\"},{\"id\":2,\"name\":\"微信\"}],\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expected, response, true);
+    }
+
+    @Test
+    public void listAllPayPatterns() throws Exception{
+        String response = this.mvc.perform(get("/shops/0/paypatterns").contentType("application/json;charset=UTF-8").header("authorization", adminToken))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+
+        String expected = "{\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":[{\"id\":1,\"name\":\"支付宝\",\"state\":null,\"beginTime\":null,\"endTime\":null,\"className\":\"AlipayTransaction\",\"creator\":{\"id\":null,\"name\":null},\"gmtCreate\":null,\"gmtModified\":null,\"modifier\":{\"id\":null,\"name\":null}},{\"id\":2,\"name\":\"微信\",\"state\":null,\"beginTime\":null,\"endTime\":null,\"className\":\"WechatpayTransaction\",\"creator\":{\"id\":null,\"name\":null},\"gmtCreate\":null,\"gmtModified\":null,\"modifier\":{\"id\":null,\"name\":null}}]}";
         JSONAssert.assertEquals(expected, response, true);
     }
 
