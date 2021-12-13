@@ -69,32 +69,20 @@ public class OrderDao {
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-    public ReturnObject getOrderByPid(Long pid)
+    public ReturnObject updateOrderByExample(Order order)
     {
         try
         {
-            OrderPoExample orderPoExample=new OrderPoExample();
-            OrderPoExample.Criteria cr=orderPoExample.createCriteria();
-            cr.andPidEqualTo(pid);
-            List<OrderPo> orderPos=orderPoMapper.selectByExample(orderPoExample);
-            if(orderPos.size()==0)
-            {
-                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
-            }
-            List<Order> orders=new ArrayList<>();
-            for(OrderPo orderPo:orderPos)
-            {
-                Order order=cloneVo(orderPo,Order.class);
-                orders.add(order);
-            }
-            return new ReturnObject(orders);
+            OrderPoExample orderPoExample = new OrderPoExample();
+            OrderPoExample.Criteria cr = orderPoExample.createCriteria();
+            cr.andPidEqualTo(order.getPid());
+            OrderPo orderPo=cloneVo(order,OrderPo.class);
+            return new ReturnObject(orderPoMapper.updateByExampleSelective(orderPo,orderPoExample));
         }catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
-
     }
-
 
     public ReturnObject updateOrder(Order order) {
         try {

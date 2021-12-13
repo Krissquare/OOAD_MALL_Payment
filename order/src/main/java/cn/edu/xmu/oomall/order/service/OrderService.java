@@ -190,7 +190,6 @@ public class OrderService {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
         String documentId;
-        List<Order> orders=null;
         Order pOrder=null;
         if(order.getPid()==0)
         {
@@ -199,14 +198,12 @@ public class OrderService {
         else
         {
             ReturnObject ret1=orderDao.getOrderById(order.getPid());
+            if(!ret1.getCode().equals(ReturnNo.OK))
+            {
+                return ret1;
+            }
             pOrder=(Order) ret1.getData();
             documentId=pOrder.getOrderSn();
-            ReturnObject ret2=orderDao.getOrderByPid(pOrder.getId());
-            if(!ret2.getCode().equals(ReturnNo.OK))
-            {
-                return ret2;
-            }
-            orders=(List<Order>) ret2.getData();
         }
         ReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
         if(!returnObject.getCode().equals(ReturnNo.OK))
@@ -226,20 +223,18 @@ public class OrderService {
                 return new ReturnObject(retRefund);
             }
         }
-        if(orders==null)
-        {
-            order.setState(OrderState.CANCEL_ORDER.getCode());
-            Common.setPoModifiedFields(order, loginUserId, loginUserName);
-        }
-        else
+        order.setState(OrderState.CANCEL_ORDER.getCode());
+        Common.setPoModifiedFields(order, loginUserId, loginUserName);
+        if(pOrder!=null)
         {
             pOrder.setState(OrderState.CANCEL_ORDER.getCode());
             Common.setPoModifiedFields(pOrder, loginUserId, loginUserName);
-            for(Order order1:orders)
+            ReturnObject ret3=orderDao.updateOrder(pOrder);
+            if(!ret3.getCode().equals(ReturnNo.OK))
             {
-                order1.setState(OrderState.CANCEL_ORDER.getCode());
-                Common.setPoModifiedFields(order1, loginUserId, loginUserName);
+                return ret3;
             }
+            return orderDao.updateOrderByExample(order);
         }
         return orderDao.updateOrder(order);
     }
