@@ -1,11 +1,18 @@
 package cn.edu.xmu.oomall.order;
 
 import cn.edu.xmu.oomall.core.util.JacksonUtil;
+import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.microservice.CustomService;
 import cn.edu.xmu.oomall.order.microservice.ShopService;
 import cn.edu.xmu.oomall.order.microservice.TransactionService;
+import cn.edu.xmu.oomall.order.microservice.bo.PaymentState;
+import cn.edu.xmu.oomall.order.microservice.bo.RefundState;
+import cn.edu.xmu.oomall.order.microservice.bo.RefundType;
+import cn.edu.xmu.oomall.order.microservice.vo.RefundRecVo;
+import cn.edu.xmu.oomall.order.microservice.vo.RefundRetVo;
 import cn.edu.xmu.oomall.order.model.vo.MarkShipmentVo;
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
+import cn.edu.xmu.oomall.order.util.CreateObject;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import cn.edu.xmu.privilegegateway.annotation.util.JwtHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +29,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -50,8 +59,14 @@ class OrderApplicationTests {
     void init() {
         token = jwtHelper.createToken(2L, "lxc", 0L, 1, 3600);
         token4 = jwtHelper.createToken(4L, "lxc", 0L, 1, 3600);
+        InternalReturnObject<Map<String, Object>> refunds = CreateObject.listRefunds(1L);
+        InternalReturnObject<Map<String,Object>> payments=CreateObject.listPayments(1L);
         Mockito.when(shopService.getShopById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(new SimpleVo(1L, "aaa")));
         Mockito.when(customService.getCustomerById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(new SimpleVo(1L, "aaa")));
+        Mockito.when(transactionService.listRefund(0L,"20216453652635231006", RefundState.FINISH_REFUND.getCode(),null,null,1,10)).thenReturn(refunds);
+        Mockito.when(transactionService.listPayment(0L,"20216489872635231004", PaymentState.ALREADY_PAY.getCode(),null,null,1,10)).thenReturn(payments);
+        Mockito.when(transactionService.Refund(new RefundRecVo(null,null,1L,null,500L, RefundType.ORDER.getCode()),2L,"lxc")).thenReturn(new InternalReturnObject<>(new RefundRetVo(1L,"123",1L,500L,(byte)0,"123",(byte)0)));
+        Mockito.when(transactionService.Refund(new RefundRecVo(null,null,2L,null,100L,RefundType.ORDER.getCode()),2L,"lxc")).thenReturn(new InternalReturnObject<>(new RefundRetVo(1L,"123",1L,100L,(byte)0,"123",(byte)0)));
     }
 
     @Test
@@ -199,13 +214,13 @@ class OrderApplicationTests {
     @Test
     public void getPaymentByOrderId() throws Exception
     {
-        String responseString = this.mvc.perform(get("/orders/1/payment")
+        String responseString = this.mvc.perform(get("/orders/4/payment")
                 .contentType("application/json;charset=UTF-8")
                 .header("authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse = "{\"errno\":0,\"errmsg\":\"成功\"}";
+        String expectedResponse = "{\"errno\":0,\"data\":[{\"id\":1,\"tradeSn\":null,\"patternId\":null,\"documentId\":null,\"documentType\":2,\"descr\":null,\"amount\":500,\"actualAmount\":null,\"state\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null},{\"id\":2,\"tradeSn\":null,\"patternId\":null,\"documentId\":null,\"documentType\":3,\"descr\":null,\"amount\":100,\"actualAmount\":null,\"state\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null}],\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expectedResponse, responseString, true);
     }
 
@@ -223,6 +238,57 @@ class OrderApplicationTests {
     }
 
 
+    @Test
+    public void listOrderRefundsTest() throws Exception
+    {
+        String responseString = this.mvc.perform(get("/orders/1/refund")
+                .contentType("application/json;charset=UTF-8")
+                .header("authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectedResponse = "{\"errno\":0,\"data\":[{\"id\":1,\"tradeSn\":null,\"patternId\":null,\"amount\":null,\"state\":null,\"documentId\":null,\"documentType\":null},{\"id\":2,\"tradeSn\":null,\"patternId\":null,\"amount\":null,\"state\":null,\"documentId\":null,\"documentType\":null}],\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, true);
+    }
+
+    @Test
+    public void getOrderItemTest() throws Exception
+    {
+        String responseString = this.mvc.perform(get("/internal/orderitems/1")
+                .contentType("application/json;charset=UTF-8")
+                .header("authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectedResponse = "{\"errno\":0,\"data\":{\"orderId\":2,\"shopId\":1,\"productId\":1,\"onsaleId\":1,\"name\":\"巧克力\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":1,\"couponActivityId\":1,\"customerId\":1},\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, true);
+    }
+
+    @Test
+    public void internalCancelOrderTest() throws Exception
+    {
+        String responseString = this.mvc.perform(put("/internal/shops/2/orders/4/cancel")
+                .contentType("application/json;charset=UTF-8")
+                .header("authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectedResponse = "{\"errno\":0,\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, true);
+    }
+
+    @Test
+    public void getPaymentByOrderitemTest() throws Exception
+    {
+        String responseString = this.mvc.perform(get("/internal/orderitems/3/payment")
+                .contentType("application/json;charset=UTF-8")
+                .header("authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectedResponse = "{\"errno\":0,\"data\":{\"id\":2,\"tradeSn\":null,\"patternId\":null,\"documentId\":null,\"documentType\":3,\"descr\":null,\"amount\":100,\"actualAmount\":null,\"state\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null},\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, true);
+    }
     @Test
     public void getTokens(){
         System.out.println();
@@ -271,6 +337,22 @@ class OrderApplicationTests {
                 "  \"errmsg\": \"成功\"\n" +
                 "}";
         JSONAssert.assertEquals(expected, response, true);
+    }
+    /**
+     * orderId查item
+     * @throws Exception
+     */
+    @Test
+    public void listOrderItemsByOrderId() throws Exception {
+        String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/internal/order/1")
+                .header("authorization", token4)
+                .contentType("application/json;charset=UTF-8"))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+
+        String expected="{\"errno\":0,\"errmsg\":\"成功\",\"data\":[{\"id\":1,\"orderId\":2,\"shopId\":1,\"productId\":1,\"onsaleId\":1,\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"name\":\"巧克力\",\"couponActivityId\":1,\"couponId\":1,\"commented\":null,\"creatorId\":1,\"creatorName\":\"gyt\",\"modifierBy\":null,\"modifierName\":null,\"gmtCreate\":\"2021-12-02T17:33:33\",\"gmtModified\":null},{\"id\":2,\"orderId\":3,\"shopId\":2,\"productId\":2,\"onsaleId\":2,\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"name\":\"薯片\",\"couponActivityId\":2,\"couponId\":2,\"commented\":null,\"creatorId\":1,\"creatorName\":\"gyt\",\"modifierBy\":null,\"modifierName\":null,\"gmtCreate\":\"2021-12-02T17:34:20\",\"gmtModified\":null}]}";
+        JSONAssert.assertEquals(expected, responseString, true);
     }
 
 }

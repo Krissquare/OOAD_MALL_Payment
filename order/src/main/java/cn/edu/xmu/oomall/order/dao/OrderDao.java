@@ -12,6 +12,7 @@ import cn.edu.xmu.oomall.order.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.model.po.OrderPoExample;
 import cn.edu.xmu.oomall.order.model.vo.BriefOrderVo;
+import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import cn.edu.xmu.privilegegateway.annotation.util.RedisUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -48,7 +49,6 @@ public class OrderDao {
 
     final static private String ORDER_KEY="order_%d";
 
-
     public ReturnObject getOrderById(Long id) {
         try {
             String key = String.format(ORDER_KEY, id);
@@ -68,7 +68,21 @@ public class OrderDao {
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-
+    public ReturnObject cancelRelatedOrder(Order order)
+    {
+        try
+        {
+            OrderPoExample orderPoExample = new OrderPoExample();
+            OrderPoExample.Criteria cr = orderPoExample.createCriteria();
+            cr.andPidEqualTo(order.getPid());
+            OrderPo orderPo=cloneVo(order,OrderPo.class);
+            orderPoMapper.updateByExampleSelective(orderPo,orderPoExample);
+            return new ReturnObject(ReturnNo.OK);
+        }catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
 
     public ReturnObject updateOrder(Order order) {
         try {
@@ -93,6 +107,10 @@ public class OrderDao {
             OrderItemPoExample.Criteria cr=orderItemPoExample.createCriteria();
             cr.andOrderIdEqualTo(orderId);
             List<OrderItemPo> orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
+            if(orderItemPos.size()==0)
+            {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
             List<OrderItem> orderItemList=new ArrayList<>(orderItemPos.size());
             for(OrderItemPo orderItemPo:orderItemPos)
             {
@@ -111,20 +129,16 @@ public class OrderDao {
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria cr = orderPoExample.createCriteria();
             cr.andShopIdEqualTo(shopId);
-            if(customerId!=null)
-            {
+            if (customerId != null) {
                 cr.andCustomerIdEqualTo(customerId);
             }
-            if(orderSn!=null)
-            {
+            if (orderSn != null) {
                 cr.andOrderSnEqualTo(orderSn);
             }
-            if(beginTime!=null)
-            {
+            if (beginTime != null) {
                 cr.andGmtCreateGreaterThan(beginTime);
             }
-            if(endTime!=null)
-            {
+            if (endTime != null) {
                 cr.andGmtCreateLessThan(endTime);
             }
             List<OrderPo> orderPoList = orderPoMapper.selectByExample(orderPoExample);
@@ -137,6 +151,24 @@ public class OrderDao {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
+    }
+
+    public ReturnObject getOrderItemById(Long id)
+    {
+        try
+        {
+            OrderItemPo orderItemPo=orderItemPoMapper.selectByPrimaryKey(id);
+            if(orderItemPo==null)
+            {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            OrderItem orderItem=cloneVo(orderItemPo,OrderItem.class);
+            return new ReturnObject(orderItem);
+        }catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+
     }
 
     /**
@@ -177,6 +209,36 @@ public class OrderDao {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
+    }
+    public InternalReturnObject listOrderItemsByPOrderId(Long id){
+        try{
+            OrderPoExample example = new OrderPoExample();
+            OrderPoExample.Criteria criteria = example.createCriteria();
+            criteria.andPidEqualTo(id);
+            List<OrderPo> list = orderPoMapper.selectByExample(example);
+            List<OrderItemPo>orderItemPos=new ArrayList<>();
+            //没有子订单
+            if (list.size()==0) {
+                OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
+                OrderItemPoExample.Criteria orderItemPoExampleCriteria=orderItemPoExample.createCriteria();
+                orderItemPoExampleCriteria.andOrderIdEqualTo(id);
+                orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
+            }
+            //有子订单
+            else{
+                for(OrderPo orderPo:list){
+                    OrderItemPoExample orderItemPoExample=new OrderItemPoExample();
+                    OrderItemPoExample.Criteria orderItemPoExampleCriteria=orderItemPoExample.createCriteria();
+                    orderItemPoExampleCriteria.andOrderIdEqualTo(orderPo.getId());
+                    orderItemPos.addAll(orderItemPoMapper.selectByExample(orderItemPoExample));
+                }
+            }
+            return new InternalReturnObject(orderItemPos);}
+        catch (Exception e){
+            logger.error(e.getMessage());
+            return new InternalReturnObject(ReturnNo.INTERNAL_SERVER_ERR);
+        }
+
     }
 
     public ReturnObject insertOrder(Order order){

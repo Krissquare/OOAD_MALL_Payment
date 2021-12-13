@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.transaction.model.vo;
+package cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo;
 
 import cn.edu.xmu.oomall.transaction.util.MyDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -16,10 +16,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WechatPaymentNotifyVo {
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public class WeChatTransactionVo {
+    public static class WechatTransactionVo {
+
         @Data
         @NoArgsConstructor
         @AllArgsConstructor
@@ -29,6 +31,7 @@ public class WechatPaymentNotifyVo {
             private String currency;
             private String payer_currency;
         }
+
 
         @Data
         @NoArgsConstructor
@@ -59,13 +62,14 @@ public class WechatPaymentNotifyVo {
         private LocalDateTime success_time;
 
     }
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public class Resource{
+    public static class Resource{
         private String algorithm;
         private String original_type;
-        private WeChatTransactionVo ciphertext;
+        private WechatTransactionVo ciphertext;
         private String nonce;
     }
 
