@@ -4,6 +4,7 @@ import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.microservice.bo.PaymentType;
 import cn.edu.xmu.oomall.order.microservice.vo.PaymentRetVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRetVo;
+import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 public class CreateObject {
-    public static ReturnObject listRefunds(Long id)
+    public static InternalReturnObject listRefunds(Long id)
     {
         List<RefundRetVo> refundRetVoList=new ArrayList<>();
         RefundRetVo refundRetVo=new RefundRetVo();
@@ -23,9 +24,9 @@ public class CreateObject {
         Map<String,Object> map=new HashMap<>();
         map.put("list",refundRetVoList);
         map.put("total",10);
-        return new ReturnObject(map);
+        return new InternalReturnObject(map);
     }
-    public static ReturnObject listPayments(Long id)
+    public static InternalReturnObject listPayments(Long id)
     {
         List<PaymentRetVo> paymentList=new ArrayList<>();
         PaymentRetVo retVo=new PaymentRetVo();
@@ -41,6 +42,6 @@ public class CreateObject {
         Map<String,Object> map=new HashMap<>();
         map.put("list",paymentList);
         map.put("total",10);
-        return new ReturnObject(map);
+        return new InternalReturnObject(map);
     }
 }

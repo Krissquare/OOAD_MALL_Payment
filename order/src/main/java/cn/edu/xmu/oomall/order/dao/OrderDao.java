@@ -68,7 +68,7 @@ public class OrderDao {
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-    public ReturnObject updateOrderByExample(Order order)
+    public ReturnObject cancelRelatedOrder(Order order)
     {
         try
         {
@@ -76,7 +76,8 @@ public class OrderDao {
             OrderPoExample.Criteria cr = orderPoExample.createCriteria();
             cr.andPidEqualTo(order.getPid());
             OrderPo orderPo=cloneVo(order,OrderPo.class);
-            return new ReturnObject(orderPoMapper.updateByExampleSelective(orderPo,orderPoExample));
+            orderPoMapper.updateByExampleSelective(orderPo,orderPoExample);
+            return new ReturnObject(ReturnNo.OK);
         }catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());

@@ -59,8 +59,8 @@ class OrderApplicationTests {
     void init() {
         token = jwtHelper.createToken(2L, "lxc", 0L, 1, 3600);
         token4 = jwtHelper.createToken(4L, "lxc", 0L, 1, 3600);
-        ReturnObject<Map<String, Object>> refunds = CreateObject.listRefunds(1L);
-        ReturnObject<Map<String,Object>> payments=CreateObject.listPayments(1L);
+        InternalReturnObject<Map<String, Object>> refunds = CreateObject.listRefunds(1L);
+        InternalReturnObject<Map<String,Object>> payments=CreateObject.listPayments(1L);
         Mockito.when(shopService.getShopById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(new SimpleVo(1L, "aaa")));
         Mockito.when(customService.getCustomerById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(new SimpleVo(1L, "aaa")));
         Mockito.when(transactionService.listRefund(0L,"20216453652635231006", RefundState.FINISH_REFUND.getCode(),null,null,1,10)).thenReturn(refunds);

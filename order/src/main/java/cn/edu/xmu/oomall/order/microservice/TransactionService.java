@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 @FeignClient(name = "transaction-service")
 public interface TransactionService {
     @GetMapping("/shops/{shopId}/payment")
-    ReturnObject listPayment(@PathVariable(value = "shopId") Long shopId,
+    InternalReturnObject listPayment(@PathVariable(value = "shopId") Long shopId,
                              @RequestParam(value = "documentId",required = false)String documentId,
                              @RequestParam(value = "state",required = false)Byte state,
                              @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
@@ -30,7 +30,7 @@ public interface TransactionService {
                              @RequestParam(value="page",required = false)Integer page,
                              @RequestParam(value = "pageSize",required = false)Integer pageSize);
     @GetMapping("/shops/{shopId}/refund")
-    ReturnObject listRefund(@PathVariable("shopId") Long shopId, @RequestParam(value="documentId",required = false)String documentId,
+    InternalReturnObject listRefund(@PathVariable("shopId") Long shopId, @RequestParam(value="documentId",required = false)String documentId,
                             @RequestParam(value="state",required = false)Byte state,
                             @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
                             @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
