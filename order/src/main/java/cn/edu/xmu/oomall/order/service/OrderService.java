@@ -1,5 +1,6 @@
 package cn.edu.xmu.oomall.order.service;
 
+import cn.edu.xmu.oomall.core.util.JacksonUtil;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.dao.OrderDao;
@@ -12,19 +13,19 @@ import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import cn.edu.xmu.privilegegateway.annotation.util.Common;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.client.producer.SendStatus;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Objects;
+import java.util.*;
 
-import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
-import static cn.edu.xmu.privilegegateway.annotation.util.Common.setPoModifiedFields;
+import static cn.edu.xmu.privilegegateway.annotation.util.Common.*;
 
 @Service
 public class OrderService {
@@ -48,11 +49,16 @@ public class OrderService {
 
     @Autowired
     ShopService shopService;
+
     @Autowired
     TransactionService transactionService;
 
+    @Autowired
+    RocketMQTemplate rocketMQTemplate;
+
     /**
      * 新建订单
+     *
      * @param simpleOrderVo
      * @param userId
      * @param userName
@@ -60,18 +66,26 @@ public class OrderService {
      */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject insertOrder(SimpleOrderVo simpleOrderVo, Long userId, String userName) {
+        OrderAndOrderItemsVo orderAndOrderItemsVo = new OrderAndOrderItemsVo();
+        List<Long> weights = new ArrayList<>();
+        List<FreightCalculatingPostVo> freightCalculatingPostVos = new ArrayList<>();
+        List<OrderItem> orderItemsBo = new ArrayList<>();
+        Set<Long> couponIds = new HashSet<>();
+        Set<Long> couponActivityIds = new HashSet<>();
         // 订单的orderItem不能为空
         List<SimpleOrderItemVo> orderItems = simpleOrderVo.getOrderItems();
         if (orderItems.size() == 0) {
             return new ReturnObject(ReturnNo.FIELD_NOTVALID);
         }
-        //验证orderItem的所有可能会不存在的id
-        for(SimpleOrderItemVo simpleOrderItemVo:orderItems){
+        //验证orderItem的所有可能会不存在的id,以及组装orderitem
+        for (SimpleOrderItemVo simpleOrderItemVo : orderItems) {
+            OrderItem orderItem = cloneVo(simpleOrderItemVo, OrderItem.class);
             // 判断productId是否存在
             InternalReturnObject<ProductVo> productVo = goodsService.getProductById(simpleOrderItemVo.getProductId());
             if (productVo.getErrno() != 0) {
                 return new ReturnObject(ReturnNo.getByCode(productVo.getErrno()));
             }
+            weights.add(productVo.getData().getWeight());
             // 判断onsaleId是否存在
             InternalReturnObject<OnSaleVo> onSaleVo = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId());
             if (onSaleVo.getErrno() != 0) {
@@ -82,25 +96,41 @@ public class OrderService {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
             }
             //判断couponActId;
-            if(simpleOrderItemVo.getCouponActId()!=null){
-                InternalReturnObject couponActivityById = couponService.getCouponActivityById(onSaleVo.getData().getShop().getId(), simpleOrderItemVo.getCouponId());
-                if(couponActivityById.getErrno()!=0){
-                    return new ReturnObject(ReturnNo.getByCode(couponActivityById.getErrno()));
+            if (simpleOrderItemVo.getCouponActId() != null) {
+                //因为可能不同item用一个活动，下同理
+                if (!couponActivityIds.contains(simpleOrderItemVo.getCouponActId())) {
+                    couponActivityIds.add(simpleOrderItemVo.getCouponActId());
+                    InternalReturnObject couponActivityById = couponService.getCouponActivityById(onSaleVo.getData().getShop().getId(), simpleOrderItemVo.getCouponId());
+                    if (couponActivityById.getErrno() != 0) {
+                        return new ReturnObject(ReturnNo.getByCode(couponActivityById.getErrno()));
+                    }
                 }
             }
             //
-            if(simpleOrderItemVo.getCouponId()!=null){
-                InternalReturnObject couponById = customService.getCouponById(simpleOrderItemVo.getCouponId());
-                if(couponById.getErrno()!=0){
-                    return new ReturnObject(ReturnNo.getByCode(couponById.getErrno()));
+            if (simpleOrderItemVo.getCouponId() != null) {
+                if (!couponIds.contains(simpleOrderItemVo.getCouponId())) {
+                    couponIds.add(simpleOrderItemVo.getCouponId());
+                    InternalReturnObject couponById = customService.getCouponById(simpleOrderItemVo.getCouponId());
+                    if (couponById.getErrno() != 0) {
+                        return new ReturnObject(ReturnNo.getByCode(couponById.getErrno()));
+                    }
                 }
             }
+            orderItem.setShopId(productVo.getData().getShop().getId());
+            orderItem.setPrice(onSaleVo.getData().getPrice() * simpleOrderItemVo.getQuantity());
+            //如果是优惠 就重新set
+            orderItem.setDiscountPrice(0L);
+            orderItem.setName(productVo.getData().getName());
+            orderItem.setCommented((byte) 0);
+            setPoCreatedFields(orderItem, userId, userName);
+            setPoModifiedFields(orderItem, userId, userName);
+            orderItemsBo.add(orderItem);
         }
         //验证除了orderItem的字段
         if (simpleOrderVo.getGrouponId() != null) {
             // 团购订单
             //团购的list只能为1
-            if(orderItems.size()!=1){
+            if (orderItems.size() != 1) {
                 return new ReturnObject(ReturnNo.FIELD_NOTVALID);
             }
             InternalReturnObject<GrouponActivityVo> grouponsById = activityService.getGrouponsById(simpleOrderVo.getGrouponId());
@@ -108,63 +138,146 @@ public class OrderService {
                 return new ReturnObject(ReturnNo.getByCode(grouponsById.getErrno()));
             }
             SimpleOrderItemVo simpleOrderItemVo = orderItems.get(0);
-            OnSaleVo onSaleVo = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId()).getData();
-            //上面也判断过所以肯定存在
+            InternalReturnObject<OnSaleVo> onsaleById = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId());
+            if (onsaleById.getErrno() != 0) {
+                return new ReturnObject(ReturnNo.getByCode(onsaleById.getErrno()));
+            }
+            OnSaleVo onSaleVo = onsaleById.getData();
             //判断onsaleid里的activity是不是couponid
-            if(!(onSaleVo.getType()==(byte)2&& onSaleVo.getActivityId().equals(simpleOrderVo.getGrouponId()))){
+            if (!(onSaleVo.getType() == (byte) 2 && onSaleVo.getActivityId().equals(simpleOrderVo.getGrouponId()))) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
             }
-            //得到价格
-            Long price = onSaleVo.getPrice();//单价*数量=总价
-
-        } else if(simpleOrderVo.getAdvancesaleId()!=null){
+        } else if (simpleOrderVo.getAdvancesaleId() != null) {
             // 预售订单
             InternalReturnObject<AdvanceVo> advanceSaleById = activityService.getAdvanceSaleById(simpleOrderVo.getAdvancesaleId());
             if (simpleOrderVo.getOrderItems().size() != 1) {
                 return new ReturnObject(ReturnNo.FIELD_NOTVALID);
             }
-            if (advanceSaleById.getErrno()!=0){
+            if (advanceSaleById.getErrno() != 0) {
                 return new ReturnObject(ReturnNo.getByCode(advanceSaleById.getErrno()));
             }
-            //钱
-            AdvanceVo data = advanceSaleById.getData();//单价*数量
-            Long price = data.getPrice();
-            Long advancePayPrice = data.getAdvancePayPrice();
-
-        }else {
+            SimpleOrderItemVo simpleOrderItemVo = orderItems.get(0);
+            InternalReturnObject<OnSaleVo> onsaleById = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId());
+            if (onsaleById.getErrno() != 0) {
+                return new ReturnObject(ReturnNo.getByCode(onsaleById.getErrno()));
+            }
+            OnSaleVo onSaleVo = onsaleById.getData();
+            //判断onsaleid里的activity是不是couponid
+            if (!(onSaleVo.getType() == (byte) 3 && onSaleVo.getActivityId().equals(simpleOrderVo.getAdvancesaleId()))) {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+            }
+        } else {
             //普通或者优惠订单
-            List<ProductPostVo> commonList = new ArrayList<>();
             List<ProductPostVo> disList = new ArrayList<>();
-            for (SimpleOrderItemVo simpleOrderItemVo:simpleOrderVo.getOrderItems()){
-                OnSaleVo data = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId()).getData();
-                //价格*数量
-                Long price = data.getPrice();
-                ProductPostVo productPostVo = new ProductPostVo(simpleOrderItemVo.getProductId(), simpleOrderItemVo.getOnsaleId(), simpleOrderItemVo.getQuantity()
-                        , simpleOrderItemVo.getCouponActId(), price);
-                if (productPostVo.getActivityId()!=null){
+            List<Integer> indexs = new ArrayList<>();
+            for (int i = 0; i < orderItemsBo.size(); i++) {
+                OrderItem orderItem = orderItemsBo.get(i);
+                if (orderItem.getCouponActivityId() != null) {
+                    //参加优惠活动的
+                    ProductPostVo productPostVo = cloneVo(orderItem, ProductPostVo.class);
+                    productPostVo.setActivityId(orderItem.getCouponActivityId());
+                    productPostVo.setOriginalPrice(orderItem.getPrice());
                     disList.add(productPostVo);
-                }else {
-                    commonList.add(productPostVo);
+                    indexs.add(i);
                 }
             }
-            if (disList.size()!=0){
+            if (disList.size() != 0) {
                 InternalReturnObject internalReturnObject = couponService.calculateDiscoutprices(disList);
-                if (internalReturnObject.getErrno()!=0){
+                if (internalReturnObject.getErrno() != 0) {
                     return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
                 }
-                //得到优惠钱
-                ProductRetVo productRetVo = (ProductRetVo) internalReturnObject.getData();
-                //TODO:计算普通的钱
+                //得到优惠钱封装进去
+                List<ProductRetVo> calList = (List<ProductRetVo>) internalReturnObject.getData();
+                for (int i = 0; i < calList.size(); i++) {
+                    orderItemsBo.get(indexs.get(i)).setDiscountPrice(calList.get(i).getDiscountPrice() * 10);//1/10分
+                }
             }
-
         }
-        //TODO：组装vo
+
+        Order order = cloneVo(simpleOrderVo, Order.class);
+        order.setCustomerId(userId);
+        order.setPid(0L);
+        //TODO 订单号 生成算法
+        order.setState(OrderState.NEW_ORDER.getCode());
+        order.setBeDeleted((byte) 0);
+        setPoCreatedFields(order, userId, userName);
+        setPoModifiedFields(order, userId, userName);
+        Long sumOrigin = 0L;
+        Long sumDiscount = 0L;
+        Long sumNow = 0L;
+        //分积点总积点*10分到某个里面在除以数量
+        Long totalPoint = order.getPoint() * 10;
+        for (int i = 0; i < orderItemsBo.size(); i++) {
+            OrderItem orderItem = orderItemsBo.get(i);
+            sumOrigin += orderItem.getPrice() * orderItem.getQuantity();
+            sumDiscount += orderItem.getDiscountPrice() * orderItem.getQuantity();
+            sumNow += sumOrigin;
+            sumNow -= sumDiscount;
+            //运费
+            FreightCalculatingPostVo freightCalculatingPostVo = cloneVo(orderItem, FreightCalculatingPostVo.class);
+            freightCalculatingPostVo.setWeight(weights.get(i));
+            freightCalculatingPostVos.add(freightCalculatingPostVo);
+            //减少库存量 redis
+            InternalReturnObject internalReturnObject = goodsService.decreaseOnSale(orderItem.getShopId(), orderItem.getOnsaleId(), new QuantityVo(orderItem.getQuantity()));
+            if (internalReturnObject.getErrno() != 0) {
+                return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
+            }
+        }
+        //转换为1/10的单位
+        sumNow *= 10;
+        for (int i = 0; i < orderItemsBo.size(); i++) {
+            OrderItem orderItem = orderItemsBo.get(i);
+            double sum = orderItem.getQuantity() * (orderItem.getPrice() * 10 - orderItem.getDiscountPrice());
+            double proportion = sum / sumNow;
+            orderItem.setPoint((long) (proportion * totalPoint / orderItem.getQuantity()));
+        }
+        order.setOriginPrice(sumOrigin);
+        order.setDiscountPrice(sumDiscount);
+        //计算运费
+        InternalReturnObject<FreightCalculatingRetVo> freightCalculatingRetVoInternalReturnObject = freightService.calculateFreight(order.getRegionId(), freightCalculatingPostVos);
+        if (freightCalculatingRetVoInternalReturnObject.getErrno() != 0) {
+            return new ReturnObject(ReturnNo.getByCode(freightCalculatingRetVoInternalReturnObject.getErrno()));
+        }
+        order.setExpressFee(freightCalculatingRetVoInternalReturnObject.getData().getFreightPrice());
+        orderAndOrderItemsVo.setOrder(order);
+
+        //减少积点,减少优惠卷
+        InternalReturnObject internalReturnObject1 = customService.updatePoint(-orderAndOrderItemsVo.getOrder().getPoint());
+        if (internalReturnObject1.getErrno() != 0) {
+            return new ReturnObject(ReturnNo.getByCode(internalReturnObject1.getErrno()));
+        }
+        for (Long id : couponIds) {
+            InternalReturnObject internalReturnObject = customService.updateCouponById(id, (byte) 0);
+            if (internalReturnObject.getErrno() != 0) {
+                return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
+            }
+        }
+        //todo: redis暂存 以防没插进去就支付
+        //发消息
+        String json = JacksonUtil.toJson(orderAndOrderItemsVo);
+        Message message = MessageBuilder.withPayload(json).build();
+        SendResult sendResult = rocketMQTemplate.syncSend("insert-order", message);
+        if (sendResult.getSendStatus()!= SendStatus.SEND_OK){
+            //回滚积点,优惠卷
+            internalReturnObject1 = customService.updatePoint(orderAndOrderItemsVo.getOrder().getPoint());
+            if (internalReturnObject1.getErrno() != 0) {
+                return new ReturnObject(ReturnNo.getByCode(internalReturnObject1.getErrno()));
+            }
+            for (Long id : couponIds) {
+                InternalReturnObject internalReturnObject = customService.updateCouponById(id, (byte) 1);
+                if (internalReturnObject.getErrno() != 0) {
+                    return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
+                }
+            }
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,"发送消息失败");
+        }
         return new ReturnObject();
     }
 
     /**
      * 买家逻辑删除订单
      * created by  xiuchen lang
+     *
      * @param id
      * @param userId
      * @param userName
@@ -193,6 +306,7 @@ public class OrderService {
     /**
      * 买家取消订单
      * create by xiuchen Lang
+     *
      * @param id
      * @param userId
      * @param userName
@@ -224,24 +338,24 @@ public class OrderService {
      * create by hty
      */
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject confirmOrder(Long orderId,Long loginUserId,String loginUserName) {
-        ReturnObject ret=orderDao.getOrderById(orderId);
-        if(!ret.getCode().equals(ReturnNo.OK)) {
+    public ReturnObject confirmOrder(Long orderId, Long loginUserId, String loginUserName) {
+        ReturnObject ret = orderDao.getOrderById(orderId);
+        if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;
         }
-        Order order=(Order) ret.getData();
-        if(!order.getState().equals(OrderState.SEND_GOODS.getCode()))
-        {
+        Order order = (Order) ret.getData();
+        if (!order.getState().equals(OrderState.SEND_GOODS.getCode())) {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
         order.setState(OrderState.COMPLETE_ORDER.getCode());
-        Common.setPoModifiedFields(order,loginUserId,loginUserName);
+        Common.setPoModifiedFields(order, loginUserId, loginUserName);
         return orderDao.updateOrder(order);
     }
 
     /**
      * create by hty
      * 店家获取订单概要
+     *
      * @param shopId
      * @param customerId
      * @param orderSn
@@ -252,13 +366,14 @@ public class OrderService {
      * @return
      */
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject listBriefOrdersByShopId(Long shopId,Long customerId,String orderSn,LocalDateTime beginTime,LocalDateTime endTime, Integer pageNumber, Integer pageSize) {
-        return orderDao.listBriefOrdersByShopId(shopId,customerId,orderSn,beginTime,endTime, pageNumber, pageSize);
+    public ReturnObject listBriefOrdersByShopId(Long shopId, Long customerId, String orderSn, LocalDateTime beginTime, LocalDateTime endTime, Integer pageNumber, Integer pageSize) {
+        return orderDao.listBriefOrdersByShopId(shopId, customerId, orderSn, beginTime, endTime, pageNumber, pageSize);
     }
 
     /**
      * create by hty
      * 店家修改订单留言
+     *
      * @param shopId
      * @param orderId
      * @param orderVo
@@ -269,14 +384,12 @@ public class OrderService {
 
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject updateOrderComment(Long shopId, Long orderId, OrderVo orderVo, Long loginUserId, String loginUserName) {
-        ReturnObject ret=orderDao.getOrderById(orderId);
-        if(!ret.getCode().equals(ReturnNo.OK))
-        {
+        ReturnObject ret = orderDao.getOrderById(orderId);
+        if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;
         }
         Order order = (Order) ret.getData();
-        if(!order.getShopId().equals(shopId))
-        {
+        if (!order.getShopId().equals(shopId)) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
         order.setMessage(orderVo.getMessage());
@@ -287,6 +400,7 @@ public class OrderService {
     /**
      * create by hty
      * 店家获取订单详情
+     *
      * @param shopId
      * @param orderId
      * @return
@@ -329,7 +443,7 @@ public class OrderService {
         if (newOrder.getGrouponId() == null) {
             return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
-        if(!newOrder.getShopId().equals(shopId)){
+        if (!newOrder.getShopId().equals(shopId)) {
             return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
         // 设置订单状态为付款成功
@@ -344,9 +458,11 @@ public class OrderService {
 
         return returnObject;
     }
+
     /**
      * gyt
      * 管理员取消本店铺订单。（a-4）
+     *
      * @param id
      * @param userId
      * @param userName
@@ -371,9 +487,11 @@ public class OrderService {
         Common.setPoModifiedFields(order, userId, userName);
         return orderDao.updateOrder(order);
     }
+
     /**
      * gyt
      * 店家对订单标记发货。
+     *
      * @param shopId
      * @param id
      * @param markShipmentVo
@@ -395,7 +513,7 @@ public class OrderService {
         if (!order.getState().equals(OrderState.FINISH_PAY.getCode())) {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
-        LocalDateTime nowTime=LocalDateTime.now();
+        LocalDateTime nowTime = LocalDateTime.now();
         Order order1 = cloneVo(markShipmentVo, Order.class);
         order1.setId(id);
         order1.setConfirmTime(nowTime);
@@ -403,14 +521,16 @@ public class OrderService {
         setPoModifiedFields(order1, loginUserId, loginUserName);
         return orderDao.updateOrder(order1);
     }
+
     /**
      * gyt
      * 查询自己订单的支付信息（a-4）
+     *
      * @param id
      * @return
      */
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject getPaymentByOrderId(Long id,Long loginUserId,String loginUserName) {
+    public ReturnObject getPaymentByOrderId(Long id, Long loginUserId, String loginUserName) {
         ReturnObject returnObject1 = orderDao.getOrderById(id);
         if (returnObject1.getCode() != ReturnNo.OK) {
             return returnObject1;
@@ -425,12 +545,13 @@ public class OrderService {
 
     /**
      * a-1
+     *
      * @author Fang Zheng
-     * */
+     */
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject listAllOrderState(){
+    public ReturnObject listAllOrderState() {
         HashMap<Integer, String> ret = new HashMap<>();
-        for (OrderState item: OrderState.values()){
+        for (OrderState item : OrderState.values()) {
             ret.put(item.getCode(), item.getMessage());
         }
         return new ReturnObject(ret);
@@ -438,8 +559,9 @@ public class OrderService {
 
     /**
      * a-1
+     *
      * @author Fang Zheng
-     * */
+     */
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject listCustomerBriefOrder(Long userId,
                                                String orderSn,
@@ -447,31 +569,32 @@ public class OrderService {
                                                LocalDateTime beginTime,
                                                LocalDateTime endTime,
                                                Integer pageNumber,
-                                               Integer pageSize){
-        return orderDao.listBriefOrderByUserId(userId,orderSn,state,beginTime,endTime,pageNumber,pageSize);
+                                               Integer pageSize) {
+        return orderDao.listBriefOrderByUserId(userId, orderSn, state, beginTime, endTime, pageNumber, pageSize);
     }
 
     /**
      * a-1
+     *
      * @author Fang Zheng
-     * */
+     */
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject listCustomerWholeOrder(Long userId, Long orderId){
+    public ReturnObject listCustomerWholeOrder(Long userId, Long orderId) {
         ReturnObject ret = orderDao.getOrderById(orderId);
-        if (!ret.getCode().equals(ReturnNo.OK)){
+        if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;
         }
         Order order = (Order) ret.getData();
-        if (!order.getCustomerId().equals(userId)){
+        if (!order.getCustomerId().equals(userId)) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
         InternalReturnObject customerRet = customService.getCustomerById(order.getCustomerId());
-        if (!customerRet.getErrno().equals(ReturnNo.OK)){
+        if (!customerRet.getErrno().equals(ReturnNo.OK)) {
             return new ReturnObject(ReturnNo.CUSTOMERID_NOTEXIST);
         }
         SimpleVo customerVo = (SimpleVo) customerRet.getData();
         InternalReturnObject shopRet = shopService.getShopById(order.getShopId());
-        if (!customerRet.getErrno().equals(ReturnNo.OK)){
+        if (!customerRet.getErrno().equals(ReturnNo.OK)) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
         }
         SimpleVo shopVo = (SimpleVo) shopRet.getData();
@@ -490,21 +613,22 @@ public class OrderService {
 
     /**
      * a-1
+     *
      * @author FangZheng
-     * */
+     */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject updateCustomerOrder(Long userId,
                                             Long orderId,
-                                            UpdateOrderVo updateOrderVo){
+                                            UpdateOrderVo updateOrderVo) {
         ReturnObject ret = orderDao.getOrderById(orderId);
-        if (!ret.getCode().equals(ReturnNo.OK)){
+        if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;
         }
         Order oldOrder = (Order) ret.getData();
-        if (!oldOrder.getCustomerId().equals(userId)){
+        if (!oldOrder.getCustomerId().equals(userId)) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
-        if (oldOrder.getState() >= OrderState.SEND_GOODS.getCode()){
+        if (oldOrder.getState() >= OrderState.SEND_GOODS.getCode()) {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
         Order newOrder = Common.cloneVo(updateOrderVo, Order.class);

@@ -17,7 +17,7 @@ import java.util.List;
 @FeignClient(name = "coupon-service")
 public interface CouponService {
     @PutMapping("/internal/discountprices")
-    InternalReturnObject<ProductRetVo> calculateDiscoutprices(@RequestBody List<ProductPostVo> productOnsaleVos);
+    InternalReturnObject<List<ProductRetVo>> calculateDiscoutprices(@RequestBody List<ProductPostVo> productOnsaleVos);
 
 
     /**

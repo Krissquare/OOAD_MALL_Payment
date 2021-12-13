@@ -4,16 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.Min;
+
 /**
  * @author xiuchen lang 22920192204222
- * @date 2021/12/07 17:22
+ * @date 2021/12/12 15:54
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class FreightCalculatingPostVo {
-    private Long productId;
-    private Integer quantity;
-    private Long freightId;
-    private Long weight;
+@AllArgsConstructor
+public class QuantityVo {
+    @Min(1)
+    private  Long quantity;
 }
