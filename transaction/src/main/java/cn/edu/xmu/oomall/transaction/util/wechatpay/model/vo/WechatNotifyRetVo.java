@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.transaction.model.vo;
+package cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,10 +9,10 @@ import lombok.NoArgsConstructor;
  * @date 2021/12/09 21:14
  */
 @Data
-public class NotifyRetVo {
+public class WechatNotifyRetVo {
     String code;
     String message;
-    public NotifyRetVo(){
+    public WechatNotifyRetVo(){
         this.code="success";
         this.message="成功";
     }

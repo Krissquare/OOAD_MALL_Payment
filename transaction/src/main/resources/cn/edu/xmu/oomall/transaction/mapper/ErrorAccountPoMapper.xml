@@ -11,7 +11,7 @@
     <result column="pattern_id" jdbcType="BIGINT" property="patternId" />
     <result column="income" jdbcType="BIGINT" property="income" />
     <result column="expenditure" jdbcType="BIGINT" property="expenditure" />
-    <result column="document_id" jdbcType="BIGINT" property="documentId" />
+    <result column="document_id" jdbcType="VARCHAR" property="documentId" />
     <result column="state" jdbcType="TINYINT" property="state" />
     <result column="time" jdbcType="TIMESTAMP" property="time" />
     <result column="descr" jdbcType="VARCHAR" property="descr" />
@@ -162,7 +162,7 @@
       `creator_name`, `modifier_id`, `modifier_name`, 
       `gmt_create`, `gmt_modified`)
     values (#{tradeSn,jdbcType=VARCHAR}, #{patternId,jdbcType=BIGINT}, #{income,jdbcType=BIGINT}, 
-      #{expenditure,jdbcType=BIGINT}, #{documentId,jdbcType=BIGINT}, #{state,jdbcType=TINYINT}, 
+      #{expenditure,jdbcType=BIGINT}, #{documentId,jdbcType=VARCHAR}, #{state,jdbcType=TINYINT}, 
       #{time,jdbcType=TIMESTAMP}, #{descr,jdbcType=VARCHAR}, #{adjustId,jdbcType=BIGINT}, 
       #{adjustName,jdbcType=VARCHAR}, #{adjustTime,jdbcType=TIMESTAMP}, #{creatorId,jdbcType=BIGINT}, 
       #{creatorName,jdbcType=VARCHAR}, #{modifierId,jdbcType=BIGINT}, #{modifierName,jdbcType=VARCHAR}, 
@@ -244,7 +244,7 @@
         #{expenditure,jdbcType=BIGINT},
       </if>
       <if test="documentId != null">
-        #{documentId,jdbcType=BIGINT},
+        #{documentId,jdbcType=VARCHAR},
       </if>
       <if test="state != null">
         #{state,jdbcType=TINYINT},
@@ -307,7 +307,7 @@
         `expenditure` = #{record.expenditure,jdbcType=BIGINT},
       </if>
       <if test="record.documentId != null">
-        `document_id` = #{record.documentId,jdbcType=BIGINT},
+        `document_id` = #{record.documentId,jdbcType=VARCHAR},
       </if>
       <if test="record.state != null">
         `state` = #{record.state,jdbcType=TINYINT},
@@ -361,7 +361,7 @@
       `pattern_id` = #{record.patternId,jdbcType=BIGINT},
       `income` = #{record.income,jdbcType=BIGINT},
       `expenditure` = #{record.expenditure,jdbcType=BIGINT},
-      `document_id` = #{record.documentId,jdbcType=BIGINT},
+      `document_id` = #{record.documentId,jdbcType=VARCHAR},
       `state` = #{record.state,jdbcType=TINYINT},
       `time` = #{record.time,jdbcType=TIMESTAMP},
       `descr` = #{record.descr,jdbcType=VARCHAR},
@@ -398,7 +398,7 @@
         `expenditure` = #{expenditure,jdbcType=BIGINT},
       </if>
       <if test="documentId != null">
-        `document_id` = #{documentId,jdbcType=BIGINT},
+        `document_id` = #{documentId,jdbcType=VARCHAR},
       </if>
       <if test="state != null">
         `state` = #{state,jdbcType=TINYINT},
@@ -449,7 +449,7 @@
       `pattern_id` = #{patternId,jdbcType=BIGINT},
       `income` = #{income,jdbcType=BIGINT},
       `expenditure` = #{expenditure,jdbcType=BIGINT},
-      `document_id` = #{documentId,jdbcType=BIGINT},
+      `document_id` = #{documentId,jdbcType=VARCHAR},
       `state` = #{state,jdbcType=TINYINT},
       `time` = #{time,jdbcType=TIMESTAMP},
       `descr` = #{descr,jdbcType=VARCHAR},

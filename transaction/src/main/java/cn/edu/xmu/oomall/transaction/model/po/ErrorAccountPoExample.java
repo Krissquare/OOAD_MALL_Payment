@@ -515,52 +515,62 @@ public class ErrorAccountPoExample {
             return (Criteria) this;
         }
 
-        public Criteria andDocumentIdEqualTo(Long value) {
+        public Criteria andDocumentIdEqualTo(String value) {
             addCriterion("`document_id` =", value, "documentId");
             return (Criteria) this;
         }
 
-        public Criteria andDocumentIdNotEqualTo(Long value) {
+        public Criteria andDocumentIdNotEqualTo(String value) {
             addCriterion("`document_id` <>", value, "documentId");
             return (Criteria) this;
         }
 
-        public Criteria andDocumentIdGreaterThan(Long value) {
+        public Criteria andDocumentIdGreaterThan(String value) {
             addCriterion("`document_id` >", value, "documentId");
             return (Criteria) this;
         }
 
-        public Criteria andDocumentIdGreaterThanOrEqualTo(Long value) {
+        public Criteria andDocumentIdGreaterThanOrEqualTo(String value) {
             addCriterion("`document_id` >=", value, "documentId");
             return (Criteria) this;
         }
 
-        public Criteria andDocumentIdLessThan(Long value) {
+        public Criteria andDocumentIdLessThan(String value) {
             addCriterion("`document_id` <", value, "documentId");
             return (Criteria) this;
         }
 
-        public Criteria andDocumentIdLessThanOrEqualTo(Long value) {
+        public Criteria andDocumentIdLessThanOrEqualTo(String value) {
             addCriterion("`document_id` <=", value, "documentId");
             return (Criteria) this;
         }
 
-        public Criteria andDocumentIdIn(List<Long> values) {
+        public Criteria andDocumentIdLike(String value) {
+            addCriterion("`document_id` like", value, "documentId");
+            return (Criteria) this;
+        }
+
+        public Criteria andDocumentIdNotLike(String value) {
+            addCriterion("`document_id` not like", value, "documentId");
+            return (Criteria) this;
+        }
+
+        public Criteria andDocumentIdIn(List<String> values) {
             addCriterion("`document_id` in", values, "documentId");
             return (Criteria) this;
         }
 
-        public Criteria andDocumentIdNotIn(List<Long> values) {
+        public Criteria andDocumentIdNotIn(List<String> values) {
             addCriterion("`document_id` not in", values, "documentId");
             return (Criteria) this;
         }
 
-        public Criteria andDocumentIdBetween(Long value1, Long value2) {
+        public Criteria andDocumentIdBetween(String value1, String value2) {
             addCriterion("`document_id` between", value1, value2, "documentId");
             return (Criteria) this;
         }
 
-        public Criteria andDocumentIdNotBetween(Long value1, Long value2) {
+        public Criteria andDocumentIdNotBetween(String value1, String value2) {
             addCriterion("`document_id` not between", value1, value2, "documentId");
             return (Criteria) this;
         }
