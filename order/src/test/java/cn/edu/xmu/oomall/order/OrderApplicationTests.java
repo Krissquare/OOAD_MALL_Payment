@@ -3,13 +3,18 @@ package cn.edu.xmu.oomall.order;
 import cn.edu.xmu.oomall.core.util.JacksonUtil;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.microservice.CustomService;
+import cn.edu.xmu.oomall.order.microservice.GoodsService;
 import cn.edu.xmu.oomall.order.microservice.ShopService;
 import cn.edu.xmu.oomall.order.microservice.TransactionService;
 import cn.edu.xmu.oomall.order.microservice.bo.PaymentState;
 import cn.edu.xmu.oomall.order.microservice.bo.RefundState;
 import cn.edu.xmu.oomall.order.microservice.bo.RefundType;
+import cn.edu.xmu.oomall.order.microservice.vo.OnSaleVo;
+import cn.edu.xmu.oomall.order.microservice.vo.ProductVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRecVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRetVo;
+import cn.edu.xmu.oomall.order.model.vo.AftersaleOrderitemRecVo;
+import cn.edu.xmu.oomall.order.model.vo.AftersaleRecVo;
 import cn.edu.xmu.oomall.order.model.vo.MarkShipmentVo;
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import cn.edu.xmu.oomall.order.util.CreateObject;
@@ -52,6 +57,9 @@ class OrderApplicationTests {
     private CustomService customService;
     @MockBean
     private TransactionService transactionService;
+
+    @MockBean
+    private GoodsService goodsService;
     @Autowired
     private MockMvc mvc;
 
@@ -61,8 +69,16 @@ class OrderApplicationTests {
         token4 = jwtHelper.createToken(4L, "lxc", 0L, 1, 3600);
         InternalReturnObject<Map<String, Object>> refunds = CreateObject.listRefunds(1L);
         InternalReturnObject<Map<String,Object>> payments=CreateObject.listPayments(1L);
+        OnSaleVo onSaleVo=new OnSaleVo();
+        onSaleVo.setId(1L);
+        ProductVo productVo=new ProductVo();
+        productVo.setId(1L);
+        productVo.setOnSaleId(1L);
+        productVo.setName("123");
         Mockito.when(shopService.getShopById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(new SimpleVo(1L, "aaa")));
         Mockito.when(customService.getCustomerById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(new SimpleVo(1L, "aaa")));
+        Mockito.when(goodsService.getOnsaleById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(onSaleVo));
+        Mockito.when(goodsService.getProductById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(productVo));
         Mockito.when(transactionService.listRefund(0L,"20216453652635231006", RefundState.FINISH_REFUND.getCode(),null,null,1,10)).thenReturn(refunds);
         Mockito.when(transactionService.listPayment(0L,"20216489872635231004", PaymentState.ALREADY_PAY.getCode(),null,null,1,10)).thenReturn(payments);
         Mockito.when(transactionService.Refund(new RefundRecVo(null,null,1L,null,500L, RefundType.ORDER.getCode()),2L,"lxc")).thenReturn(new InternalReturnObject<>(new RefundRetVo(1L,"123",1L,500L,(byte)0,"123",(byte)0)));
@@ -353,6 +369,28 @@ class OrderApplicationTests {
 
         String expected="{\"errno\":0,\"errmsg\":\"成功\",\"data\":[{\"id\":1,\"orderId\":2,\"shopId\":1,\"productId\":1,\"onsaleId\":1,\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"name\":\"巧克力\",\"couponActivityId\":1,\"couponId\":1,\"commented\":null,\"creatorId\":1,\"creatorName\":\"gyt\",\"modifierBy\":null,\"modifierName\":null,\"gmtCreate\":\"2021-12-02T17:33:33\",\"gmtModified\":null},{\"id\":2,\"orderId\":3,\"shopId\":2,\"productId\":2,\"onsaleId\":2,\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"name\":\"薯片\",\"couponActivityId\":2,\"couponId\":2,\"commented\":null,\"creatorId\":1,\"creatorName\":\"gyt\",\"modifierBy\":null,\"modifierName\":null,\"gmtCreate\":\"2021-12-02T17:34:20\",\"gmtModified\":null}]}";
         JSONAssert.assertEquals(expected, responseString, true);
+    }
+
+    @Test
+    public void createAftersaleTest() throws Exception
+    {
+        AftersaleOrderitemRecVo orderitemRecVo=new AftersaleOrderitemRecVo();
+        orderitemRecVo.setProductId(1L);
+        orderitemRecVo.setOnsaleId(1L);
+        orderitemRecVo.setQuantity(5L);
+        AftersaleRecVo aftersaleRecVo=new AftersaleRecVo();
+        aftersaleRecVo.setOrderItem(orderitemRecVo);
+        aftersaleRecVo.setCustomerId(1L);
+        String request= JacksonUtil.toJson(aftersaleRecVo);
+        String response = this.mvc.perform(MockMvcRequestBuilders.post("/internal/shops/1/orders")
+                .header("authorization",token4)
+                .contentType("application/json;charset=UTF-8")
+                .content(request))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        String expected = "";
+        JSONAssert.assertEquals(expected, response, false);
     }
 
 }

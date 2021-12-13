@@ -3,10 +3,7 @@ package cn.edu.xmu.oomall.order.controller;
 import cn.edu.xmu.oomall.core.util.Common;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
-import cn.edu.xmu.oomall.order.model.vo.MarkShipmentVo;
-import cn.edu.xmu.oomall.order.model.vo.OrderVo;
-import cn.edu.xmu.oomall.order.model.vo.SimpleOrderVo;
-import cn.edu.xmu.oomall.order.model.vo.UpdateOrderVo;
+import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.service.OrderService;
 import cn.edu.xmu.oomall.order.util.MyDateTime;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
@@ -282,9 +279,9 @@ public class OrderController {
 
     @Audit(departName = "order")
     @GetMapping("internal/orderitems/{id}")
-    public Object getOrderItemById(@PathVariable("id") Long id)
+    public Object getOrderItemById(@PathVariable("id") Long id,@RequestParam(value="customerId",required = false) Long customerId)
     {
-        return Common.decorateReturnObject(orderService.getOrderItemById(id));
+        return Common.decorateReturnObject(orderService.getOrderItemById(id,customerId));
     }
 
     @Audit(departName="shop")
@@ -370,4 +367,18 @@ public class OrderController {
     public Object listOrderItemsByOrderId(@PathVariable(value = "id")Long id){
         return orderService.listOrderItemsByOrderId(id);
     }
+
+    @Audit(departName = "shop")
+    @PostMapping("internal/shops/{shopId}/orders")
+    public Object createAftersaleOrder(@PathVariable("shopId")Long shopId,@RequestBody AftersaleRecVo orderVo,
+                                       @LoginUser Long loginUserId,@LoginName String loginUserName,BindingResult bindingResult)
+    {
+        Object object = Common.processFieldErrors(bindingResult, httpServletResponse);
+        if(object!=null)
+        {
+            return object;
+        }
+        return Common.decorateReturnObject(orderService.insertAftersaleOrder(shopId,orderVo,loginUserId,loginUserName));
+    }
+
 }

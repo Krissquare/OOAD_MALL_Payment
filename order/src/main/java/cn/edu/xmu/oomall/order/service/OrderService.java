@@ -16,7 +16,6 @@ import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import cn.edu.xmu.privilegegateway.annotation.util.Common;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
-import net.bytebuddy.asm.Advice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,6 +57,7 @@ public class OrderService {
 
     /**
      * 新建订单
+     *
      * @param simpleOrderVo
      * @param userId
      * @param userName
@@ -114,6 +114,57 @@ public class OrderService {
             }
         }
         return new ReturnObject();
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject insertAftersaleOrder(Long shopId, AftersaleRecVo orderVo, Long loginUserId, String loginUserName)
+    {
+        AftersaleOrderitemRecVo simpleOrderItemVo = orderVo.getOrderItem();
+        // 判断productId是否存在
+        InternalReturnObject<ProductVo> productVo = goodsService.getProductById(simpleOrderItemVo.getProductId());
+        if (productVo.getErrno() != 0) {
+            return new ReturnObject(ReturnNo.getByCode(productVo.getErrno()));
+        }
+        // 判断onsaleId是否存在
+        InternalReturnObject<OnSaleVo> onSaleVo = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId());
+        if (onSaleVo.getErrno() != 0) {
+            return new ReturnObject(ReturnNo.getByCode(onSaleVo.getErrno()));
+        }
+        // 判断回传的Product中的OnsaleId（某一时刻唯一）是否和传入的OnsaleId对应
+        if (onSaleVo.getData().getId().equals(productVo.getData().getOnSaleId())) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        Order order=cloneVo(orderVo,Order.class);
+        order.setShopId(shopId);
+        order.setDiscountPrice(0L);
+        order.setOriginPrice(0L);
+        order.setPoint(0L);
+        order.setPid(0L);
+        order.setState(OrderState.FINISH_PAY.getCode());
+        ReturnObject ret=orderDao.createOrder(order);
+        if(!ret.getCode().equals(ReturnNo.OK))
+        {
+            return ret;
+        }
+        Order order1=(Order) ret.getData();
+        OrderItem orderItem=cloneVo(simpleOrderItemVo,OrderItem.class );
+        orderItem.setShopId(shopId);
+        orderItem.setPrice(0L);
+        orderItem.setName(productVo.getData().getName());
+        orderItem.setOrderId(order1.getId());
+        ReturnObject ret2=orderDao.createOrderItem(orderItem);
+        if(!ret2.getCode().equals(ReturnNo.OK))
+        {
+            return ret2;
+        }
+        AftersaleRetVo aftersaleRetVo=cloneVo(order1,AftersaleRetVo.class);
+        InternalReturnObject customer=customService.getCustomerById(order1.getCustomerId());
+        aftersaleRetVo.setCustomer((SimpleVo) customer.getData());
+        InternalReturnObject shop=shopService.getShopById(shopId);
+        aftersaleRetVo.setShop((SimpleVo) shop.getData());
+        AftersaleOrderitemRetVo aftersaleOrderitemRetVo=cloneVo(ret2.getData(),AftersaleOrderitemRetVo.class);
+        aftersaleRetVo.setAftersaleOrderitemVo(aftersaleOrderitemRetVo);
+        return new ReturnObject(aftersaleRetVo);
     }
 
     /**
@@ -551,7 +602,7 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true,rollbackFor = Exception.class)
-    public ReturnObject getOrderItemById(Long id)
+    public ReturnObject getOrderItemById(Long id,Long customerId)
     {
         ReturnObject ret=orderDao.getOrderItemById(id);
         if(!ret.getCode().equals(ReturnNo.OK))
@@ -566,6 +617,13 @@ public class OrderService {
             return ret1;
         }
         Order order=(Order) ret1.getData();
+        if(customerId!=null)
+        {
+            if(!customerId.equals(order.getCustomerId()))
+            {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+            }
+        }
         retVo.setCustomerId(order.getCustomerId());
         return new ReturnObject(retVo);
     }
