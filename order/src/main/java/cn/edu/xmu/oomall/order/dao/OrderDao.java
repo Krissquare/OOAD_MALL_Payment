@@ -69,6 +69,31 @@ public class OrderDao {
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
+    public ReturnObject getOrderByPid(Long pid)
+    {
+        try
+        {
+            OrderPoExample orderPoExample=new OrderPoExample();
+            OrderPoExample.Criteria cr=orderPoExample.createCriteria();
+            cr.andPidEqualTo(pid);
+            List<OrderPo> orderPos=orderPoMapper.selectByExample(orderPoExample);
+            if(orderPos.size()==0)
+            {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            List<Order> orders=new ArrayList<>();
+            for(OrderPo orderPo:orderPos)
+            {
+                Order order=cloneVo(orderPo,Order.class);
+                orders.add(order);
+            }
+            return new ReturnObject(orders);
+        }catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+
+    }
 
 
     public ReturnObject updateOrder(Order order) {
@@ -94,6 +119,10 @@ public class OrderDao {
             OrderItemPoExample.Criteria cr=orderItemPoExample.createCriteria();
             cr.andOrderIdEqualTo(orderId);
             List<OrderItemPo> orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
+            if(orderItemPos.size()==0)
+            {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
             List<OrderItem> orderItemList=new ArrayList<>(orderItemPos.size());
             for(OrderItemPo orderItemPo:orderItemPos)
             {

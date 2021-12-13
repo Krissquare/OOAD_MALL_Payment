@@ -189,7 +189,25 @@ public class OrderService {
         {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
-        String documentId=order.getOrderSn();
+        String documentId;
+        List<Order> orders=null;
+        Order pOrder=null;
+        if(order.getPid()==0)
+        {
+            documentId=order.getOrderSn();
+        }
+        else
+        {
+            ReturnObject ret1=orderDao.getOrderById(order.getPid());
+            pOrder=(Order) ret1.getData();
+            documentId=pOrder.getOrderSn();
+            ReturnObject ret2=orderDao.getOrderByPid(pOrder.getId());
+            if(!ret2.getCode().equals(ReturnNo.OK))
+            {
+                return ret2;
+            }
+            orders=(List<Order>) ret2.getData();
+        }
         ReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
         if(!returnObject.getCode().equals(ReturnNo.OK))
         {
@@ -208,8 +226,21 @@ public class OrderService {
                 return new ReturnObject(retRefund);
             }
         }
-        order.setState(OrderState.CANCEL_ORDER.getCode());
-        Common.setPoModifiedFields(order, loginUserId, loginUserName);
+        if(orders==null)
+        {
+            order.setState(OrderState.CANCEL_ORDER.getCode());
+            Common.setPoModifiedFields(order, loginUserId, loginUserName);
+        }
+        else
+        {
+            pOrder.setState(OrderState.CANCEL_ORDER.getCode());
+            Common.setPoModifiedFields(pOrder, loginUserId, loginUserName);
+            for(Order order1:orders)
+            {
+                order1.setState(OrderState.CANCEL_ORDER.getCode());
+                Common.setPoModifiedFields(order1, loginUserId, loginUserName);
+            }
+        }
         return orderDao.updateOrder(order);
     }
 

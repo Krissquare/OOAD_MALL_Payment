@@ -220,7 +220,7 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse = "{\"errno\":0,\"data\":[{\"id\":1,\"tradeSn\":null,\"patternId\":null,\"documentId\":null,\"documentType\":null,\"descr\":null,\"amount\":500,\"actualAmount\":null,\"state\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null},{\"id\":2,\"tradeSn\":null,\"patternId\":null,\"documentId\":null,\"documentType\":null,\"descr\":null,\"amount\":100,\"actualAmount\":null,\"state\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null}],\"errmsg\":\"成功\"}";
+        String expectedResponse = "{\"errno\":0,\"data\":[{\"id\":1,\"tradeSn\":null,\"patternId\":null,\"documentId\":null,\"documentType\":2,\"descr\":null,\"amount\":500,\"actualAmount\":null,\"state\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null},{\"id\":2,\"tradeSn\":null,\"patternId\":null,\"documentId\":null,\"documentType\":3,\"descr\":null,\"amount\":100,\"actualAmount\":null,\"state\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null}],\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expectedResponse, responseString, true);
     }
 
