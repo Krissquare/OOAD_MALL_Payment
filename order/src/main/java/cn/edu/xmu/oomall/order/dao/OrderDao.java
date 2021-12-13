@@ -68,7 +68,21 @@ public class OrderDao {
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-
+    public ReturnObject cancelRelatedOrder(Order order)
+    {
+        try
+        {
+            OrderPoExample orderPoExample = new OrderPoExample();
+            OrderPoExample.Criteria cr = orderPoExample.createCriteria();
+            cr.andPidEqualTo(order.getPid());
+            OrderPo orderPo=cloneVo(order,OrderPo.class);
+            orderPoMapper.updateByExampleSelective(orderPo,orderPoExample);
+            return new ReturnObject(ReturnNo.OK);
+        }catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
 
     public ReturnObject updateOrder(Order order) {
         try {
@@ -93,6 +107,10 @@ public class OrderDao {
             OrderItemPoExample.Criteria cr=orderItemPoExample.createCriteria();
             cr.andOrderIdEqualTo(orderId);
             List<OrderItemPo> orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
+            if(orderItemPos.size()==0)
+            {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
             List<OrderItem> orderItemList=new ArrayList<>(orderItemPos.size());
             for(OrderItemPo orderItemPo:orderItemPos)
             {
@@ -133,6 +151,24 @@ public class OrderDao {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
+    }
+
+    public ReturnObject getOrderItemById(Long id)
+    {
+        try
+        {
+            OrderItemPo orderItemPo=orderItemPoMapper.selectByPrimaryKey(id);
+            if(orderItemPo==null)
+            {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            OrderItem orderItem=cloneVo(orderItemPo,OrderItem.class);
+            return new ReturnObject(orderItem);
+        }catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+
     }
 
     /**
