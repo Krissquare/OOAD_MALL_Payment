@@ -21,8 +21,14 @@ public class AlipayController {
      * @return
      */
     @PostMapping("/alipay/notify")
-    public Object notifyByAlipay(@RequestBody AlipayNotifyVo alipayNotifyVo){
+    public Object notifyByAlipay(@RequestBody AlipayNotifyVo alipayNotifyVo) {
 
-        return alipayService.notifyByAlipay(alipayNotifyVo);
+        if (alipayNotifyVo.getOutBizNo() == null) {
+            alipayService.paymentNotifyByAlipay(alipayNotifyVo);
+        } else {
+            alipayService.refundNotifyByAlipay(alipayNotifyVo);
+        }
+
+        return null;
     }
 }

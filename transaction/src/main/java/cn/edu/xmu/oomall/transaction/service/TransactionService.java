@@ -6,7 +6,6 @@ import cn.edu.xmu.oomall.transaction.dao.TransactionDao;
 import cn.edu.xmu.oomall.transaction.model.bo.*;
 import cn.edu.xmu.oomall.transaction.model.vo.*;
 import cn.edu.xmu.oomall.transaction.util.RefundBill;
-import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import cn.edu.xmu.oomall.transaction.util.PaymentBill;
 import cn.edu.xmu.oomall.transaction.util.TransactionPattern;
 import cn.edu.xmu.oomall.transaction.util.TransactionPatternFactory;
@@ -47,7 +46,6 @@ public class TransactionService {
     @Transactional(readOnly = true)
     public ReturnObject listPayment(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
         return transactionDao.listPayment(null, documentId, null, state, beginTime, endTime, page, pageSize);
-
     }
 
     /**
@@ -164,85 +162,10 @@ public class TransactionService {
     }
 
 
-    /**
-     * 内部API退款
-     * @param
-     * @return
-     */
-    public ReturnObject requestRefund(RefundBill refundBill) {
-        // 查payment
-        ReturnObject returnObject = transactionDao.getPaymentById(refundBill.getPaymentId());
-        if (returnObject.getData() == null) {
-            return returnObject;
-        }
-
-        // 根据documentId, documentType去查refund
-        ReturnObject<PageInfo<Payment>> retRefundPageInfo =
-                transactionDao.listRefund(refundBill.getPaymentId(), null, null, null, null, null, null, 1, 100);
-        if (!retRefundPageInfo.getCode().equals(ReturnNo.OK)) {
-            return retRefundPageInfo;
-        }
-
-        // 获取refundList
-        Map<String, Object> retMap = (Map<String, Object>) retRefundPageInfo.getData();
-        List<Refund> refundList = (List<Refund>) retMap.get("list");
-
-        Refund validExistedRefund = null;
-        for (Refund refund : refundList) {
-            // TODO: 需要判断，避免重复退款
-
-
-        }
-
-        TransactionPattern pattern = transactionPatternFactory.getPatternInstance(refundBill.getPatternId());
-        if (validExistedRefund == null) {
-            //写进数据库
-            Refund refund = cloneVo(refundBill, Refund.class);
-            //TODO:要setcreator和modify吗？
-            ReturnObject<Refund> retRefund = transactionDao.insertRefund(refund);
-            if (retRefund.getData() == null) {
-                return retRefund;
-            }
-            //  然后请求退款
-            ReturnObject ret = pattern.requestRefund(retRefund.getData().getId(), refundBill);
-
-        } else {
-            // 存在匹配的流水，什么也不做
-        }
-
-
-        //3.根据pattern调支付宝或微信的接口
-        //支付宝
-//        if (refundRet.getPatternId() == 0) {
-//            AlipayRefundVo alipayRefundVo = new AlipayRefundVo();
-//            alipayRefundVo.setRefundAmount(refundVo.getAmount());
-//            alipayRefundVo.setOutTradeNo(refundVo.getPaymentId().toString());
-//            alipayRefundVo.setOutRequestNo(refundRet.getId().toString());
-//            //TODO:将vo转为json
-//            String biz_content = "vo转json";
-//            alipayService.gatewayDo(null, AlipayMethod.REFUND.getMethod(), null, null, null, null, null, null, "vo转json");
-//        }
-//        //微信支付
-//        if (refundRet.getPatternId() == 1) {
-//            WeChatPayRefundVo weChatPayRefundVo = new WeChatPayRefundVo();
-//            weChatPayRefundVo.setOutRefundNo(refundRet.getId().toString());
-//            weChatPayRefundVo.setOutTradeNo(refundVo.getPaymentId().toString());
-//            RefundAmountVo refundAmountVo = new RefundAmountVo();
-//            refundAmountVo.setRefund(Integer.parseInt(String.valueOf(refundVo.getAmount())));
-//            refundAmountVo.setTotal(Integer.parseInt(String.valueOf(payment.getAmount())));
-//            weChatPayRefundVo.setAmount(refundAmountVo);
-//            weChatPayService.createRefund(weChatPayRefundVo);
-//        }
-
-        return null;
-    }
-
-
-
     public ReturnObject requestPayment(PaymentBill paymentBill, Long loginUserId, String loginUserName) {
         // 根据documentId, documentType去查payment
         ReturnObject<PageInfo<Payment>> retPaymentPageInfo =
-                transactionDao.listPayment(paymentBill.getPatternId(), null, paymentBill.getDocumentType(), null, null, null, 1, 100);
+                transactionDao.listPayment(null, paymentBill.getDocumentId(), paymentBill.getDocumentType(), null, null, null, 1, 100);
         if (!retPaymentPageInfo.getCode().equals(ReturnNo.OK)) {
             return retPaymentPageInfo;
         }
@@ -253,53 +176,105 @@ public class TransactionService {
 
         Payment validExistedPayment = null;
         for (Payment payment : paymentList) {
-            // 判断是否存在已支付、已对账、已清算的流水
+            // 判断是否存在已支付、已对账、已清算的支付流水
             if (payment.getState().equals(PaymentState.ALREADY_PAY.getCode()) ||
-                payment.getState().equals(PaymentState.ALREADY_RECONCILIATION.getCode()) ||
-                payment.getState().equals(PaymentState.ALREADY_LIQUIDATION.getCode())) {
+                    payment.getState().equals(PaymentState.ALREADY_RECONCILIATION.getCode()) ||
+                    payment.getState().equals(PaymentState.ALREADY_LIQUIDATION.getCode())) {
                 return new ReturnObject(ReturnNo.STATENOTALLOW);
             }
 
             // TODO: 判断是否在beginTime和endTime内
 
-            // 判断是否存在待支付超时流水，不在这里判断
-//            if (LocalDateTime.now().isAfter(payment.getEndTime()) &&
-//                payment.getState().equals(PaymentState.WAIT_PAY.getCode())) {
-//                payment.setState(PaymentState.CANCLE.getCode());
-//                setPoModifiedFields(payment, loginUserId, loginUserName);
-//
-//
-//                transactionDao.updatePayment(payment);
-//            }
-
             // 判断是否存在匹配支付渠道的待支付流水
             if (paymentBill.getPatternId().equals(payment.getPatternId()) &&
-                payment.getState().equals(PaymentState.WAIT_PAY.getCode())) {
+                    payment.getState().equals(PaymentState.WAIT_PAY.getCode())) {
                 validExistedPayment = payment;
             }
         }
 
         // 开始请求支付
         TransactionPattern pattern = transactionPatternFactory.getPatternInstance(paymentBill.getPatternId());
+
+        // 不存在匹配的流水，则需要新建
         if (validExistedPayment == null) {
-            // 不存在匹配的流水，则需要新建
             Payment payment = cloneVo(paymentBill, Payment.class);
             setPoCreatedFields(payment, loginUserId, loginUserName);
             setPoModifiedFields(payment, loginUserId, loginUserName);
             ReturnObject<Payment> retPayment = transactionDao.insertPayment(payment);
-
             if (!retPayment.getCode().equals(ReturnNo.OK)) {
                 return retPayment;
             }
-            // 然后请求支付
-            ReturnObject ret = pattern.requestPayment(retPayment.getData().getId(), paymentBill);
-
-
-        } else {
-            // 存在匹配的流水
+            validExistedPayment = retPayment.getData();
         }
 
-        return null;
+        // 然后请求支付
+        // 创建请求号
+        String requestNo = transactionPatternFactory.encodeRequestNo(validExistedPayment.getId(),
+                validExistedPayment.getDocumentId(), validExistedPayment.getDocumentType());
+        pattern.requestPayment(requestNo, paymentBill);
+
+        return new ReturnObject<>(ReturnNo.OK);
+    }
+
+
+    /**
+     * 内部API退款
+     * @param
+     * @return
+     */
+    public ReturnObject requestRefund(RefundBill refundBill) {
+        // 查payment是否存在
+        ReturnObject<Payment> retPayment = transactionDao.getPaymentById(refundBill.getPaymentId());
+        if (retPayment.getData() == null) {
+            return retPayment;
+        }
+
+        // 判断amount是否超出payment的支付金额
+        if (refundBill.getAmount() > retPayment.getData().getActualAmount()) {
+            return new ReturnObject<>(ReturnNo.REFUND_MORE);
+        }
+        refundBill.setTotal(retPayment.getData().getActualAmount());
+
+        // 根据documentId和paymentId去查refund
+        ReturnObject<PageInfo<Payment>> retRefundPageInfo =
+                transactionDao.listRefund(refundBill.getPaymentId(), refundBill.getDocumentId(), null, null, null, null, null, 1, 100);
+        if (!retRefundPageInfo.getCode().equals(ReturnNo.OK)) {
+            return retRefundPageInfo;
+        }
+
+        // 获取refundList
+        Map<String, Object> retMap = (Map<String, Object>) retRefundPageInfo.getData();
+        List<Refund> refundList = (List<Refund>) retMap.get("list");
+
+        // 同一时刻同一个documentId和paymentId（一个单子）至多只允许存在一笔待退款的流水
+        for (Refund refund : refundList) {
+            // 需要判断，避免重复退款
+            // 判断是否待退款、已退款、已对账、已清算
+            if (refund.getState().equals(RefundState.WAIT_REFUND.getCode()) ||
+                    refund.getState().equals(RefundState.FINISH_RECONCILIATION.getCode()) ||
+                    refund.getState().equals(RefundState.FINISH_LIQUIDATION.getCode()) ||
+                    refund.getState().equals(RefundState.FINISH_REFUND.getCode())) {
+                return new ReturnObject<>(ReturnNo.STATENOTALLOW);
+            }
+        }
+
+        TransactionPattern pattern = transactionPatternFactory.getPatternInstance(refundBill.getPatternId());
+
+        //写进数据库
+        Refund refund = cloneVo(refundBill, Refund.class);
+        //TODO:要setcreator和modify吗？
+        ReturnObject<Refund> retRefund = transactionDao.insertRefund(refund);
+        if (!retRefund.getCode().equals(ReturnNo.OK)) {
+            return retRefund;
+        }
+        refund = retRefund.getData();
+        //  然后请求退款
+        //  创建请求号
+        String requestNo = transactionPatternFactory.encodeRequestNo(refund.getId(),
+                refund.getDocumentId(), refund.getDocumentType());
+        pattern.requestRefund(requestNo, refundBill);
+
+        return new ReturnObject<>(ReturnNo.OK);
     }
 
 }

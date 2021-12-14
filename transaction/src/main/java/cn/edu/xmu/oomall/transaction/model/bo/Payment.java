@@ -13,11 +13,11 @@ public class Payment {
     private Long id;
     private String tradeSn;
     private Long patternId;
-    private Long documentId;
+    private String documentId;
     private Byte documentType;
     private String descr;
     private Long amount;
-    private String actualAmount;
+    private Long actualAmount;
     private Byte state;
     private LocalDateTime payTime;
     private LocalDateTime beginTime;

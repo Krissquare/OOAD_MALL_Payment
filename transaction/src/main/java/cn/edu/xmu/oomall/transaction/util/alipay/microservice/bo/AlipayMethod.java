@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.transaction.util.alipay.model.bo;
+package cn.edu.xmu.oomall.transaction.util.alipay.microservice.bo;
 
 /**
  * @author 高艺桐 22920192204199
@@ -10,7 +10,7 @@ public enum AlipayMethod {
     CLOSE("alipay.trade.close"),
     REFUND("alipay.trade.refund"),
     QUERY_REFUND("alipay.trade.refund.query"),
-    QUERY_BILL("alipay.data.dataservice.bill.downloadurl.query");
+    QUERY_DOWNLOAD_BILL("alipay.data.dataservice.bill.downloadurl.query");
     private String method;
     AlipayMethod(String method){
         this.method = method;
