@@ -7,7 +7,6 @@ import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderItem;
 import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
-import org.apache.rocketmq.spring.annotation.ConsumeMode;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,16 +24,16 @@ import static cn.edu.xmu.privilegegateway.annotation.util.Common.*;
  * @date 2021/12/13 21:28
  */
 @Service
-@RocketMQMessageListener(topic = "pay-success", consumeMode = ConsumeMode.CONCURRENTLY, consumeThreadMax = 10, consumerGroup = "${rocketmq.consumer.group}")
+@RocketMQMessageListener(topic = "pay-success", consumerGroup = "${rocketmq.consumer.group}")
 public class PaySuccessListener implements RocketMQListener<String> {
 
     @Autowired
     OrderDao orderDao;
 
     @Override
-    public void onMessage(String message) {
+    public void onMessage(String orderSn) {
         //TODO: message类型 假设只返回成功 暂且都当写入数据库 没写入数据库的还没有考虑
-        ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(message);
+        ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(orderSn);
         if (orderByOrderSn.getCode() != ReturnNo.OK) {
             return;
         }
@@ -69,9 +68,6 @@ public class PaySuccessListener implements RocketMQListener<String> {
         if (orderPo.getState() != OrderState.NEW_ORDER.getCode()) {
             return;
         }
-        order.setState(OrderState.FINISH_PAY.getCode());
-        setPoCreatedFields(order, 0L, null);
-        orderDao.updateOrder(order);
         //查明细列表
         ReturnObject<List<OrderItem>> returnObject = orderDao.listOrderItemsByOrderId(orderPo.getId());
         if (returnObject.getCode() != ReturnNo.OK) {
@@ -83,9 +79,17 @@ public class PaySuccessListener implements RocketMQListener<String> {
             set.add(orderItem.getShopId());
         }
         if (set.size() <= 1) {
+            order.setState(OrderState.FINISH_PAY.getCode());
+            setPoCreatedFields(order, 0L, null);
+            orderDao.updateOrder(order);
             return;
         }
         //分单逻辑
+        //父订单状态改为已分单
+        order.setState(OrderState.NOT_FROUP.getCode());
+        setPoCreatedFields(order, 0L, null);
+        orderDao.updateOrder(order);
+
         Long discountPrice=0L;
         Long originprice=0L;
         Long point=0L;
