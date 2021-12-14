@@ -322,7 +322,7 @@ public class TransactionService {
     /**
      * fz
      * */
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject listAllValidPayPatterns(){
         ReturnObject ret = transactionDao.listAllPayPattern();
         List<PaymentPatternPo> oriList = (List<PaymentPatternPo>) ret.getData();
@@ -339,7 +339,7 @@ public class TransactionService {
     /**
      * fz
      * */
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject listAllPayPatterns(){
         ReturnObject ret = transactionDao.listAllPayPattern();
         List<PaymentPatternPo> oriList = (List<PaymentPatternPo>) ret.getData();
@@ -362,7 +362,7 @@ public class TransactionService {
     /**
      * fz
      * */
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject listErrorAccountsByConditions(String documentId,
                                                       Byte state,
                                                       LocalDateTime beginTime,
@@ -375,7 +375,7 @@ public class TransactionService {
     /**
      * fz
      * */
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject getDetailedErrorAccount(Long id){
         ReturnObject ret = transactionDao.getErrorAccount(id);
         if (!ret.getCode().equals(ReturnNo.OK)){
