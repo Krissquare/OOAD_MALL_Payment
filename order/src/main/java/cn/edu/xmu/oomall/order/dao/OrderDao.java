@@ -12,6 +12,7 @@ import cn.edu.xmu.oomall.order.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.model.po.OrderPoExample;
 import cn.edu.xmu.oomall.order.model.vo.BriefOrderVo;
+import cn.edu.xmu.oomall.order.model.vo.OrderItemRetVo;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import cn.edu.xmu.privilegegateway.annotation.util.RedisUtil;
 import com.github.pagehelper.PageHelper;
@@ -233,7 +234,11 @@ public class OrderDao {
                     orderItemPos.addAll(orderItemPoMapper.selectByExample(orderItemPoExample));
                 }
             }
-            return new InternalReturnObject(orderItemPos);}
+            List<OrderItemRetVo>list1=new ArrayList<>();
+            for(OrderItemPo orderItemPo:orderItemPos){
+                list1.add(cloneVo(orderItemPo,OrderItemRetVo.class));
+            }
+            return new InternalReturnObject(list1);}
         catch (Exception e){
             logger.error(e.getMessage());
             return new InternalReturnObject(ReturnNo.INTERNAL_SERVER_ERR);
