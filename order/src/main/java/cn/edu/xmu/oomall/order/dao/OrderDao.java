@@ -241,6 +241,33 @@ public class OrderDao {
 
     }
 
+    public ReturnObject createOrder(Order order)
+    {
+        try
+        {
+            OrderPo orderPo=cloneVo(order,OrderPo.class);
+            orderPoMapper.insert(orderPo);
+            Order order1=cloneVo(orderPo,Order.class);
+            return new ReturnObject(order1);
+        }
+        catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+        }
+    }
+
+    public ReturnObject createOrderItem(OrderItem orderItem)
+    {
+        try{
+            OrderItemPo orderItemPo=cloneVo(orderItem,OrderItemPo.class);
+            orderItemPoMapper.insert(orderItemPo);
+            return new ReturnObject(ReturnNo.OK);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+        }
+    }
+
     public ReturnObject insertOrder(Order order){
         try {
             OrderPo orderPo = cloneVo(order, OrderPo.class);
