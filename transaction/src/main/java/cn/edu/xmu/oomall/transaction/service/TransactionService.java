@@ -4,6 +4,10 @@ import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.transaction.dao.TransactionDao;
 import cn.edu.xmu.oomall.transaction.model.bo.*;
+import cn.edu.xmu.oomall.transaction.model.bo.Payment;
+import cn.edu.xmu.oomall.transaction.model.bo.PaymentState;
+import cn.edu.xmu.oomall.transaction.model.po.ErrorAccountPo;
+import cn.edu.xmu.oomall.transaction.model.po.PaymentPatternPo;
 import cn.edu.xmu.oomall.transaction.model.vo.*;
 import cn.edu.xmu.oomall.transaction.util.RefundBill;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
@@ -18,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.setPoModifiedFields;
@@ -300,6 +306,107 @@ public class TransactionService {
         }
 
         return null;
+    }
+
+    /**
+     * fz
+     * */
+    public ReturnObject listAllPaymentStates(){
+        HashMap<Byte, String> states = new HashMap<>();
+        for (PaymentState item: PaymentState.values()){
+            states.put(item.getCode(),item.getState());
+        }
+        return new ReturnObject(states);
+    }
+
+    /**
+     * fz
+     * */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject listAllValidPayPatterns(){
+        ReturnObject ret = transactionDao.listAllPayPattern();
+        List<PaymentPatternPo> oriList = (List<PaymentPatternPo>) ret.getData();
+        List<SimpleVo> retList = new ArrayList<>();
+        for (PaymentPatternPo item: oriList){
+            if (item.getState() == null) {
+                SimpleVo simpleVo = cloneVo(item, SimpleVo.class);
+                retList.add(simpleVo);
+            }
+        }
+        return new ReturnObject(retList);
+    }
+
+    /**
+     * fz
+     * */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject listAllPayPatterns(){
+        ReturnObject ret = transactionDao.listAllPayPattern();
+        List<PaymentPatternPo> oriList = (List<PaymentPatternPo>) ret.getData();
+        List<PaymentPatternVo> tarList = new ArrayList<>();
+        for (PaymentPatternPo item: oriList){
+            SimpleVo creator = new SimpleVo();
+            creator.setId(item.getCreatorId());
+            creator.setName(item.getCreatorName());
+            SimpleVo modifier = new SimpleVo();
+            modifier.setId(item.getModifierId());
+            modifier.setName(item.getModifierName());
+            PaymentPatternVo tarItem = cloneVo(item, PaymentPatternVo.class);
+            tarItem.setCreator(creator);
+            tarItem.setModifier(modifier);
+            tarList.add(tarItem);
+        }
+        return new ReturnObject(tarList);
+    }
+
+    /**
+     * fz
+     * */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject listErrorAccountsByConditions(String documentId,
+                                                      Byte state,
+                                                      LocalDateTime beginTime,
+                                                      LocalDateTime endTime,
+                                                      Integer page,
+                                                      Integer pageSize){
+        return transactionDao.listErrorAccountsVoByConditions(documentId,state,beginTime,endTime,page,pageSize);
+    }
+
+    /**
+     * fz
+     * */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject getDetailedErrorAccount(Long id){
+        ReturnObject ret = transactionDao.getErrorAccount(id);
+        if (!ret.getCode().equals(ReturnNo.OK)){
+            return ret;
+        }
+        ErrorAccountPo ori = (ErrorAccountPo) ret.getData();
+        ErrorAccountDetailedVo tar = ErrorAccountDetailedVo.generateFromErrorAccountPo(ori);
+        return new ReturnObject(tar);
+    }
+
+    /**
+     * fz
+     * */
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject updateErrorAccount(Long id, ErrorAccountUpdateVo updateVo){
+        ReturnObject ret = transactionDao.getErrorAccount(id);
+        if (!ret.getCode().equals(ReturnNo.OK)){
+            return ret;
+        }
+        ErrorAccountPo po = (ErrorAccountPo) ret.getData();
+        if (po.getState() != 0){
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
+        po.setDescr(updateVo.getDescr());
+        po.setState(updateVo.getState());
+        ReturnObject updRet = transactionDao.updateErrorAccount(po);
+        if (!updRet.getCode().equals(ReturnNo.OK)){
+            return ret;
+        }
+        ErrorAccountDetailedVo retData = ErrorAccountDetailedVo.generateFromErrorAccountPo(po);
+        return new ReturnObject(retData);
     }
 
 }

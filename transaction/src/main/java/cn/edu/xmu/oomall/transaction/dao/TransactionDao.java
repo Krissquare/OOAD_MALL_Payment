@@ -4,11 +4,13 @@ import cn.edu.xmu.oomall.core.util.Common;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.transaction.mapper.PaymentPatternPoMapper;
+import cn.edu.xmu.oomall.transaction.mapper.ErrorAccountPoMapper;
+import cn.edu.xmu.oomall.transaction.mapper.PaymentPatternPoMapper;
 import cn.edu.xmu.oomall.transaction.mapper.PaymentPoMapper;
 import cn.edu.xmu.oomall.transaction.model.bo.Payment;
 import cn.edu.xmu.oomall.transaction.model.bo.PaymentPattern;
 import cn.edu.xmu.oomall.transaction.model.po.*;
-import cn.edu.xmu.oomall.transaction.model.vo.PaymentRetVo;
+import cn.edu.xmu.oomall.transaction.model.vo.*;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.slf4j.Logger;
@@ -16,9 +18,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import cn.edu.xmu.oomall.transaction.mapper.RefundPoMapper;
 import cn.edu.xmu.oomall.transaction.model.bo.Refund;
-import cn.edu.xmu.oomall.transaction.model.vo.RefundRetVo;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
@@ -28,12 +30,15 @@ public class TransactionDao {
     private static final Logger logger = LoggerFactory.getLogger(TransactionDao.class);
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private PaymentPoMapper paymentPoMapper;
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private RefundPoMapper refundPoMapper;
 
     @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private PaymentPatternPoMapper paymentPatternPoMapper;
 
     public ReturnObject insertPayment(Payment payment) {
@@ -47,8 +52,11 @@ public class TransactionDao {
         }
     }
 
+    @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+    private ErrorAccountPoMapper errorAccountPoMapper;
 
-    public ReturnObject listPayment(Long patternId,String documentId, Byte documentType, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
+    public ReturnObject listPayment(Long patternId,String documentId,Byte documentType, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
     {
         try {
             PaymentPoExample example = new PaymentPoExample();
@@ -209,4 +217,69 @@ public class TransactionDao {
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
+    public ReturnObject listAllPayPattern(){
+        try {
+            PaymentPatternPoExample paymentPatternPoExample = new PaymentPatternPoExample();
+            List<PaymentPatternPo> validPayPatterns = paymentPatternPoMapper.selectByExample(paymentPatternPoExample);
+            return new ReturnObject(validPayPatterns);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
+    public ReturnObject listErrorAccountsVoByConditions(String documentId,
+                                                        Byte state,
+                                                        LocalDateTime beginTime,
+                                                        LocalDateTime endTime,
+                                                        Integer page,
+                                                        Integer pageSize){
+        try {
+            ErrorAccountPoExample errorAccountPoExample = new ErrorAccountPoExample();
+            ErrorAccountPoExample.Criteria criteria = errorAccountPoExample.createCriteria();
+            if (documentId != null){
+                criteria.andDocumentIdEqualTo(documentId);
+            }
+            if (state != null){
+                criteria.andStateEqualTo(state);
+            }
+            if (beginTime != null){
+                criteria.andTimeGreaterThanOrEqualTo(beginTime);
+            }
+            if (beginTime != null){
+                criteria.andTimeLessThanOrEqualTo(endTime);
+            }
+            PageHelper.startPage(page, pageSize, true, true, true);
+            List<ErrorAccountPo> errorAccountPoList = errorAccountPoMapper.selectByExample(errorAccountPoExample);
+            ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo<>(errorAccountPoList));
+            return Common.getPageRetVo(ret, ErrorAccountVo.class);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
+    public ReturnObject getErrorAccount(Long id){
+        try{
+            ErrorAccountPo errorAccountPo = errorAccountPoMapper.selectByPrimaryKey(id);
+            return new ReturnObject(errorAccountPo);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
+    public ReturnObject updateErrorAccount(ErrorAccountPo errorAccountPo){
+        try {
+            int result = errorAccountPoMapper.updateByPrimaryKeySelective(errorAccountPo);
+            if (result == 0){
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            else return new ReturnObject(ReturnNo.OK);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
 }
