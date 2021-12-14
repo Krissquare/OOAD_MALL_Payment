@@ -39,8 +39,6 @@ public class InsertOrderListener implements RocketMQListener<String>
                 orderItem.setOrderId(orderPo.getId());
                 orderDao.insertOrderItem(orderItem);
                 //TODO:减数据库的库存 :没有这个外部接口
-
-                //TODO:监听者去分单
             }
         }
     }

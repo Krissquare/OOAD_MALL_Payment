@@ -33,10 +33,7 @@ public class PaySuccessListener implements RocketMQListener<String> {
 
     @Override
     public void onMessage(String message) {
-        //TODO: message类型
-        //假设只返回成功
-        //暂且都当写入数据库
-        //没写入数据库的还没有考虑
+        //TODO: message类型 假设只返回成功 暂且都当写入数据库 没写入数据库的还没有考虑
         ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(message);
         if (orderByOrderSn.getCode() != ReturnNo.OK) {
             return;
@@ -85,14 +82,10 @@ public class PaySuccessListener implements RocketMQListener<String> {
         for (OrderItem orderItem : orderItemList) {
             set.add(orderItem.getShopId());
         }
-        if (set.size() == 1) {
+        if (set.size() <= 1) {
             return;
         }
-        orderItemList.sort(
-                (OrderItem orderItem1, OrderItem orderItem2) -> {
-                    return Math.toIntExact(orderItem1.getShopId() - orderItem2.getShopId());
-                });
-        //TODO:分单逻辑
+        //分单逻辑
         Long discountPrice=0L;
         Long originprice=0L;
         Long point=0L;
@@ -116,8 +109,6 @@ public class PaySuccessListener implements RocketMQListener<String> {
                     discountPrice+=orderItem.getDiscountPrice()*orderItem.getQuantity();
                     originprice+=orderItem.getPrice()*orderItem.getQuantity();
                     point+=orderItem.getPoint()*orderItem.getQuantity();
-                }else {
-                    break;
                 }
             }
             order.setDiscountPrice(discountPrice/10);

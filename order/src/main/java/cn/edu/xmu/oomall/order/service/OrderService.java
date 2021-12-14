@@ -115,7 +115,7 @@ public class OrderService {
             if (simpleOrderItemVo.getCouponId() != null) {
                 if (!couponIds.contains(simpleOrderItemVo.getCouponId())) {
                     couponIds.add(simpleOrderItemVo.getCouponId());
-                    InternalReturnObject couponById = customService.getCouponById(simpleOrderItemVo.getCouponId());
+                    InternalReturnObject couponById = customService.isCouponExists(simpleOrderItemVo.getCouponId());
                     if (couponById.getErrno() != 0) {
                         return new ReturnObject(ReturnNo.getByCode(couponById.getErrno()));
                     }
@@ -252,12 +252,12 @@ public class OrderService {
         orderAndOrderItemsVo.setOrder(order);
 
         //减少积点,减少优惠卷
-        InternalReturnObject internalReturnObject1 = customService.updatePoint(-orderAndOrderItemsVo.getOrder().getPoint());
+        InternalReturnObject internalReturnObject1 = customService.changeCustomerPoint(userId,new CustomerModifyPointsVo(-orderAndOrderItemsVo.getOrder().getPoint()));
         if (internalReturnObject1.getErrno() != 0) {
             return new ReturnObject(ReturnNo.getByCode(internalReturnObject1.getErrno()));
         }
         for (Long id : couponIds) {
-            InternalReturnObject internalReturnObject = customService.updateCouponById(id, (byte) 0);
+            InternalReturnObject internalReturnObject = customService.useCoupon(id);
             if (internalReturnObject.getErrno() != 0) {
                 return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
             }
@@ -269,12 +269,12 @@ public class OrderService {
         SendResult sendResult = rocketMQTemplate.syncSend("insert-order", message);
         if (sendResult.getSendStatus()!= SendStatus.SEND_OK){
             //回滚积点,优惠卷
-            internalReturnObject1 = customService.updatePoint(orderAndOrderItemsVo.getOrder().getPoint());
+            internalReturnObject1 = customService.changeCustomerPoint(userId,new CustomerModifyPointsVo(orderAndOrderItemsVo.getOrder().getPoint()));
             if (internalReturnObject1.getErrno() != 0) {
                 return new ReturnObject(ReturnNo.getByCode(internalReturnObject1.getErrno()));
             }
             for (Long id : couponIds) {
-                InternalReturnObject internalReturnObject = customService.updateCouponById(id, (byte) 1);
+                InternalReturnObject internalReturnObject = customService.refundCoupon(id);
                 if (internalReturnObject.getErrno() != 0) {
                     return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
                 }
