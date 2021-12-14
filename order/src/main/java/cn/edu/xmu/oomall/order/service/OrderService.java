@@ -76,6 +76,7 @@ public class OrderService {
         List<OrderItem> orderItemsBo = new ArrayList<>();
         Set<Long> couponIds = new HashSet<>();
         Set<Long> couponActivityIds = new HashSet<>();
+        Set<Long> shopIds = new HashSet<>();
         // 订单的orderItem不能为空
         List<SimpleOrderItemVo> orderItems = simpleOrderVo.getOrderItems();
         if (orderItems.size() == 0) {
@@ -96,7 +97,7 @@ public class OrderService {
                 return new ReturnObject(ReturnNo.getByCode(onSaleVo.getErrno()));
             }
             // 判断回传的Product中的OnsaleId（某一时刻唯一）是否和传入的OnsaleId对应
-            if (onSaleVo.getData().getId().equals(productVo.getData().getOnSaleId())) {
+            if (!onSaleVo.getData().getId().equals(productVo.getData().getOnSaleId())) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
             }
             //判断couponActId;
@@ -129,6 +130,7 @@ public class OrderService {
             setPoCreatedFields(orderItem, userId, userName);
             setPoModifiedFields(orderItem, userId, userName);
             orderItemsBo.add(orderItem);
+            shopIds.add(orderItem.getShopId());
         }
         //验证除了orderItem的字段
         if (simpleOrderVo.getGrouponId() != null) {
@@ -199,6 +201,10 @@ public class OrderService {
         }
 
         Order order = cloneVo(simpleOrderVo, Order.class);
+        if(shopIds.size()==1){
+            Iterator it = shopIds.iterator();
+            order.setShopId((Long) it.next());
+        }
         order.setCustomerId(userId);
         order.setPid(0L);
         //TODO 订单号 生成算法

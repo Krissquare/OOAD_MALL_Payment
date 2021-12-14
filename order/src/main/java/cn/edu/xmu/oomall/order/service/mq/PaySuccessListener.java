@@ -18,8 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
-import static cn.edu.xmu.privilegegateway.annotation.util.Common.setPoCreatedFields;
+import static cn.edu.xmu.privilegegateway.annotation.util.Common.*;
 
 /**
  * @author xiuchen lang 22920192204222
@@ -56,18 +55,14 @@ public class PaySuccessListener implements RocketMQListener<String> {
             return;
         } else if (order.getAdvancesaleId() != 0) {
             //这是预售 不用拆单子
-            if (orderPo.getState() == OrderState.NEW_ORDER.getCode()) {
+            if (order.getState() == OrderState.NEW_ORDER.getCode()) {
                 //定金
-                if (order.getState() != OrderState.NEW_ORDER.getCode()) {
-                    return;
-                }
                 order.setState(OrderState.WAIT_PAY_REST.getCode());
             } else if (order.getState() == OrderState.WAIT_PAY_REST.getCode()) {
                 //尾款
-                if (order.getState() != OrderState.NEW_ORDER.getCode()) {
-                    return;
-                }
                 order.setState(OrderState.FINISH_PAY.getCode());
+            }else {
+                return;
             }
             setPoCreatedFields(order, 0L, null);
             orderDao.updateOrder(order);
@@ -80,7 +75,7 @@ public class PaySuccessListener implements RocketMQListener<String> {
         order.setState(OrderState.FINISH_PAY.getCode());
         setPoCreatedFields(order, 0L, null);
         orderDao.updateOrder(order);
-        //差明细列表
+        //查明细列表
         ReturnObject<List<OrderItem>> returnObject = orderDao.listOrderItemsByOrderId(orderPo.getId());
         if (returnObject.getCode() != ReturnNo.OK) {
             return;
@@ -98,17 +93,46 @@ public class PaySuccessListener implements RocketMQListener<String> {
                     return Math.toIntExact(orderItem1.getShopId() - orderItem2.getShopId());
                 });
         //TODO:分单逻辑
+        Long discountPrice=0L;
+        Long originprice=0L;
+        Long point=0L;
         for (Long shopId : set) {
+            discountPrice=0L;
+            originprice=0L;
+            point=0L;
             List<OrderItem> listByShop = new ArrayList();
+            //上面的order就当新的子order
+            order.setPid(order.getId());
+            order.setId(null);
+            order.setExpressFee(null);
+            order.setShopId(shopId);
+            //TODO:子订单生成订单号
+            setPoCreatedFields(order,0L,null);
+            setPoModifiedFields(order,0L,null);
             for (OrderItem orderItem : orderItemList) {
                 //是这个商铺的  累加积点，累加钱，累加优惠 子改pid，改状态    改明细order_id
                 if (orderItem.getShopId().equals(shopId)) {
                     listByShop.add(orderItem);
+                    discountPrice+=orderItem.getDiscountPrice()*orderItem.getQuantity();
+                    originprice+=orderItem.getPrice()*orderItem.getQuantity();
+                    point+=orderItem.getPoint()*orderItem.getQuantity();
                 }else {
                     break;
                 }
             }
-
+            order.setDiscountPrice(discountPrice/10);
+            order.setPoint(point/10);
+            order.setOriginPrice(originprice);
+            ReturnObject returnObject1 = orderDao.insertOrder(order);
+            if (returnObject1.getCode()!=ReturnNo.OK){
+                return;
+            }
+            OrderPo data = (OrderPo) returnObject1.getData();
+            for (OrderItem orderItem:listByShop){
+                orderItem.setOrderId(data.getId());
+                orderDao.insertOrderItem(orderItem);
+            }
+            return;
         }
     }
 }
