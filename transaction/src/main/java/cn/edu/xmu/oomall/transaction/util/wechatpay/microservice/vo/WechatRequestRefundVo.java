@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 @NoArgsConstructor
-public class WeChatRefundVo {
+public class WechatRequestRefundVo {
 
     @Data
     @NoArgsConstructor
@@ -23,18 +23,23 @@ public class WeChatRefundVo {
         private Integer total;
         private String currency;
     }
+
+    @NotBlank
+    private String transactionId;
+
     @NotBlank
     private String outTradeNo;
 
     @NotBlank
     private String outRefundNo;
 
-    private String reason;
-
-    private String notifyUrl;
-
     @NotNull
     private RefundAmountVo amount;
+
+    private String reason;
+
+
+    private String notifyUrl;
 
 
 }

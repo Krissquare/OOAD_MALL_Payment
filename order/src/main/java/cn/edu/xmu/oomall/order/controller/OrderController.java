@@ -3,15 +3,13 @@ package cn.edu.xmu.oomall.order.controller;
 import cn.edu.xmu.oomall.core.util.Common;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
-import cn.edu.xmu.oomall.order.model.vo.MarkShipmentVo;
-import cn.edu.xmu.oomall.order.model.vo.OrderVo;
-import cn.edu.xmu.oomall.order.model.vo.SimpleOrderVo;
-import cn.edu.xmu.oomall.order.model.vo.UpdateOrderVo;
+import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.service.OrderService;
 import cn.edu.xmu.oomall.order.util.MyDateTime;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
+import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -22,8 +20,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
+import java.util.List;
 
-import static cn.edu.xmu.oomall.core.util.Common.processFieldErrors;
 
 @RestController
 @RequestMapping(value = "/", produces = "application/json;charset=UTF-8")
@@ -57,7 +55,7 @@ public class OrderController {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
         }
 
-        return orderService.insertOrder(simpleOrderVo, userId, userName);
+        return Common.decorateReturnObject(orderService.insertOrder(simpleOrderVo, userId, userName));
     }
 
 
@@ -135,7 +133,7 @@ public class OrderController {
             @ApiResponse(code = 505, message = "操作的资源id不是自己的对象")
     })
     @GetMapping("shops/{shopId}/orders")
-    @Audit(departName = "order")
+    @Audit(departName = "shop")
     public Object listBriefOrdersByShopId(@PathVariable("shopId") Long shopId,
                                           @RequestParam(value="customerId",required = false)Long customerId,
                                           @RequestParam(value="orderSn",required = false) String orderSn,
@@ -177,7 +175,7 @@ public class OrderController {
             @ApiResponse(code = 505, message = "操作的资源id不是自己的对象")
     })
     @PutMapping("shops/{shopId}/orders/{id}")
-    @Audit(departName = "order")
+    @Audit(departName = "shop")
     public Object updateOrderComment(@PathVariable("shopId") Long shopId, @PathVariable("id") Long orderId, @Validated @RequestBody OrderVo orderVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName) {
         if (bindingResult.hasErrors()) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
@@ -193,7 +191,7 @@ public class OrderController {
      * @return
      */
     @GetMapping("shops/{shopId}/orders/{id}")
-    @Audit(departName = "order")
+    @Audit(departName = "shop")
     public Object getOrderDetail(@PathVariable("shopId") Long shopId, @PathVariable("id") Long id) {
         return Common.decorateReturnObject(orderService.getOrderDetail(shopId, id));
     }
@@ -232,7 +230,7 @@ public class OrderController {
                                @PathVariable(value = "id") Long id,
                                @Validated @RequestBody MarkShipmentVo markShipmentVo,
                                BindingResult bindingResult) {
-        Object object = processFieldErrors(bindingResult, httpServletResponse);
+        Object object = Common.processFieldErrors(bindingResult, httpServletResponse);
         if (object != null) {
             return object;
         }
@@ -272,8 +270,27 @@ public class OrderController {
         return Common.decorateReturnObject(orderService.confirmGrouponOrder(shopId,id,loginUserId,loginUserName));
     }
 
+    @Audit(departName = "order")
+    @GetMapping("orders/{id}/refund")
+    public Object listOrderRefunds(@PathVariable("id")Long id)
+    {
+        ReturnObject ret=orderService.listOrderRefunds(id);
+        return Common.decorateReturnObject(ret);
+    }
 
+    @Audit(departName = "order")
+    @GetMapping("internal/orderitems/{id}")
+    public Object getOrderItemById(@PathVariable("id") Long id,@RequestParam(value="customerId",required = false) Long customerId)
+    {
+        return Common.decorateReturnObject(orderService.getOrderItemById(id,customerId));
+    }
 
+    @Audit(departName="shop")
+    @PutMapping("internal/shops/{shopId}/orders/{id}/cancel")
+    public Object cancelOrderByShop(@PathVariable("shopId")Long shopId,@PathVariable("id") Long id,@LoginUser Long loginUserId,@LoginName String loginUserName)
+    {
+        return Common.decorateReturnObject(orderService.internalcancelOrderByShop(shopId,id,loginUserId,loginUserName));
+    }
     /**
      * task a-1
      * @author Fang Zheng
@@ -283,6 +300,16 @@ public class OrderController {
         return Common.decorateReturnObject(orderService.listAllOrderState());
     }
 
+    @Audit(departName = "order")
+    @GetMapping("internal/orderitems/{id}/payment")
+    public Object getPaymentByOrderItem(@PathVariable("id") Long id)
+    {
+        return Common.decorateReturnObject(orderService.getPaymentByOrderitem(id));
+    }
+
+//    @Audit(departName = "shop")
+//    @PostMapping("internal/shops/{shopId}/orders")
+//    public Object createAftersaleOrder()
     /**
      * a-1
      * @author Fang Zheng
@@ -338,7 +365,21 @@ public class OrderController {
      * @return
      */
     @GetMapping("/internal/order/{id}")
-    public Object listOrderItemsByOrderId(@PathVariable(value = "id")Long id){
+    public InternalReturnObject<List<OrderItemRetVo>> listOrderItemsByOrderId(@PathVariable(value = "id")Long id){
         return orderService.listOrderItemsByOrderId(id);
     }
+
+    @Audit(departName = "shop")
+    @PostMapping("internal/shops/{shopId}/orders")
+    public Object createAftersaleOrder(@PathVariable("shopId")Long shopId,@RequestBody AftersaleRecVo orderVo,
+                                       @LoginUser Long loginUserId,@LoginName String loginUserName,BindingResult bindingResult)
+    {
+        Object object = Common.processFieldErrors(bindingResult, httpServletResponse);
+        if(object!=null)
+        {
+            return object;
+        }
+        return Common.decorateReturnObject(orderService.insertAftersaleOrder(shopId,orderVo,loginUserId,loginUserName));
+    }
+
 }

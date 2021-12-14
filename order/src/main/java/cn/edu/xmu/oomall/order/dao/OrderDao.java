@@ -12,6 +12,7 @@ import cn.edu.xmu.oomall.order.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.model.po.OrderPoExample;
 import cn.edu.xmu.oomall.order.model.vo.BriefOrderVo;
+import cn.edu.xmu.oomall.order.model.vo.OrderItemRetVo;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import cn.edu.xmu.privilegegateway.annotation.util.RedisUtil;
 import com.github.pagehelper.PageHelper;
@@ -68,7 +69,21 @@ public class OrderDao {
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-
+    public ReturnObject cancelRelatedOrder(Order order)
+    {
+        try
+        {
+            OrderPoExample orderPoExample = new OrderPoExample();
+            OrderPoExample.Criteria cr = orderPoExample.createCriteria();
+            cr.andPidEqualTo(order.getPid());
+            OrderPo orderPo=cloneVo(order,OrderPo.class);
+            orderPoMapper.updateByExampleSelective(orderPo,orderPoExample);
+            return new ReturnObject(ReturnNo.OK);
+        }catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
 
     public ReturnObject updateOrder(Order order) {
         try {
@@ -93,6 +108,10 @@ public class OrderDao {
             OrderItemPoExample.Criteria cr=orderItemPoExample.createCriteria();
             cr.andOrderIdEqualTo(orderId);
             List<OrderItemPo> orderItemPos=orderItemPoMapper.selectByExample(orderItemPoExample);
+            if(orderItemPos.size()==0)
+            {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
             List<OrderItem> orderItemList=new ArrayList<>(orderItemPos.size());
             for(OrderItemPo orderItemPo:orderItemPos)
             {
@@ -133,6 +152,24 @@ public class OrderDao {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
+    }
+
+    public ReturnObject getOrderItemById(Long id)
+    {
+        try
+        {
+            OrderItemPo orderItemPo=orderItemPoMapper.selectByPrimaryKey(id);
+            if(orderItemPo==null)
+            {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            OrderItem orderItem=cloneVo(orderItemPo,OrderItem.class);
+            return new ReturnObject(orderItem);
+        }catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+
     }
 
     /**
@@ -197,7 +234,11 @@ public class OrderDao {
                     orderItemPos.addAll(orderItemPoMapper.selectByExample(orderItemPoExample));
                 }
             }
-            return new InternalReturnObject(orderItemPos);}
+            List<OrderItemRetVo>list1=new ArrayList<>();
+            for(OrderItemPo orderItemPo:orderItemPos){
+                list1.add(cloneVo(orderItemPo,OrderItemRetVo.class));
+            }
+            return new InternalReturnObject(list1);}
         catch (Exception e){
             logger.error(e.getMessage());
             return new InternalReturnObject(ReturnNo.INTERNAL_SERVER_ERR);
@@ -205,4 +246,67 @@ public class OrderDao {
 
     }
 
+    public ReturnObject createOrder(Order order)
+    {
+        try
+        {
+            OrderPo orderPo=cloneVo(order,OrderPo.class);
+            orderPoMapper.insert(orderPo);
+            Order order1=cloneVo(orderPo,Order.class);
+            return new ReturnObject(order1);
+        }
+        catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+        }
+    }
+
+    public ReturnObject createOrderItem(OrderItem orderItem)
+    {
+        try{
+            OrderItemPo orderItemPo=cloneVo(orderItem,OrderItemPo.class);
+            orderItemPoMapper.insert(orderItemPo);
+            return new ReturnObject(ReturnNo.OK);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+        }
+    }
+
+    public ReturnObject insertOrder(Order order){
+        try {
+            OrderPo orderPo = cloneVo(order, OrderPo.class);
+            orderPoMapper.insert(orderPo);
+            return new ReturnObject(orderPo);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+        }
+    }
+    public ReturnObject insertOrderItem(OrderItem orderItem){
+        try {
+            OrderItemPo orderItemPo = cloneVo(orderItem, OrderItemPo.class);
+            orderItemPoMapper.insert(orderItemPo);
+            return new ReturnObject(orderItemPo);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+        }
+    }
+
+    public ReturnObject getOrderByOrderSn(String orderSn){
+        try {
+            OrderPoExample orderPoExample = new OrderPoExample();
+            OrderPoExample.Criteria criteria = orderPoExample.createCriteria();
+            criteria.andOrderSnEqualTo(orderSn);
+            List<OrderPo> orderPos = orderPoMapper.selectByExample(orderPoExample);
+            if (orderPos.size()==0){
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            return new ReturnObject(orderPos.get(0));
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+        }
+    }
 }

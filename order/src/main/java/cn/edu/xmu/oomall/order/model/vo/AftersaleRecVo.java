@@ -8,19 +8,14 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-import java.util.List;
 
-/**
- * @author xiuchen lang 22920192204222
- * @date 2021/12/07 15:44
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SimpleOrderVo {
+public class AftersaleRecVo {
     @NotNull
     @Valid
-    private List<SimpleOrderItemVo> orderItems;
+    private AftersaleOrderitemRecVo orderItem;
     @NotNull
     @NotBlank
     private String consignee;
@@ -30,8 +25,5 @@ public class SimpleOrderVo {
     @Pattern(regexp = "^(13[0-9]|14[5|7]|15[0|1|2|3|5|6|7|8|9]|18[0|1|2|3|5|6|7|8|9])\\d{8}$", message = "电话号码不符合格式")
     private String mobile;
     private String message;
-    private Long advancesaleId;
-    private Long grouponId;
     private Long customerId;
-    private Long point;
 }
