@@ -20,7 +20,7 @@ import java.util.List;
  * topic 对应send的destination
  */
 @Service
-@RocketMQMessageListener(topic = "insert-order-info",consumerGroup ="${rocketmq.consumer.group}")
+@RocketMQMessageListener(topic = "insert-order",consumerGroup ="${rocketmq.consumer.group}")
 public class InsertOrderListener implements RocketMQListener<OrderAndOrderItemsVo>
 {
     @Autowired

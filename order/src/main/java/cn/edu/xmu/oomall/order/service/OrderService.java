@@ -1,5 +1,6 @@
 package cn.edu.xmu.oomall.order.service;
 
+import cn.edu.xmu.oomall.core.util.JacksonUtil;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.dao.OrderDao;
@@ -433,7 +434,7 @@ public class OrderService {
             RefundRecVo refundRecVo=cloneVo(paymentVo,RefundRecVo.class);
             refundRecVo.setPaymentId(paymentVo.getId());
             refundRecVo.setDocumentType(RefundType.ORDER.getCode());
-            InternalReturnObject<RefundRetVo> retRefund= transactionService.Refund(refundRecVo,loginUserId,loginUserName);
+            InternalReturnObject<RefundRetVo> retRefund= transactionService.refund(refundRecVo);
             if(retRefund.getData()==null)
             {
                 return new ReturnObject(retRefund);

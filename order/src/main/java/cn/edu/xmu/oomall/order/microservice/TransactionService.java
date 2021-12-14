@@ -1,10 +1,7 @@
 package cn.edu.xmu.oomall.order.microservice;
 
-
-import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRecVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRetVo;
-import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import cn.edu.xmu.oomall.order.util.MyDateTime;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
@@ -21,6 +18,7 @@ import java.time.LocalDateTime;
  */
 @FeignClient(name = "transaction-service")
 public interface TransactionService {
+
     @GetMapping("/shops/{shopId}/payment")
     InternalReturnObject listPayment(@PathVariable(value = "shopId") Long shopId,
                              @RequestParam(value = "documentId",required = false)String documentId,
@@ -29,6 +27,7 @@ public interface TransactionService {
                              @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
                              @RequestParam(value="page",required = false)Integer page,
                              @RequestParam(value = "pageSize",required = false)Integer pageSize);
+
     @GetMapping("/shops/{shopId}/refund")
     InternalReturnObject listRefund(@PathVariable("shopId") Long shopId, @RequestParam(value="documentId",required = false)String documentId,
                             @RequestParam(value="state",required = false)Byte state,
@@ -38,5 +37,5 @@ public interface TransactionService {
                             @RequestParam(value = "pageSize", required = false) Integer pageSize);
 
     @PostMapping("/internal/refunds")
-    InternalReturnObject<RefundRetVo> Refund(@RequestBody RefundRecVo refundRecVo, @LoginUser Long loginUserId, @LoginName String loginUserName);
+    InternalReturnObject<RefundRetVo> refund(@RequestBody RefundRecVo refundRecVo);
 }

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
  * @date 2021/12/14 9:25
  */
 @Service
-@RocketMQMessageListener(consumerGroup = "${rocketmq.consumer.group}", topic = "refund-success")
+@RocketMQMessageListener(consumerGroup = "refund-success", topic = "refund-success")
 public class RefundSuccessListener implements RocketMQListener<String> {
     @Autowired
     OrderDao orderDao;
