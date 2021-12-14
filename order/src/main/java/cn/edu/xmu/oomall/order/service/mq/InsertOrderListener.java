@@ -23,7 +23,7 @@ import java.util.List;
  */
 @Service
 @RocketMQMessageListener(topic = "insert-order-info", consumeMode = ConsumeMode.CONCURRENTLY, consumeThreadMax = 10, consumerGroup ="${rocketmq.consumer.group}")
-public class OrderServiceListener implements RocketMQListener<String>
+public class InsertOrderListener implements RocketMQListener<String>
 {
     @Autowired
     OrderDao orderDao;
@@ -38,7 +38,8 @@ public class OrderServiceListener implements RocketMQListener<String>
             for (OrderItem orderItem:orderItems){
                 orderItem.setOrderId(orderPo.getId());
                 orderDao.insertOrderItem(orderItem);
-                //TODO:减数据库的库存
+                //TODO:减数据库的库存 :没有这个外部接口
+
                 //TODO:监听者去分单
             }
         }

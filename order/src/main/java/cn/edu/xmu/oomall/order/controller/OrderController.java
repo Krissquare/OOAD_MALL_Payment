@@ -56,7 +56,7 @@ public class OrderController {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
         }
 
-        return orderService.insertOrder(simpleOrderVo, userId, userName);
+        return Common.decorateReturnObject(orderService.insertOrder(simpleOrderVo, userId, userName));
     }
 
 
