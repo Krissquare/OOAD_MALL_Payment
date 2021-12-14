@@ -142,7 +142,6 @@ public class OrderService {
         order.setPid(0L);
         order.setState(OrderState.FINISH_PAY.getCode());
         Common.setPoCreatedFields(order,loginUserId,loginUserName);
-        order.setGmtCreate(LocalDateTime.now());
         ReturnObject ret=orderDao.createOrder(order);
         if(!ret.getCode().equals(ReturnNo.OK))
         {
@@ -154,7 +153,6 @@ public class OrderService {
         orderItem.setPrice(0L);
         orderItem.setName(productVo.getData().getName());
         orderItem.setOrderId(order1.getId());
-        orderItem.setGmtCreate(LocalDateTime.now());
         Common.setPoCreatedFields(orderItem,loginUserId,loginUserName);
         ReturnObject ret2=orderDao.createOrderItem(orderItem);
         if(!ret2.getCode().equals(ReturnNo.OK))
