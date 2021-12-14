@@ -381,6 +381,9 @@ class OrderApplicationTests {
         AftersaleRecVo aftersaleRecVo=new AftersaleRecVo();
         aftersaleRecVo.setOrderItem(orderitemRecVo);
         aftersaleRecVo.setCustomerId(1L);
+        aftersaleRecVo.setConsignee("222");
+        aftersaleRecVo.setRegionId(5L);
+        aftersaleRecVo.setMobile("13056766288");
         String request= JacksonUtil.toJson(aftersaleRecVo);
         String response = this.mvc.perform(MockMvcRequestBuilders.post("/internal/shops/1/orders")
                 .header("authorization",token4)
@@ -389,7 +392,7 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "";
+        String expected = "{\"errno\":0,\"data\":{\"orderSn\":null,\"customer\":{\"id\":1,\"name\":\"aaa\"},\"shop\":{\"id\":1,\"name\":\"aaa\"},\"pid\":0,\"state\":201,\"confirmTime\":null,\"discountPrice\":0,\"originPrice\":0,\"point\":0,\"expressFee\":null,\"consignee\":\"222\",\"regionId\":5,\"address\":null,\"mobile\":\"13056766288\",\"message\":null,\"advancesaleId\":null,\"grouponId\":null,\"shipmentSn\":null,\"aftersaleOrderitemVo\":{\"productId\":1,\"name\":\"123\",\"quantity\":5,\"price\":0}},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, response, false);
     }
 

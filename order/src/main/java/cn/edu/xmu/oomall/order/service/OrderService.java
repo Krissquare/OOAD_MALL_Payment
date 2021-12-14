@@ -131,7 +131,7 @@ public class OrderService {
             return new ReturnObject(ReturnNo.getByCode(onSaleVo.getErrno()));
         }
         // 判断回传的Product中的OnsaleId（某一时刻唯一）是否和传入的OnsaleId对应
-        if (onSaleVo.getData().getId().equals(productVo.getData().getOnSaleId())) {
+        if (!onSaleVo.getData().getId().equals(productVo.getData().getOnSaleId())) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
         Order order=cloneVo(orderVo,Order.class);
@@ -141,6 +141,8 @@ public class OrderService {
         order.setPoint(0L);
         order.setPid(0L);
         order.setState(OrderState.FINISH_PAY.getCode());
+        Common.setPoCreatedFields(order,loginUserId,loginUserName);
+        order.setGmtCreate(LocalDateTime.now());
         ReturnObject ret=orderDao.createOrder(order);
         if(!ret.getCode().equals(ReturnNo.OK))
         {
@@ -152,6 +154,8 @@ public class OrderService {
         orderItem.setPrice(0L);
         orderItem.setName(productVo.getData().getName());
         orderItem.setOrderId(order1.getId());
+        orderItem.setGmtCreate(LocalDateTime.now());
+        Common.setPoCreatedFields(orderItem,loginUserId,loginUserName);
         ReturnObject ret2=orderDao.createOrderItem(orderItem);
         if(!ret2.getCode().equals(ReturnNo.OK))
         {
@@ -162,7 +166,7 @@ public class OrderService {
         aftersaleRetVo.setCustomer((SimpleVo) customer.getData());
         InternalReturnObject shop=shopService.getShopById(shopId);
         aftersaleRetVo.setShop((SimpleVo) shop.getData());
-        AftersaleOrderitemRetVo aftersaleOrderitemRetVo=cloneVo(ret2.getData(),AftersaleOrderitemRetVo.class);
+        AftersaleOrderitemRetVo aftersaleOrderitemRetVo=cloneVo(orderItem,AftersaleOrderitemRetVo.class);
         aftersaleRetVo.setAftersaleOrderitemVo(aftersaleOrderitemRetVo);
         return new ReturnObject(aftersaleRetVo);
     }

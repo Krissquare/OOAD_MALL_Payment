@@ -18,6 +18,4 @@ public class AftersaleOrderitemRecVo {
     @NotNull(message = "quantity不能为空")
     @Min(1)
     private Long quantity;
-    private Long price;
-    private String name;
 }

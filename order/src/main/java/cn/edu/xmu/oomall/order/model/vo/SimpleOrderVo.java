@@ -32,4 +32,5 @@ public class SimpleOrderVo {
     private String message;
     private Long advancesaleId;
     private Long grouponId;
+    private Long customerId;
 }

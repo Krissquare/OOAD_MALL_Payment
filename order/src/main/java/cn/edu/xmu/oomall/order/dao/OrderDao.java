@@ -247,12 +247,12 @@ public class OrderDao {
         {
             OrderPo orderPo=cloneVo(order,OrderPo.class);
             orderPoMapper.insert(orderPo);
-            order.setId(orderPo.getId());
-            return new ReturnObject(order);
+            Order order1=cloneVo(orderPo,Order.class);
+            return new ReturnObject(order1);
         }
         catch (Exception e){
             logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR);
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
         }
     }
 
@@ -264,7 +264,7 @@ public class OrderDao {
             return new ReturnObject(ReturnNo.OK);
         }catch (Exception e){
             logger.error(e.getMessage());
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR);
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
         }
     }
 
