@@ -263,7 +263,7 @@ public class TransactionController {
                                               @RequestParam(value = "endTime", required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime endTime,
                                               @RequestParam(value = "page", required = false) Integer page,
                                               @RequestParam(value = "pageSize", required = false) Integer pageSize){
-        if (endTime == null){
+        if (endTime == null || beginTime == null){
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
         }
         if (shopId != 0){
