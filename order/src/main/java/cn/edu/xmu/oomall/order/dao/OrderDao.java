@@ -268,4 +268,40 @@ public class OrderDao {
         }
     }
 
+    public ReturnObject insertOrder(Order order){
+        try {
+            OrderPo orderPo = cloneVo(order, OrderPo.class);
+            orderPoMapper.insert(orderPo);
+            return new ReturnObject(orderPo);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+        }
+    }
+    public ReturnObject insertOrderItem(OrderItem orderItem){
+        try {
+            OrderItemPo orderItemPo = cloneVo(orderItem, OrderItemPo.class);
+            orderItemPoMapper.insert(orderItemPo);
+            return new ReturnObject(orderItemPo);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+        }
+    }
+
+    public ReturnObject getOrderByOrderSn(String orderSn){
+        try {
+            OrderPoExample orderPoExample = new OrderPoExample();
+            OrderPoExample.Criteria criteria = orderPoExample.createCriteria();
+            criteria.andOrderSnEqualTo(orderSn);
+            List<OrderPo> orderPos = orderPoMapper.selectByExample(orderPoExample);
+            if (orderPos.size()==0){
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            return new ReturnObject(orderPos.get(0));
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+        }
+    }
 }

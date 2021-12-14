@@ -81,8 +81,8 @@ class OrderApplicationTests {
         Mockito.when(goodsService.getProductById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(productVo));
         Mockito.when(transactionService.listRefund(0L,"20216453652635231006", RefundState.FINISH_REFUND.getCode(),null,null,1,10)).thenReturn(refunds);
         Mockito.when(transactionService.listPayment(0L,"20216489872635231004", PaymentState.ALREADY_PAY.getCode(),null,null,1,10)).thenReturn(payments);
-        Mockito.when(transactionService.Refund(new RefundRecVo(null,null,1L,null,500L, RefundType.ORDER.getCode()),2L,"lxc")).thenReturn(new InternalReturnObject<>(new RefundRetVo(1L,"123",1L,500L,(byte)0,"123",(byte)0)));
-        Mockito.when(transactionService.Refund(new RefundRecVo(null,null,2L,null,100L,RefundType.ORDER.getCode()),2L,"lxc")).thenReturn(new InternalReturnObject<>(new RefundRetVo(1L,"123",1L,100L,(byte)0,"123",(byte)0)));
+        Mockito.when(transactionService.refund(new RefundRecVo(null,null,1L,null,500L, RefundType.ORDER.getCode()))).thenReturn(new InternalReturnObject<>(new RefundRetVo(1L,"123",1L,500L,(byte)0,"123",(byte)0)));
+        Mockito.when(transactionService.refund(new RefundRecVo(null,null,2L,null,100L,RefundType.ORDER.getCode()))).thenReturn(new InternalReturnObject<>(new RefundRetVo(1L,"123",1L,100L,(byte)0,"123",(byte)0)));
     }
 
     @Test

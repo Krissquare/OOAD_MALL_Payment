@@ -20,7 +20,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 
-import static cn.edu.xmu.oomall.core.util.Common.processFieldErrors;
 
 @RestController
 @RequestMapping(value = "/", produces = "application/json;charset=UTF-8")
@@ -54,7 +53,7 @@ public class OrderController {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
         }
 
-        return orderService.insertOrder(simpleOrderVo, userId, userName);
+        return Common.decorateReturnObject(orderService.insertOrder(simpleOrderVo, userId, userName));
     }
 
 
@@ -229,7 +228,7 @@ public class OrderController {
                                @PathVariable(value = "id") Long id,
                                @Validated @RequestBody MarkShipmentVo markShipmentVo,
                                BindingResult bindingResult) {
-        Object object = processFieldErrors(bindingResult, httpServletResponse);
+        Object object = Common.processFieldErrors(bindingResult, httpServletResponse);
         if (object != null) {
             return object;
         }
