@@ -411,30 +411,74 @@ public class OrderService {
      * 7.买家取消本人名下订单
      * create by xiuchen Lang
      *
-     * @param id
-     * @param userId
-     * @param userName
+     * @param orderId
+     * @param loginUserId
+     * @param loginUserName
      * @return
      */
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject cancelOrderByCustomer(Long id, Long userId, String userName) {
-        ReturnObject returnObject = orderDao.getOrderById(id);
-        if (returnObject.getCode() != ReturnNo.OK) {
-            return returnObject;
+    public ReturnObject cancelOrderByCustomer(Long orderId,Long loginUserId,String loginUserName)
+    {
+        ReturnObject ret=orderDao.getOrderById(orderId);
+        if(!ret.getCode().equals(ReturnNo.OK))
+        {
+            return ret;
         }
-        Order data = (Order) returnObject.getData();
-        if (!Objects.equals(data.getCustomerId(), userId)) {
+        Order order=(Order) ret.getData();
+        if(!order.getCustomerId().equals(loginUserId))
+        {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
-        if (data.getState() == OrderState.COMPLETE_ORDER.getCode() || data.getState() == OrderState.CANCEL_ORDER.getCode()) {
+        if(order.getState()==OrderState.CANCEL_ORDER.getCode()||order.getState()==OrderState.COMPLETE_ORDER.getCode())
+        {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
-        Order order = new Order();
-        order.setId(id);
+        String documentId;
+        Order pOrder=null;
+        if(order.getPid()==0)
+        {
+            documentId=order.getOrderSn();
+        }
+        else
+        {
+            ReturnObject ret1=orderDao.getOrderById(order.getPid());
+            if(!ret1.getCode().equals(ReturnNo.OK))
+            {
+                return ret1;
+            }
+            pOrder=(Order) ret1.getData();
+            documentId=pOrder.getOrderSn();
+        }
+        InternalReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
+        List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
+        for(PaymentRetVo paymentVo:list)
+        {
+            RefundRecVo refundRecVo=cloneVo(paymentVo,RefundRecVo.class);
+            refundRecVo.setPaymentId(paymentVo.getId());
+            refundRecVo.setDocumentType(RefundType.ORDER.getCode());
+            InternalReturnObject<RefundRetVo> retRefund= transactionService.refund(refundRecVo);
+            if(retRefund.getData()==null)
+            {
+                return new ReturnObject(retRefund);
+            }
+        }
         order.setState(OrderState.CANCEL_ORDER.getCode());
-        Common.setPoModifiedFields(order, userId, userName);
+        Common.setPoModifiedFields(order, loginUserId, loginUserName);
+        if(pOrder!=null)
+        {
+            pOrder.setState(OrderState.CANCEL_ORDER.getCode());
+            Common.setPoModifiedFields(pOrder, loginUserId, loginUserName);
+            ReturnObject ret3=orderDao.updateOrder(pOrder);
+            if(!ret3.getCode().equals(ReturnNo.OK))
+            {
+                return ret3;
+            }
+            return orderDao.cancelRelatedOrder(order);
+        }
         return orderDao.updateOrder(order);
     }
+
 
     /**
      * 8.买家标记确认收货
@@ -662,61 +706,55 @@ public class OrderService {
      * hty
      *
      * @param shopId
-     * @param orderId
-     * @param loginUserId
-     * @param loginUserName
+     * @param id
+     * @param userId
+     * @param userName
      * @return
      */
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject internalcancelOrderByShop(Long shopId, Long orderId, Long loginUserId, String loginUserName) {
-        ReturnObject ret = orderDao.getOrderById(orderId);
-        if (!ret.getCode().equals(ReturnNo.OK)) {
+    public ReturnObject internalcancelOrderByShop(Long shopId,Long id, Long userId, String userName) {
+        ReturnObject ret = orderDao.getOrderById(id);
+        if (ret.getCode() != ReturnNo.OK) {
             return ret;
         }
         Order order = (Order) ret.getData();
-        if (!order.getShopId().equals(shopId)) {
-            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
-        }
-        if (order.getState() == OrderState.CANCEL_ORDER.getCode() || order.getState() == OrderState.COMPLETE_ORDER.getCode()) {
+        //判断操作的订单是否为子订单
+        if(order.getPid()!=0)
+        {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
-        String documentId;
-        Order pOrder = null;
-        if (order.getPid() == 0) {
-            documentId = order.getOrderSn();
-        } else {
-            ReturnObject ret1 = orderDao.getOrderById(order.getPid());
-            if (!ret1.getCode().equals(ReturnNo.OK)) {
-                return ret1;
-            }
-            pOrder = (Order) ret1.getData();
-            documentId = pOrder.getOrderSn();
+        //操作的订单是父订单,接下来判断是否分单，分单shopId==null
+        if(order.getShopId()==null)
+        {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
+        if(!order.getShopId().equals(shopId))
+        {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        if (order.getState() == OrderState.COMPLETE_ORDER.getCode() || order.getState() == OrderState.CANCEL_ORDER.getCode()) {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
+        String documentId=order.getOrderSn();
         InternalReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
         Map<String, Object> data = (Map<String, Object>) returnObject.getData();
         List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
-        for (PaymentRetVo paymentVo : list) {
-            RefundRecVo refundRecVo = cloneVo(paymentVo, RefundRecVo.class);
+        for(PaymentRetVo paymentVo:list)
+        {
+            RefundRecVo refundRecVo=cloneVo(paymentVo,RefundRecVo.class);
             refundRecVo.setPaymentId(paymentVo.getId());
             refundRecVo.setDocumentType(RefundType.ORDER.getCode());
-            InternalReturnObject<RefundRetVo> retRefund = transactionService.refund(refundRecVo);
-            if (retRefund.getData() == null) {
+            InternalReturnObject<RefundRetVo> retRefund= transactionService.refund(refundRecVo);
+            if(retRefund.getData()==null)
+            {
                 return new ReturnObject(retRefund);
             }
         }
         order.setState(OrderState.CANCEL_ORDER.getCode());
-        Common.setPoModifiedFields(order, loginUserId, loginUserName);
-        if (pOrder != null) {
-            pOrder.setState(OrderState.CANCEL_ORDER.getCode());
-            Common.setPoModifiedFields(pOrder, loginUserId, loginUserName);
-            ReturnObject ret3 = orderDao.updateOrder(pOrder);
-            if (!ret3.getCode().equals(ReturnNo.OK)) {
-                return ret3;
-            }
-            return orderDao.cancelRelatedOrder(order);
-        }
+        Common.setPoModifiedFields(order, userId, userName);
         return orderDao.updateOrder(order);
     }
+
 
     /**
      * 2.内部API-管理员建立售后订单
