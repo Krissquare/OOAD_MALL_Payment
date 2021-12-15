@@ -27,24 +27,6 @@ public class AlipayService {
     private TransactionPatternFactory transactionPatternFactory;
 
 
-
-    private NotifyMessage createNotifyMessage(AlipayNotifyVo alipayNotifyVo, NotifyMessage.MessageType messageType) {
-        NotifyMessage message = new NotifyMessage();
-        if (alipayNotifyVo.getTradeStatus().equals(AlipayTradeState.TRADE_CLOSED.getDescription())) {
-            message.setState(PaymentState.CANCEL.getCode());
-        } else if (alipayNotifyVo.getTradeStatus().equals(AlipayTradeState.TRADE_FINISHED.getDescription()) ||
-                alipayNotifyVo.getTradeStatus().equals(AlipayTradeState.TRADE_SUCCESS.getDescription())) {
-            message.setState(PaymentState.ALREADY_PAY.getCode());
-        }
-
-        Map<String, Object> map = transactionPatternFactory.decodeRequestNo(alipayNotifyVo.getOutTradeNo());
-        message.setDocumentId((String) map.get("documentId"));
-        message.setDocumentType((Byte) map.get("documentType"));
-        message.setMessageType(messageType);
-        return message;
-    }
-
-
     @Transactional()
     public Object paymentNotifyByAlipay(AlipayNotifyVo alipayNotifyVo) {
         Payment payment = new Payment();
@@ -92,5 +74,22 @@ public class AlipayService {
         transactionDao.updateRefund(refund);
 
         return new WechatNotifyRetVo();
+    }
+
+
+    private NotifyMessage createNotifyMessage(AlipayNotifyVo alipayNotifyVo, NotifyMessage.MessageType messageType) {
+        NotifyMessage message = new NotifyMessage();
+        if (alipayNotifyVo.getTradeStatus().equals(AlipayTradeState.TRADE_CLOSED.getDescription())) {
+            message.setState(PaymentState.CANCEL.getCode());
+        } else if (alipayNotifyVo.getTradeStatus().equals(AlipayTradeState.TRADE_FINISHED.getDescription()) ||
+                alipayNotifyVo.getTradeStatus().equals(AlipayTradeState.TRADE_SUCCESS.getDescription())) {
+            message.setState(PaymentState.ALREADY_PAY.getCode());
+        }
+
+        Map<String, Object> map = transactionPatternFactory.decodeRequestNo(alipayNotifyVo.getOutTradeNo());
+        message.setDocumentId((String) map.get("documentId"));
+        message.setDocumentType((Byte) map.get("documentType"));
+        message.setMessageType(messageType);
+        return message;
     }
 }
