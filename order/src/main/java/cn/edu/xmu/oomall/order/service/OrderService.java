@@ -338,7 +338,7 @@ public class OrderService {
             return new ReturnObject(ReturnNo.CUSTOMERID_NOTEXIST);
         }
         SimpleVo customerVo = (SimpleVo) customerRet.getData();
-        InternalReturnObject shopRet = shopService.getShopById(order.getShopId());
+        InternalReturnObject shopRet = shopService.getSimpleShopById(order.getShopId());
         if (!customerRet.getErrno().equals(ReturnNo.OK)) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
         }
@@ -444,14 +444,17 @@ public class OrderService {
             pOrder = (Order) ret1.getData();
             documentId = pOrder.getOrderSn();
         }
-        InternalReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
-        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
-        List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
+        InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        if(!returnObject.getErrno().equals(ReturnNo.OK.getCode()))
+        {
+            return new ReturnObject(returnObject);
+        }
+        List<PaymentRetVo> list = returnObject.getData().getList();
         for (PaymentRetVo paymentVo : list) {
             RefundRecVo refundRecVo = cloneVo(paymentVo, RefundRecVo.class);
             refundRecVo.setPaymentId(paymentVo.getId());
             refundRecVo.setDocumentType(RefundType.ORDER.getCode());
-            InternalReturnObject<RefundRetVo> retRefund = transactionService.refund(refundRecVo);
+            InternalReturnObject<RefundRetVo> retRefund = transactionService.requestRefund(refundRecVo);
             if (retRefund.getData() == null) {
                 return new ReturnObject(retRefund);
             }
@@ -554,7 +557,7 @@ public class OrderService {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
         SimpleVo customerVo = customService.getCustomerById(order.getCustomerId()).getData();
-        SimpleVo shopVo = shopService.getShopById(order.getShopId()).getData();
+        SimpleVo shopVo = shopService.getSimpleShopById(order.getShopId()).getData();
         DetailOrderVo orderVo = Common.cloneVo(order, DetailOrderVo.class);
         orderVo.setCustomerVo(customerVo);
         orderVo.setShopVo(shopVo);
@@ -646,9 +649,12 @@ public class OrderService {
         }
         Order order = (Order) returnObject1.getData();
         String ducumentId = order.getOrderSn();
-        InternalReturnObject returnObject = transactionService.listPayment(0L, ducumentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
-        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
-        List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
+        InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, ducumentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        if(!returnObject.getErrno().equals(ReturnNo.OK.getCode()))
+        {
+            return new ReturnObject(returnObject);
+        }
+        List<PaymentRetVo> list = returnObject.getData().getList();
         return new ReturnObject(list);
     }
 
@@ -724,14 +730,13 @@ public class OrderService {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
         String documentId = order.getOrderSn();
-        InternalReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
-        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
-        List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
+        InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        List<PaymentRetVo> list = returnObject.getData().getList();
         for (PaymentRetVo paymentVo : list) {
             RefundRecVo refundRecVo = cloneVo(paymentVo, RefundRecVo.class);
             refundRecVo.setPaymentId(paymentVo.getId());
             refundRecVo.setDocumentType(RefundType.ORDER.getCode());
-            InternalReturnObject<RefundRetVo> retRefund = transactionService.refund(refundRecVo);
+            InternalReturnObject<RefundRetVo> retRefund = transactionService.requestRefund(refundRecVo);
             if (retRefund.getData() == null) {
                 return new ReturnObject(retRefund);
             }
@@ -794,7 +799,7 @@ public class OrderService {
         AftersaleRetVo aftersaleRetVo = cloneVo(order1, AftersaleRetVo.class);
         InternalReturnObject customer = customService.getCustomerById(order1.getCustomerId());
         aftersaleRetVo.setCustomer((SimpleVo) customer.getData());
-        InternalReturnObject shop = shopService.getShopById(shopId);
+        InternalReturnObject shop = shopService.getSimpleShopById(shopId);
         aftersaleRetVo.setShop((SimpleVo) shop.getData());
         SimpleOrderitemRetVo simpleOrderitemRetVo = cloneVo(orderItem, SimpleOrderitemRetVo.class);
         aftersaleRetVo.setAftersaleOrderitemVo(simpleOrderitemRetVo);
@@ -816,9 +821,12 @@ public class OrderService {
         }
         Order order = (Order) ret.getData();
         String documentId = order.getOrderSn();
-        InternalReturnObject returnObject = transactionService.listRefund(0L, documentId, RefundState.FINISH_REFUND.getCode(), null, null, 1, 10);
-        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
-        List<RefundRetVo> list = (List<RefundRetVo>) data.get("list");
+        InternalReturnObject<PageVo<RefundRetVo>> returnObject = transactionService.getRefund(0L, documentId, RefundState.FINISH_REFUND.getCode(), null, null, 1, 10);
+        if(!returnObject.getErrno().equals(ReturnNo.OK.getCode()))
+        {
+            return new ReturnObject(returnObject);
+        }
+        List<RefundRetVo> list = returnObject.getData().getList();
         return new ReturnObject(list);
     }
 
@@ -870,9 +878,8 @@ public class OrderService {
         }
         Order order = (Order) ret1.getData();
         String documentId = order.getOrderSn();
-        InternalReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
-        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
-        List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
+        InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        List<PaymentRetVo> list = returnObject.getData().getList();
         PaymentRetVo retPayment = null;
         for (PaymentRetVo paymentRetVo : list) {
             if (paymentRetVo.getDocumentType().equals(PaymentType.ORDER_ADVANCE.getCode())) {

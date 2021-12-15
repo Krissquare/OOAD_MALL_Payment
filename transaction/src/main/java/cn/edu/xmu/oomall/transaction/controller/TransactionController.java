@@ -106,7 +106,9 @@ public class TransactionController {
         }
         if (beginTime != null && endTime != null) {
             if (beginTime.isAfter(endTime))
+            {
                 return new ReturnObject(ReturnNo.LATE_BEGINTIME);
+            }
         }
         return transactionService.listPayment(documentId, state, beginTime, endTime, page, pageSize);
     }
@@ -172,7 +174,7 @@ public class TransactionController {
      */
 
     @Audit(departName="transaction")
-    @GetMapping("shops/{shopId}/refund")
+    @GetMapping("/shops/{shopId}/refund")
     public Object getRefund(@PathVariable("shopId") Long shopId, @RequestParam(value="documentId",required = false)String documentId,
                             @RequestParam(value="state",required = false)Byte state,
                             @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,

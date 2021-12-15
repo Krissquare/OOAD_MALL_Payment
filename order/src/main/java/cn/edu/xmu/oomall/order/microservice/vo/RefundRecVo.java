@@ -9,9 +9,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RefundRecVo {
     private Long patternId;
+
     private String documentId;
-    private Long paymentId;
-    private String descr;
-    private Long amount;
+
     private Byte documentType;
+
+    private Long paymentId;
+
+    private String descr;
+
+    private Long amount;
+
+    private String reason;
 }

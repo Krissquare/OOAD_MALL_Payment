@@ -228,7 +228,7 @@ public class TransactionService {
      * @return
      */
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject listRefund(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
+    public ReturnObject getRefund(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
         return transactionDao.listRefund(null, documentId, state, null, null, beginTime, endTime, page, pageSize);
     }
 
