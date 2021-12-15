@@ -19,7 +19,7 @@ public interface WechatMicroService {
     @PostMapping("/internal/wechat/pay/transactions/jsapi")
     WechatPaymentRetVo requestPayment(@Validated @RequestBody WechatPaymentVo wechatPaymentVo);
 
-
+    //TODO:返回
     @PostMapping("/internal/wechat/refund/domestic/refunds")
     InternalReturnObject requestRefund(@Validated @RequestBody WechatRefundVo weChatPayRefundVo);
 
