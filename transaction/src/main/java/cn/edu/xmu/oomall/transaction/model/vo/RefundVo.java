@@ -27,6 +27,6 @@ public class RefundVo implements RefundBillObject {
 
     @Override
     public RefundBill createRefundBill() {
-        return new RefundBill(patternId, paymentId, documentId, documentType, descr, amount, reason);
+        return new RefundBill(patternId, paymentId, documentId, documentType, descr, amount, null, reason);
     }
 }

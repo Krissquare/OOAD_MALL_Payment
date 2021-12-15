@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
-public class WechatRequestPaymentVo {
+public class WechatPaymentVo {
 
     @Data
     @NoArgsConstructor

@@ -6,8 +6,8 @@ import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatPaymentNotify
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatPaymentNotifyVo.WechatTransactionVo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatRefundNotifyVo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.WechatMicroService;
-import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayMethod;
-import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayTradeState;
+import cn.edu.xmu.oomall.transaction.util.alipay.microservice.bo.AlipayMethod;
+import cn.edu.xmu.oomall.transaction.util.alipay.microservice.bo.AlipayTradeState;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatRefundState;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatTradeState;
 import cn.edu.xmu.oomall.transaction.model.vo.*;
