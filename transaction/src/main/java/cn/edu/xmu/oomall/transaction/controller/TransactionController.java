@@ -27,10 +27,62 @@ public class TransactionController {
 
     @Autowired
     private TransactionService transactionService;
+    /**
+     * fz
+     * 1.获得支付渠道的所有状态
+     * */
+    @GetMapping("/paypatterns/states")
+    public Object listAllPayPatternStates(){
+        //TODO: qm没给出支付渠道状态图，待补
+        return new ReturnObject<>();
+    }
+    /**
+     * @author fz
+     * 2.获取当前有效的支付渠道
+     * */
+    @GetMapping("/paypatterns")
+    @Audit(departName = "payment")
+    public Object listAllValidPayPatterns(@LoginUser Long userId){
+        return Common.decorateReturnObject(transactionService.listAllValidPayPatterns());
+    }
+    /**
+     * fz
+     * 3.获得所有的支付渠道
+     * */
+    @GetMapping("/shops/{shopId}/paypatterns")
+    @Audit(departName = "payment")
+    public Object listAllPayPatterns(@PathVariable("shopId") Long shopId){
+        if (shopId != 0){
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
+        }
+        return Common.decorateReturnObject(transactionService.listAllPayPatterns());
+    }
+    /**
+     * @author fz
+     * 4.获得所有支付单状态
+     * */
+    @GetMapping("/payments/states")
+    public Object listAllPaymentStates(){
+        return Common.decorateReturnObject(transactionService.listAllPaymentStates());
+    }
+    //TODO:5.顾客支付已建立的支付单
+    /**
+     * 6.顾客请求支付
+     * hqg
+     */
+    @PostMapping("/payments")
+    public Object requestPayment(@Validated @RequestBody RequestPaymentVo requestPaymentVo, BindingResult bindingResult,
+                                 @LoginUser Long loginUserId, @LoginName String loginUserName) {
+        if (bindingResult.hasErrors()) {
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
+        }
 
+        PaymentBill paymentBill = requestPaymentVo.createPaymentBill();
+        return Common.decorateReturnObject(transactionService.requestPayment(paymentBill, loginUserId, loginUserName));
+    }
     /**
      * gyt
-     * 平台管理员查询支付信息
+     * 7.平台管理员查询支付信息
      * @param shopId
      * @param documentId
      * @param state
@@ -61,7 +113,7 @@ public class TransactionController {
 
     /**
      * gyt
-     * 平台管理员查询支付信息详情
+     * 8.平台管理员查询支付信息详情
      * @param shopId
      * @param id
      * @return
@@ -78,7 +130,7 @@ public class TransactionController {
 
     /**
      * gyt
-     * 平台管理员修改支付信息
+     * 9.平台管理员修改支付信息
      * @param loginUserId
      * @param loginUserName
      * @param shopId
@@ -108,7 +160,7 @@ public class TransactionController {
 
     /**
      * hty
-     * 管理员获取退款记录
+     * 10.管理员获取退款记录
      * @param shopId
      * @param documentId
      * @param state
@@ -138,7 +190,7 @@ public class TransactionController {
 
     /**
      * hty
-     * 平台管理员获取退款详情
+     * 11.平台管理员获取退款详情
      * @param shopId
      * @param id
      * @return
@@ -154,7 +206,7 @@ public class TransactionController {
 
     /**
      * hty
-     * 平台管理员修改退款单状态
+     * 12.平台管理员修改退款单状态
      * @param shopId
      * @param id
      * @param refundRecVo
@@ -174,84 +226,9 @@ public class TransactionController {
         }
         return Common.decorateReturnObject(transactionService.updateRefund(id, refundRecVo, loginUserId, loginUserName));
     }
-
-
-    /**
-     * 顾客请求支付
-     */
-    @PostMapping("/payments")
-    public Object requestPayment(@Validated @RequestBody RequestPaymentVo requestPaymentVo, BindingResult bindingResult,
-                                 @LoginUser Long loginUserId, @LoginName String loginUserName) {
-        if (bindingResult.hasErrors()) {
-            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
-        }
-
-        PaymentBill paymentBill = requestPaymentVo.createPaymentBill();
-        return Common.decorateReturnObject(transactionService.requestPayment(paymentBill, loginUserId, loginUserName));
-    }
-
-
-    /**
-     * 内部API退款
-     * @param refundVo
-     * @return
-     */
-    @PostMapping("/internal/refunds")
-    public Object requestRefund(@Validated @RequestBody RefundVo refundVo, BindingResult bindingResult){
-        if (bindingResult.hasErrors()) {
-            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
-        }
-
-        RefundBill refundBill = refundVo.createRefundBill();
-        return transactionService.requestRefund(refundBill);
-    }
-
-
-    /**
-     * @author fz
-     * 获得所有支付单状态
-     * */
-    @GetMapping("/payments/states")
-    public Object listAllPaymentStates(){
-        return Common.decorateReturnObject(transactionService.listAllPaymentStates());
-    }
-
-    /**
-     * @author fz
-     * 获取当前有效的支付渠道
-     * */
-    @GetMapping("/paypatterns")
-    @Audit(departName = "payment")
-    public Object listAllValidPayPatterns(@LoginUser Long userId){
-        return Common.decorateReturnObject(transactionService.listAllValidPayPatterns());
-    }
-
-    /**
-     * fz
-     * 获得所有的支付渠道
-     * */
-    @GetMapping("/shops/{shopId}/paypatterns")
-    @Audit(departName = "payment")
-    public Object listAllPayPatterns(@PathVariable("shopId") Long shopId){
-        if (shopId != 0){
-            return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
-        }
-        return Common.decorateReturnObject(transactionService.listAllPayPatterns());
-    }
-
-    /**
-     * fz
-     * 获得支付渠道的所有状态
-     * */
-    @GetMapping("/paypatterns/states")
-    public Object listAllPayPatternStates(){
-        //TODO: qm没给出支付渠道状态图，待补
-        return new ReturnObject<>();
-    }
-
     /**
      * b-3 fz
-     * 平台管理员查询错账信息
+     * 13.平台管理员查询错账信息
      * */
     @GetMapping("/shops/{shopId}/erroraccounts")
     @Audit(departName = "payment")
@@ -277,7 +254,7 @@ public class TransactionController {
 
     /**
      * b-3 fz
-     * 平台管理员查询错账信息详情
+     * 14.平台管理员查询错账信息详情
      * */
     @GetMapping("/shops/{shopId}/erroraccounts/{id}")
     @Audit(departName = "payment")
@@ -292,13 +269,28 @@ public class TransactionController {
 
     /**
      * b-3 fz
-     * 平台管理员修改错账信息
+     * 15.平台管理员修改错账信息
      * */
     @PostMapping("/shops/{shopId}/erroraccounts/{id}")
     public Object updateErrorAccountByAdmin(@PathVariable("shopId") Long shopId,
                                             @PathVariable("id") Long id,
                                             @RequestBody ErrorAccountUpdateVo updateVo){
         return Common.decorateReturnObject(transactionService.updateErrorAccount(id, updateVo));
+    }
+
+    /**
+     * 内部API退款
+     * @param refundVo
+     * @return
+     */
+    @PostMapping("/internal/refunds")
+    public Object requestRefund(@Validated @RequestBody RefundVo refundVo, BindingResult bindingResult){
+        if (bindingResult.hasErrors()) {
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
+        }
+
+        RefundBill refundBill = refundVo.createRefundBill();
+        return transactionService.requestRefund(refundBill);
     }
 
 
