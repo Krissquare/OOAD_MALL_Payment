@@ -1,5 +1,6 @@
 package cn.edu.xmu.oomall.order.microservice;
 
+import cn.edu.xmu.oomall.order.microservice.vo.PaymentRetVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRecVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRetVo;
 import cn.edu.xmu.oomall.order.util.MyDateTime;
@@ -11,6 +12,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author 高艺桐 22920192204199
@@ -20,21 +23,21 @@ import java.time.LocalDateTime;
 public interface TransactionService {
 
     @GetMapping("/shops/{shopId}/payment")
-    InternalReturnObject listPayment(@PathVariable(value = "shopId") Long shopId,
-                             @RequestParam(value = "documentId",required = false)String documentId,
-                             @RequestParam(value = "state",required = false)Byte state,
-                             @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
-                             @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
-                             @RequestParam(value="page",required = false)Integer page,
-                             @RequestParam(value = "pageSize",required = false)Integer pageSize);
+    InternalReturnObject<Map<String,Object>> listPayment(@PathVariable(value = "shopId") Long shopId,
+                                                         @RequestParam(value = "documentId",required = false)String documentId,
+                                                         @RequestParam(value = "state",required = false)Byte state,
+                                                         @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
+                                                         @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
+                                                         @RequestParam(value="page",required = false)Integer page,
+                                                         @RequestParam(value = "pageSize",required = false)Integer pageSize);
 
     @GetMapping("/shops/{shopId}/refund")
-    InternalReturnObject listRefund(@PathVariable("shopId") Long shopId, @RequestParam(value="documentId",required = false)String documentId,
-                            @RequestParam(value="state",required = false)Byte state,
-                            @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
-                            @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
-                            @RequestParam(value = "page", required = false) Integer page,
-                            @RequestParam(value = "pageSize", required = false) Integer pageSize);
+    InternalReturnObject<Map<String,Object>> listRefund(@PathVariable("shopId") Long shopId, @RequestParam(value="documentId",required = false)String documentId,
+                                                      @RequestParam(value="state",required = false)Byte state,
+                                                      @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
+                                                      @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
+                                                      @RequestParam(value = "page", required = false) Integer page,
+                                                      @RequestParam(value = "pageSize", required = false) Integer pageSize);
 
     @PostMapping("/internal/refunds")
     InternalReturnObject<RefundRetVo> refund(@RequestBody RefundRecVo refundRecVo);
