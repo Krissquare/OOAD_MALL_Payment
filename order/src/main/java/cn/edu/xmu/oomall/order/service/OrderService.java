@@ -299,18 +299,21 @@ public class OrderService {
         Message message = MessageBuilder.withPayload(json).build();
         SendResult sendResult = rocketMQTemplate.syncSend("insert-order", message);
         if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
-            //回滚积点,优惠卷
-            internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(orderAndOrderItemsVo.getOrder().getPoint()));
-            if (internalReturnObject1.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(internalReturnObject1.getErrno()));
-            }
-            for (Long id : couponIds) {
-                InternalReturnObject internalReturnObject = customService.refundCoupon(id);
-                if (internalReturnObject.getErrno() != 0) {
-                    return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
+            sendResult = rocketMQTemplate.syncSend("insert-order", message);
+            if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
+                //回滚积点,优惠卷
+                internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(orderAndOrderItemsVo.getOrder().getPoint()));
+                if (internalReturnObject1.getErrno() != 0) {
+                    return new ReturnObject(ReturnNo.getByCode(internalReturnObject1.getErrno()));
                 }
+                for (Long id : couponIds) {
+                    InternalReturnObject internalReturnObject = customService.refundCoupon(id);
+                    if (internalReturnObject.getErrno() != 0) {
+                        return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
+                    }
+                }
+                return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, "发送消息失败");
             }
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, "发送消息失败");
         }
         return new ReturnObject();
     }
@@ -417,61 +420,49 @@ public class OrderService {
      * @return
      */
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject cancelOrderByCustomer(Long orderId,Long loginUserId,String loginUserName)
-    {
-        ReturnObject ret=orderDao.getOrderById(orderId);
-        if(!ret.getCode().equals(ReturnNo.OK))
-        {
+    public ReturnObject cancelOrderByCustomer(Long orderId, Long loginUserId, String loginUserName) {
+        ReturnObject ret = orderDao.getOrderById(orderId);
+        if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;
         }
-        Order order=(Order) ret.getData();
-        if(!order.getCustomerId().equals(loginUserId))
-        {
+        Order order = (Order) ret.getData();
+        if (!order.getCustomerId().equals(loginUserId)) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
-        if(order.getState()==OrderState.CANCEL_ORDER.getCode()||order.getState()==OrderState.COMPLETE_ORDER.getCode())
-        {
+        if (order.getState() == OrderState.CANCEL_ORDER.getCode() || order.getState() == OrderState.COMPLETE_ORDER.getCode()) {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
         String documentId;
-        Order pOrder=null;
-        if(order.getPid()==0)
-        {
-            documentId=order.getOrderSn();
-        }
-        else
-        {
-            ReturnObject ret1=orderDao.getOrderById(order.getPid());
-            if(!ret1.getCode().equals(ReturnNo.OK))
-            {
+        Order pOrder = null;
+        if (order.getPid() == 0) {
+            documentId = order.getOrderSn();
+        } else {
+            ReturnObject ret1 = orderDao.getOrderById(order.getPid());
+            if (!ret1.getCode().equals(ReturnNo.OK)) {
                 return ret1;
             }
-            pOrder=(Order) ret1.getData();
-            documentId=pOrder.getOrderSn();
+            pOrder = (Order) ret1.getData();
+            documentId = pOrder.getOrderSn();
         }
         InternalReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
         Map<String, Object> data = (Map<String, Object>) returnObject.getData();
         List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
-        for(PaymentRetVo paymentVo:list)
-        {
-            RefundRecVo refundRecVo=cloneVo(paymentVo,RefundRecVo.class);
+        for (PaymentRetVo paymentVo : list) {
+            RefundRecVo refundRecVo = cloneVo(paymentVo, RefundRecVo.class);
             refundRecVo.setPaymentId(paymentVo.getId());
             refundRecVo.setDocumentType(RefundType.ORDER.getCode());
-            InternalReturnObject<RefundRetVo> retRefund= transactionService.refund(refundRecVo);
-            if(retRefund.getData()==null)
-            {
+            InternalReturnObject<RefundRetVo> retRefund = transactionService.refund(refundRecVo);
+            if (retRefund.getData() == null) {
                 return new ReturnObject(retRefund);
             }
         }
         order.setState(OrderState.CANCEL_ORDER.getCode());
         Common.setPoModifiedFields(order, loginUserId, loginUserName);
-        if(pOrder!=null)
-        {
+        if (pOrder != null) {
             pOrder.setState(OrderState.CANCEL_ORDER.getCode());
             Common.setPoModifiedFields(pOrder, loginUserId, loginUserName);
-            ReturnObject ret3=orderDao.updateOrder(pOrder);
-            if(!ret3.getCode().equals(ReturnNo.OK))
-            {
+            ReturnObject ret3 = orderDao.updateOrder(pOrder);
+            if (!ret3.getCode().equals(ReturnNo.OK)) {
                 return ret3;
             }
             return orderDao.cancelRelatedOrder(order);
@@ -712,41 +703,36 @@ public class OrderService {
      * @return
      */
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject internalcancelOrderByShop(Long shopId,Long id, Long userId, String userName) {
+    public ReturnObject internalcancelOrderByShop(Long shopId, Long id, Long userId, String userName) {
         ReturnObject ret = orderDao.getOrderById(id);
         if (ret.getCode() != ReturnNo.OK) {
             return ret;
         }
         Order order = (Order) ret.getData();
         //判断操作的订单是否为子订单
-        if(order.getPid()!=0)
-        {
+        if (order.getPid() != 0) {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
         //操作的订单是父订单,接下来判断是否分单，分单shopId==null
-        if(order.getShopId()==null)
-        {
+        if (order.getShopId() == null) {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
-        if(!order.getShopId().equals(shopId))
-        {
+        if (!order.getShopId().equals(shopId)) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
         if (order.getState() == OrderState.COMPLETE_ORDER.getCode() || order.getState() == OrderState.CANCEL_ORDER.getCode()) {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
-        String documentId=order.getOrderSn();
+        String documentId = order.getOrderSn();
         InternalReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
         Map<String, Object> data = (Map<String, Object>) returnObject.getData();
         List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
-        for(PaymentRetVo paymentVo:list)
-        {
-            RefundRecVo refundRecVo=cloneVo(paymentVo,RefundRecVo.class);
+        for (PaymentRetVo paymentVo : list) {
+            RefundRecVo refundRecVo = cloneVo(paymentVo, RefundRecVo.class);
             refundRecVo.setPaymentId(paymentVo.getId());
             refundRecVo.setDocumentType(RefundType.ORDER.getCode());
-            InternalReturnObject<RefundRetVo> retRefund= transactionService.refund(refundRecVo);
-            if(retRefund.getData()==null)
-            {
+            InternalReturnObject<RefundRetVo> retRefund = transactionService.refund(refundRecVo);
+            if (retRefund.getData() == null) {
                 return new ReturnObject(retRefund);
             }
         }

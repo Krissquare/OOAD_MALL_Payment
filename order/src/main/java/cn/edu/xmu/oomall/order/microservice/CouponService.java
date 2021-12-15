@@ -1,5 +1,6 @@
 package cn.edu.xmu.oomall.order.microservice;
 
+import cn.edu.xmu.oomall.order.microservice.vo.CouponActivityVo;
 import cn.edu.xmu.oomall.order.microservice.vo.ProductPostVo;
 import cn.edu.xmu.oomall.order.microservice.vo.ProductRetVo;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
@@ -27,6 +28,6 @@ public interface CouponService {
      * @return
      */
     @GetMapping("shops/{shopId}/couponactivities/{id}")
-    InternalReturnObject getCouponActivityById(@PathVariable Long shopId,
-                                            @PathVariable Long id);
+    InternalReturnObject<CouponActivityVo> getCouponActivityById(@PathVariable Long shopId,
+                                                                 @PathVariable Long id);
 }

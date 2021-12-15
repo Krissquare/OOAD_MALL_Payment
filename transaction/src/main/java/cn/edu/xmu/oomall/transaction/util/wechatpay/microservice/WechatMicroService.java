@@ -1,7 +1,8 @@
 package cn.edu.xmu.oomall.transaction.util.wechatpay.microservice;
 
-import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.vo.WechatRequestRefundVo;
-import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.vo.WechatRequestPaymentVo;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.vo.WechatRefundVo;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.vo.WechatPaymentVo;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.vo.WechatPaymentRetVo;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
@@ -16,10 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface WechatMicroService {
 
     @PostMapping("/internal/wechat/pay/transactions/jsapi")
-    InternalReturnObject requestPayment(@Validated @RequestBody WechatRequestPaymentVo wechatPaymentVo);
+    WechatPaymentRetVo requestPayment(@Validated @RequestBody WechatPaymentVo wechatPaymentVo);
 
-
+    //TODO:返回
     @PostMapping("/internal/wechat/refund/domestic/refunds")
-    InternalReturnObject requestRefund(@Validated @RequestBody WechatRequestRefundVo weChatPayRefundVo);
+    InternalReturnObject requestRefund(@Validated @RequestBody WechatRefundVo weChatPayRefundVo);
 
 }

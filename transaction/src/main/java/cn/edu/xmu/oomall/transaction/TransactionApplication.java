@@ -10,7 +10,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  */
 @SpringBootApplication(scanBasePackages = {"cn.edu.xmu.oomall.core", "cn.edu.xmu.oomall.transaction","cn.edu.xmu.privilegegateway"})
 @MapperScan("cn.edu.xmu.oomall.transaction.mapper")
-@EnableFeignClients(basePackages = "cn.edu.xmu.oomall.transaction.microservice")
+@EnableFeignClients(basePackages = {"cn.edu.xmu.oomall.transaction.util.alipay.microservice","cn.edu.xmu.oomall.transaction.util.wechatpay.microservice"})
 public class TransactionApplication {
     public static void main(String[] args) {
         SpringApplication.run(TransactionApplication.class, args);

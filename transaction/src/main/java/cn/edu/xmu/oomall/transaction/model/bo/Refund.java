@@ -16,6 +16,7 @@ public class Refund {
     private Long paymentId;
     private Long amount;
     private Byte state;
+    private LocalDateTime refundTime;
     private String documentId;
     private Byte documentType;
     private String descr;

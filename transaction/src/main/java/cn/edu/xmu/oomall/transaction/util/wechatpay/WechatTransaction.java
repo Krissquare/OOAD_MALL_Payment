@@ -1,16 +1,16 @@
 package cn.edu.xmu.oomall.transaction.util.wechatpay;
 
-import cn.edu.xmu.oomall.core.util.ReturnObject;
-
 import cn.edu.xmu.oomall.transaction.util.PaymentBill;
 import cn.edu.xmu.oomall.transaction.util.RefundBill;
 import cn.edu.xmu.oomall.transaction.util.TransactionPattern;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.WechatMicroService;
-import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.vo.WechatRequestPaymentVo;
-import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.vo.WechatRequestRefundVo;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.vo.WechatPaymentVo;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.vo.WechatRefundVo;
+import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.vo.WechatPaymentRetVo;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 
 @Component
 public class WechatTransaction extends TransactionPattern {
@@ -19,46 +19,38 @@ public class WechatTransaction extends TransactionPattern {
     private WechatMicroService wechatMicroService;
 
 
-    private static WechatRequestPaymentVo createWechatRequestPaymentVo(Long requestNo, PaymentBill bill) {
-        WechatRequestPaymentVo paymentVo = new WechatRequestPaymentVo();
+    private static WechatPaymentVo createWechatRequestPaymentVo(String requestNo, PaymentBill bill) {
+        WechatPaymentVo paymentVo = new WechatPaymentVo();
 
-        // 商家号那些还没
-
-        paymentVo.setOutTradeNo(requestNo.toString());
+        paymentVo.setOutTradeNo(requestNo);
         paymentVo.getAmount().setTotal(bill.getAmount());
 
         return paymentVo;
     }
 
-    private static WechatRequestRefundVo createWechatRequestRefundVo(Long requestNo, RefundBill bill) {
-        WechatRequestRefundVo refundVo = new WechatRequestRefundVo();
-        // 商家号那些都不用吗？
-        refundVo.setOutRefundNo(requestNo.toString());
+    private static WechatRefundVo createWechatRequestRefundVo(String requestNo, RefundBill bill) {
+        WechatRefundVo refundVo = new WechatRefundVo();
+        refundVo.setOutRefundNo(requestNo);
         refundVo.setOutTradeNo(bill.getPaymentId().toString());
         refundVo.setReason(bill.getReason());
-    //    refundVo.getAmount().setTotal();
-
+        refundVo.getAmount().setRefund(bill.getAmount());
+        refundVo.getAmount().setTotal(bill.getTotal());
         return refundVo;
     }
 
 
-
     @Override
-    public ReturnObject requestPayment(Long requestNo, PaymentBill bill) {
-        WechatRequestPaymentVo paymentVo = WechatTransaction.createWechatRequestPaymentVo(requestNo, bill);
+    public void requestPayment(String requestNo, PaymentBill bill) {
+        WechatPaymentVo paymentVo = WechatTransaction.createWechatRequestPaymentVo(requestNo, bill);
+        WechatPaymentRetVo ret = wechatMicroService.requestPayment(paymentVo);
 
-        InternalReturnObject ret = wechatMicroService.requestPayment(paymentVo);
 
-        return null;
     }
 
     @Override
-    public ReturnObject requestRefund(Long requestNo, RefundBill bill) {
-        WechatRequestRefundVo refundVo = WechatTransaction.createWechatRequestRefundVo(requestNo, bill);
-
+    public void requestRefund(String requestNo, RefundBill bill) {
+        WechatRefundVo refundVo = WechatTransaction.createWechatRequestRefundVo(requestNo, bill);
         InternalReturnObject ret = wechatMicroService.requestRefund(refundVo);
-
-        return null;
 
     }
 }

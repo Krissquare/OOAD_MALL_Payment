@@ -6,8 +6,8 @@ import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatPaymentNotify
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatPaymentNotifyVo.WechatTransactionVo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatRefundNotifyVo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.WechatMicroService;
-import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayMethod;
-import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayTradeState;
+import cn.edu.xmu.oomall.transaction.util.alipay.microservice.bo.AlipayMethod;
+import cn.edu.xmu.oomall.transaction.util.alipay.microservice.bo.AlipayTradeState;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatRefundState;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatTradeState;
 import cn.edu.xmu.oomall.transaction.model.vo.*;
@@ -259,10 +259,10 @@ public class TransactionControllerTest {
     public void notifyByAlipay() throws Exception
     {
         AlipayNotifyVo alipayNotifyVo=new AlipayNotifyVo();
-        alipayNotifyVo.setOut_biz_no(null);
-        alipayNotifyVo.setOut_trade_no("1");
-        alipayNotifyVo.setTrade_status(AlipayTradeState.TRADE_SUCCESS.getDescription());
-        alipayNotifyVo.setTrade_no("交易流水号");
+        alipayNotifyVo.setOutBizNo(null);
+        alipayNotifyVo.setOutTradeNo("1");
+        alipayNotifyVo.setTradeStatus(AlipayTradeState.TRADE_SUCCESS.getDescription());
+        alipayNotifyVo.setTradeNo("交易流水号");
         String requestJSON = JacksonUtil.toJson(alipayNotifyVo);
         String responseString = this.mvc.perform(post("/alipay/notify")
                 .contentType("application/json;charset=UTF-8")

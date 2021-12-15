@@ -11,8 +11,9 @@ import org.springframework.web.bind.annotation.RequestParam;
  */
 @FeignClient(name = "alipay-service")
 public interface AlipayMicroService {
+
     @PostMapping("internal/alipay/gateway.do")
-    InternalReturnObject gatewayDo(@RequestParam(required = false) String app_id ,
+    Object gatewayDo(@RequestParam(required = false) String app_id ,
                                    @RequestParam(required = true) String method ,
                                    @RequestParam(required = false) String format ,
                                    @RequestParam(required = false) String charset  ,
