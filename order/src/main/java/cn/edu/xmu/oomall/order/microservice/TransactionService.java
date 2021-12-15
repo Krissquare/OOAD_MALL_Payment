@@ -1,5 +1,6 @@
 package cn.edu.xmu.oomall.order.microservice;
 
+import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.microservice.vo.PaymentRetVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRecVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRetVo;
@@ -40,5 +41,5 @@ public interface TransactionService {
                                                       @RequestParam(value = "pageSize", required = false) Integer pageSize);
 
     @PostMapping("/internal/refunds")
-    InternalReturnObject<RefundRetVo> refund(@RequestBody RefundRecVo refundRecVo);
+    ReturnObject refund(@RequestBody RefundRecVo refundRecVo);
 }
