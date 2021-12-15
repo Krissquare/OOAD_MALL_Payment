@@ -109,7 +109,7 @@ public class OrderService {
         Set<Long> couponActivityIds = new HashSet<>();
         Set<Long> shopIds = new HashSet<>();
         // 订单的orderItem不能为空
-        List<SimpleOrderItemVo> orderItems = simpleOrderVo.getOrderItems();
+            List<SimpleOrderItemVo> orderItems = simpleOrderVo.getOrderItems();
         if (orderItems.size() == 0) {
             return new ReturnObject(ReturnNo.FIELD_NOTVALID);
         }
