@@ -451,7 +451,7 @@ public class OrderService {
             RefundRecVo refundRecVo = cloneVo(paymentVo, RefundRecVo.class);
             refundRecVo.setPaymentId(paymentVo.getId());
             refundRecVo.setDocumentType(RefundType.ORDER.getCode());
-            InternalReturnObject<RefundRetVo> retRefund = transactionService.refund(refundRecVo);
+            ReturnObject retRefund = transactionService.refund(refundRecVo);
             if (retRefund.getData() == null) {
                 return new ReturnObject(retRefund);
             }
@@ -569,31 +569,62 @@ public class OrderService {
     }
 
     /**
-     * gyt
      * 12.管理员取消本店铺订单。
-     *
-     * @param id
-     * @param userId
-     * @param userName
+     * gyt
+     * @param shopId
+     * @param orderId
+     * @param loginUserId
+     * @param loginUserName
      * @return
      */
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject cancelOrderByShop(Long shopId, Long id, Long userId, String userName) {
-        ReturnObject returnObject = orderDao.getOrderById(id);
-        if (returnObject.getCode() != ReturnNo.OK) {
-            return returnObject;
+    public ReturnObject cancelOrderByShop(Long shopId, Long orderId, Long loginUserId, String loginUserName) {
+        ReturnObject ret = orderDao.getOrderById(orderId);
+        if (!ret.getCode().equals(ReturnNo.OK)) {
+            return ret;
         }
-        Order data = (Order) returnObject.getData();
-        if (!Objects.equals(data.getShopId(), shopId)) {
+        Order order = (Order) ret.getData();
+        if (!order.getShopId().equals(shopId)) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
-        if (data.getState() == OrderState.COMPLETE_ORDER.getCode() || data.getState() == OrderState.CANCEL_ORDER.getCode()) {
+        if (order.getState() == OrderState.CANCEL_ORDER.getCode() || order.getState() == OrderState.COMPLETE_ORDER.getCode()) {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
-        Order order = new Order();
-        order.setId(id);
+        String documentId;
+        Order pOrder = null;
+        if (order.getPid() == 0) {
+            documentId = order.getOrderSn();
+        } else {
+            ReturnObject ret1 = orderDao.getOrderById(order.getPid());
+            if (!ret1.getCode().equals(ReturnNo.OK)) {
+                return ret1;
+            }
+            pOrder = (Order) ret1.getData();
+            documentId = pOrder.getOrderSn();
+        }
+        InternalReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
+        List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
+        for (PaymentRetVo paymentVo : list) {
+            RefundRecVo refundRecVo = cloneVo(paymentVo, RefundRecVo.class);
+            refundRecVo.setPaymentId(paymentVo.getId());
+            refundRecVo.setDocumentType(RefundType.ORDER.getCode());
+            ReturnObject retRefund = transactionService.refund(refundRecVo);
+            if (retRefund.getData() == null) {
+                return new ReturnObject(retRefund);
+            }
+        }
         order.setState(OrderState.CANCEL_ORDER.getCode());
-        Common.setPoModifiedFields(order, userId, userName);
+        Common.setPoModifiedFields(order, loginUserId, loginUserName);
+        if (pOrder != null) {
+            pOrder.setState(OrderState.CANCEL_ORDER.getCode());
+            Common.setPoModifiedFields(pOrder, loginUserId, loginUserName);
+            ReturnObject ret3 = orderDao.updateOrder(pOrder);
+            if (!ret3.getCode().equals(ReturnNo.OK)) {
+                return ret3;
+            }
+            return orderDao.cancelRelatedOrder(order);
+        }
         return orderDao.updateOrder(order);
     }
 
@@ -664,6 +695,7 @@ public class OrderService {
      */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject confirmGrouponOrder(Long shopId, Long id, Long loginUserId, String loginUserName) {
+        //1.合法性检查
         ReturnObject<Order> retOrder = orderDao.getOrderById(id);
         // 判断订单存在与否
         if (!retOrder.getCode().equals(ReturnNo.OK)) {
@@ -677,17 +709,38 @@ public class OrderService {
         if (!newOrder.getShopId().equals(shopId)) {
             return new ReturnObject<>(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
-        // 设置订单状态为付款成功
+        //2.更新订单
         newOrder.setState(OrderState.FINISH_PAY.getCode());
         Common.setPoModifiedFields(newOrder, loginUserId, loginUserName);
         ReturnObject returnObject = orderDao.updateOrder(newOrder);
-        //TODO:解析团购规则json信息，计算退款价格
-//        TODO: 退款
-//        if (!returnObject.getCode().equals(ReturnNo.OK)) {
-//            return returnObject;
-//        }
-
-        return returnObject;
+        //3.计算团购数量
+        Long quantity=(Long)orderDao.getQuantityByGroupOnId(newOrder.getGrouponId()).getData();
+        //4.解析团购规则，计算退款金额
+        //查团购活动
+        InternalReturnObject<GrouponActivityVo>  grouponActivityVoInternalReturnObject=activityService.getGrouponsById(newOrder.getGrouponId());
+        GrouponActivityVo grouponActivityVo=grouponActivityVoInternalReturnObject.getData();
+        List<GroupOnStrategyVo> strategy=grouponActivityVo.getStrategy();
+        //判断团购的数量符合哪个级别，进而算退的钱
+        GroupOnStrategyVo strategyLevel=new GroupOnStrategyVo();
+        for(GroupOnStrategyVo groupOnStrategyVo:strategy){
+            if(quantity<=groupOnStrategyVo.getQuantity()){
+                strategyLevel=groupOnStrategyVo;
+                break;
+            }
+        }
+        Long refundAmount=newOrder.getOriginPrice()*(1-strategyLevel.getPercentage());
+        //5.退款
+        RefundRecVo refundRecVo=new RefundRecVo();
+        refundRecVo.setAmount(refundAmount);
+        refundRecVo.setDocumentId(newOrder.getOrderSn());
+        refundRecVo.setDocumentType((byte)0);
+        //查订单对应的payment
+        InternalReturnObject returnObject1 = transactionService.listRefund(0L, newOrder.getOrderSn(), null, null, null, 1, 10);
+        Map<String, Object> data = (Map<String, Object>) returnObject1.getData();
+        List<RefundRetVo> list = (List<RefundRetVo>) data.get("list");
+        refundRecVo.setPaymentId(list.get(0).getId());
+        refundRecVo.setPatternId(list.get(0).getPatternId());
+        return transactionService.refund(refundRecVo);
     }
 
     /*===============================================内部API=======================================*/
@@ -731,7 +784,7 @@ public class OrderService {
             RefundRecVo refundRecVo = cloneVo(paymentVo, RefundRecVo.class);
             refundRecVo.setPaymentId(paymentVo.getId());
             refundRecVo.setDocumentType(RefundType.ORDER.getCode());
-            InternalReturnObject<RefundRetVo> retRefund = transactionService.refund(refundRecVo);
+            ReturnObject retRefund = transactionService.refund(refundRecVo);
             if (retRefund.getData() == null) {
                 return new ReturnObject(retRefund);
             }
@@ -891,7 +944,7 @@ public class OrderService {
      * @return
      */
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public InternalReturnObject listOrderItemsByOrderId(Long id) {
+    public ReturnObject listOrderItemsByOrderId(Long id) {
         return orderDao.listOrderItemsByPOrderId(id);
     }
 
