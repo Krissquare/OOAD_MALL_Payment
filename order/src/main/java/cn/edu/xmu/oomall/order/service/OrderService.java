@@ -109,7 +109,7 @@ public class OrderService {
         Set<Long> couponActivityIds = new HashSet<>();
         Set<Long> shopIds = new HashSet<>();
         // 订单的orderItem不能为空
-            List<SimpleOrderItemVo> orderItems = simpleOrderVo.getOrderItems();
+        List<SimpleOrderItemVo> orderItems = simpleOrderVo.getOrderItems();
         if (orderItems.size() == 0) {
             return new ReturnObject(ReturnNo.FIELD_NOTVALID);
         }
@@ -571,6 +571,7 @@ public class OrderService {
     /**
      * 12.管理员取消本店铺订单。
      * gyt
+     *
      * @param shopId
      * @param orderId
      * @param loginUserId
@@ -714,26 +715,26 @@ public class OrderService {
         Common.setPoModifiedFields(newOrder, loginUserId, loginUserName);
         ReturnObject returnObject = orderDao.updateOrder(newOrder);
         //3.计算团购数量
-        Long quantity=(Long)orderDao.getQuantityByGroupOnId(newOrder.getGrouponId()).getData();
+        Long quantity = (Long) orderDao.getQuantityByGroupOnId(newOrder.getGrouponId()).getData();
         //4.解析团购规则，计算退款金额
         //查团购活动
-        InternalReturnObject<GrouponActivityVo>  grouponActivityVoInternalReturnObject=activityService.getGrouponsById(newOrder.getGrouponId());
-        GrouponActivityVo grouponActivityVo=grouponActivityVoInternalReturnObject.getData();
-        List<GroupOnStrategyVo> strategy=grouponActivityVo.getStrategy();
+        InternalReturnObject<GrouponActivityVo> grouponActivityVoInternalReturnObject = activityService.getGrouponsById(newOrder.getGrouponId());
+        GrouponActivityVo grouponActivityVo = grouponActivityVoInternalReturnObject.getData();
+        List<GroupOnStrategyVo> strategy = grouponActivityVo.getStrategy();
         //判断团购的数量符合哪个级别，进而算退的钱
-        GroupOnStrategyVo strategyLevel=new GroupOnStrategyVo();
-        for(GroupOnStrategyVo groupOnStrategyVo:strategy){
-            if(quantity<=groupOnStrategyVo.getQuantity()){
-                strategyLevel=groupOnStrategyVo;
+        GroupOnStrategyVo strategyLevel = new GroupOnStrategyVo();
+        for (GroupOnStrategyVo groupOnStrategyVo : strategy) {
+            if (quantity <= groupOnStrategyVo.getQuantity()) {
+                strategyLevel = groupOnStrategyVo;
                 break;
             }
         }
-        Long refundAmount=newOrder.getOriginPrice()*(1-strategyLevel.getPercentage());
+        Long refundAmount = newOrder.getOriginPrice() * (1 - strategyLevel.getPercentage());
         //5.退款
-        RefundRecVo refundRecVo=new RefundRecVo();
+        RefundRecVo refundRecVo = new RefundRecVo();
         refundRecVo.setAmount(refundAmount);
         refundRecVo.setDocumentId(newOrder.getOrderSn());
-        refundRecVo.setDocumentType((byte)0);
+        refundRecVo.setDocumentType((byte) 0);
         //查订单对应的payment
         InternalReturnObject returnObject1 = transactionService.listRefund(0L, newOrder.getOrderSn(), null, null, null, 1, 10);
         Map<String, Object> data = (Map<String, Object>) returnObject1.getData();
