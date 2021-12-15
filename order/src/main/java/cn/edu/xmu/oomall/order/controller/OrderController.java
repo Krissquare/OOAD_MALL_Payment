@@ -306,8 +306,8 @@ public class OrderController {
      *
      * @param shopId
      * @param id
-     * @param loginUserId
-     * @param loginUserName
+     * @param userId
+     * @param username
      * @return
      */
     @Audit(departName = "shop")
@@ -392,4 +392,13 @@ public class OrderController {
     }
 
 
+    /**
+     * 7.orderSn查orderId
+     * hty
+     */
+    @GetMapping("/internal/orders")
+    public InternalReturnObject<OrderIdRetVo> getOrderIdByOrderSn(@RequestParam(value="orderSn",required = true) String orderSn)
+    {
+        return orderService.getOrderId(orderSn);
+    }
 }

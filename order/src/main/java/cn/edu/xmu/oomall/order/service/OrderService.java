@@ -344,9 +344,9 @@ public class OrderService {
         orderVo.setCustomerVo(customerVo);
         orderVo.setShopVo(shopVo);
         List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();
-        List<SimpleOrderItemVo> simpleOrderItemVos = new ArrayList<>();
+        List<SimpleOrderitemRetVo> simpleOrderItemVos = new ArrayList<>();
         for (OrderItem orderItem : orderItemList) {
-            SimpleOrderItemVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderItemVo.class);
+            SimpleOrderitemRetVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderitemRetVo.class);
             simpleOrderItemVos.add(simpleOrderItemVo);
         }
         orderVo.setOrderItems(simpleOrderItemVos);
@@ -568,9 +568,9 @@ public class OrderService {
         orderVo.setCustomerVo(customerVo);
         orderVo.setShopVo(shopVo);
         List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();//根据orderId查orderItem
-        List<SimpleOrderItemVo> simpleOrderItemVos = new ArrayList<>();
+        List<SimpleOrderitemRetVo> simpleOrderItemVos = new ArrayList<>();
         for (OrderItem orderItem : orderItemList) {
-            SimpleOrderItemVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderItemVo.class);
+            SimpleOrderitemRetVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderitemRetVo.class);
             simpleOrderItemVos.add(simpleOrderItemVo);
         }
         orderVo.setOrderItems(simpleOrderItemVos);
@@ -810,8 +810,8 @@ public class OrderService {
         aftersaleRetVo.setCustomer((SimpleVo) customer.getData());
         InternalReturnObject shop = shopService.getShopById(shopId);
         aftersaleRetVo.setShop((SimpleVo) shop.getData());
-        AftersaleOrderitemRetVo aftersaleOrderitemRetVo = cloneVo(orderItem, AftersaleOrderitemRetVo.class);
-        aftersaleRetVo.setAftersaleOrderitemVo(aftersaleOrderitemRetVo);
+        SimpleOrderitemRetVo simpleOrderitemRetVo = cloneVo(orderItem, SimpleOrderitemRetVo.class);
+        aftersaleRetVo.setAftersaleOrderitemVo(simpleOrderitemRetVo);
         return new ReturnObject(aftersaleRetVo);
     }
 
@@ -907,6 +907,26 @@ public class OrderService {
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public InternalReturnObject listOrderItemsByOrderId(Long id) {
         return orderDao.listOrderItemsByPOrderId(id);
+    }
+
+    /**
+     * 7. orderSn查orderId
+     * hty
+     * @param orderSn
+     * @return
+     */
+    @Transactional(readOnly = true,rollbackFor = Exception.class)
+    public InternalReturnObject getOrderId(String orderSn)
+    {
+        ReturnObject ret=orderDao.getOrderByOrderSn(orderSn);
+        if(!ret.getCode().equals(ReturnNo.OK))
+        {
+            return new InternalReturnObject(ret);
+        }
+        OrderIdRetVo orderIdRetVo=new OrderIdRetVo();
+        Order order=(Order) ret.getData();
+        orderIdRetVo.setId(order.getId());
+        return new InternalReturnObject(orderIdRetVo);
     }
 
 
