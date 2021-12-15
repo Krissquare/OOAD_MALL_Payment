@@ -4,17 +4,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotBlank;
+
 /**
  * @author xiuchen lang 22920192204222
- * @date 2021/12/07 17:29
- * 3-1返回内容
+ * @date 2021/12/14 9:14
  */
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class ProductRetVo {
-    private Long productId;
-    private Long onsaleId;
-    private Long discountPrice;
-    private Long activityId;
+@NoArgsConstructor
+public class CustomerModifyPointsVo {
+    private Long points;
 }

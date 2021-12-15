@@ -15,5 +15,5 @@ public class FreightCalculatingPostVo {
     private Long productId;
     private Integer quantity;
     private Long freightId;
-    private Integer weight;
+    private Long weight;
 }

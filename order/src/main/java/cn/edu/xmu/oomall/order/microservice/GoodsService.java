@@ -2,10 +2,13 @@ package cn.edu.xmu.oomall.order.microservice;
 
 import cn.edu.xmu.oomall.order.microservice.vo.OnSaleVo;
 import cn.edu.xmu.oomall.order.microservice.vo.ProductVo;
+import cn.edu.xmu.oomall.order.microservice.vo.QuantityVo;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 /**
  * @author xiuchen lang 22920192204222
@@ -33,4 +36,15 @@ public interface GoodsService {
     @GetMapping("/products/{id}")
     InternalReturnObject<ProductVo> getProductById(@PathVariable Long id);
 
+
+    /**
+     * internal/shops/{did}/onsales/{id}/decr
+     * 内部API-扣减库存数量（2021-3-2）
+     * @param did
+     * @param id
+     * @param vo
+     * @return
+     */
+    @PutMapping("internal/shops/{did}/onsales/{id}/decr")
+    InternalReturnObject decreaseOnSale(@PathVariable Long did, @PathVariable Long id,@RequestBody QuantityVo vo);
 }

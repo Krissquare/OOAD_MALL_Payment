@@ -81,8 +81,8 @@ class OrderApplicationTests {
         Mockito.when(goodsService.getProductById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(productVo));
         Mockito.when(transactionService.listRefund(0L,"20216453652635231006", RefundState.FINISH_REFUND.getCode(),null,null,1,10)).thenReturn(refunds);
         Mockito.when(transactionService.listPayment(0L,"20216489872635231004", PaymentState.ALREADY_PAY.getCode(),null,null,1,10)).thenReturn(payments);
-        Mockito.when(transactionService.Refund(new RefundRecVo(null,null,1L,null,500L, RefundType.ORDER.getCode()),2L,"lxc")).thenReturn(new InternalReturnObject<>(new RefundRetVo(1L,"123",1L,500L,(byte)0,"123",(byte)0)));
-        Mockito.when(transactionService.Refund(new RefundRecVo(null,null,2L,null,100L,RefundType.ORDER.getCode()),2L,"lxc")).thenReturn(new InternalReturnObject<>(new RefundRetVo(1L,"123",1L,100L,(byte)0,"123",(byte)0)));
+        Mockito.when(transactionService.refund(new RefundRecVo(null,null,1L,null,500L, RefundType.ORDER.getCode()))).thenReturn(new InternalReturnObject<>(new RefundRetVo(1L,"123",1L,500L,(byte)0,"123",(byte)0)));
+        Mockito.when(transactionService.refund(new RefundRecVo(null,null,2L,null,100L,RefundType.ORDER.getCode()))).thenReturn(new InternalReturnObject<>(new RefundRetVo(1L,"123",1L,100L,(byte)0,"123",(byte)0)));
     }
 
     @Test
@@ -116,24 +116,15 @@ class OrderApplicationTests {
 
 
     @Test
-    public void testCancleOrderByCunstomer() throws Exception {
-        String responseString = mvc.perform(put("/orders/1/cancel")
+    public void internalCancelOrderByShopTest() throws Exception {
+        String responseString = mvc.perform(put("/internal/shops/2/orders/4/cancel")
                 .header("authorization", token)
-                .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().contentType("application/json;charset=UTF-8"))
-                .andReturn().getResponse().getContentAsString();
-        String expectString = "{\"errno\":505,\"errmsg\":\"操作的资源id不是自己的对象\"}";
-        JSONAssert.assertEquals(expectString, responseString, true);
-
-        String responseString1 = mvc.perform(put("/orders/9/cancel")
-                .header("authorization", token4)
                 .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectString1 = "{\"errno\":0,\"errmsg\":\"成功\"}";
-        JSONAssert.assertEquals(expectString1, responseString1, true);
+        String expectString = "{\"errno\":0,\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expectString, responseString, true);
     }
 
     @Test
@@ -156,7 +147,7 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":0,\"data\":{\"total\":2,\"pages\":1,\"pageSize\":10,\"page\":1,\"list\":[{\"id\":2,\"customerId\":1,\"shopId\":1,\"pid\":1,\"state\":null,\"gmtCreate\":\"2021-12-02T16:41:29\",\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"grouponId\":null,\"presaleId\":null,\"shipmentSn\":null},{\"id\":9,\"customerId\":4,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-02T17:18:19\",\"originPrice\":280,\"discountPrice\":15,\"expressFee\":6,\"point\":12,\"grouponId\":null,\"presaleId\":null,\"shipmentSn\":\"36527364532\"}]},\"errmsg\":\"成功\"}";
+        String expected = "{\"errno\":0,\"data\":{\"total\":2,\"pages\":1,\"pageSize\":10,\"page\":1,\"list\":[{\"id\":2,\"customerId\":1,\"shopId\":1,\"pid\":1,\"state\":null,\"gmtCreate\":\"2021-12-02T16:41:29\",\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":9,\"customerId\":4,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-02T17:18:19\",\"originPrice\":280,\"discountPrice\":15,\"expressFee\":6,\"point\":12,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":\"36527364532\"}]},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
@@ -277,13 +268,13 @@ class OrderApplicationTests {
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
         String expectedResponse = "{\"errno\":0,\"data\":{\"orderId\":2,\"shopId\":1,\"productId\":1,\"onsaleId\":1,\"name\":\"巧克力\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":1,\"couponActivityId\":1,\"customerId\":1},\"errmsg\":\"成功\"}";
-        JSONAssert.assertEquals(expectedResponse, responseString, true);
+        JSONAssert.assertEquals(expectedResponse, responseString, false);
     }
 
     @Test
-    public void internalCancelOrderTest() throws Exception
+    public void CancelOrderByCustomerTest() throws Exception
     {
-        String responseString = this.mvc.perform(put("/internal/shops/2/orders/4/cancel")
+        String responseString = this.mvc.perform(put("/orders/4/cancel")
                 .contentType("application/json;charset=UTF-8")
                 .header("authorization", token))
                 .andExpect(status().isOk())
@@ -367,7 +358,7 @@ class OrderApplicationTests {
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
-        String expected="{\"errno\":0,\"errmsg\":\"成功\",\"data\":[{\"id\":1,\"orderId\":2,\"shopId\":1,\"productId\":1,\"onsaleId\":1,\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"name\":\"巧克力\",\"couponActivityId\":1,\"couponId\":1,\"commented\":null,\"creatorId\":1,\"creatorName\":\"gyt\",\"modifierBy\":null,\"modifierName\":null,\"gmtCreate\":\"2021-12-02T17:33:33\",\"gmtModified\":null},{\"id\":2,\"orderId\":3,\"shopId\":2,\"productId\":2,\"onsaleId\":2,\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"name\":\"薯片\",\"couponActivityId\":2,\"couponId\":2,\"commented\":null,\"creatorId\":1,\"creatorName\":\"gyt\",\"modifierBy\":null,\"modifierName\":null,\"gmtCreate\":\"2021-12-02T17:34:20\",\"gmtModified\":null}]}";
+        String expected="{\"errno\":0,\"errmsg\":\"成功\",\"data\":[{\"id\":1,\"orderId\":2,\"shopId\":1,\"productId\":1,\"onsaleId\":1,\"name\":\"巧克力\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":1,\"couponActivityId\":1,\"customerId\":null},{\"id\":2,\"orderId\":3,\"shopId\":2,\"productId\":2,\"onsaleId\":2,\"name\":\"薯片\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":2,\"couponActivityId\":2,\"customerId\":null}]}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 

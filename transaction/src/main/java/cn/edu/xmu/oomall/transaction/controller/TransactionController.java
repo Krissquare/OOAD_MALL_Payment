@@ -206,4 +206,100 @@ public class TransactionController {
         return transactionService.requestRefund(refundBill);
     }
 
+
+    /**
+     * @author fz
+     * 获得所有支付单状态
+     * */
+    @GetMapping("/payments/states")
+    public Object listAllPaymentStates(){
+        return Common.decorateReturnObject(transactionService.listAllPaymentStates());
+    }
+
+    /**
+     * @author fz
+     * 获取当前有效的支付渠道
+     * */
+    @GetMapping("/paypatterns")
+    @Audit(departName = "payment")
+    public Object listAllValidPayPatterns(@LoginUser Long userId){
+        return Common.decorateReturnObject(transactionService.listAllValidPayPatterns());
+    }
+
+    /**
+     * fz
+     * 获得所有的支付渠道
+     * */
+    @GetMapping("/shops/{shopId}/paypatterns")
+    @Audit(departName = "payment")
+    public Object listAllPayPatterns(@PathVariable("shopId") Long shopId){
+        if (shopId != 0){
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
+        }
+        return Common.decorateReturnObject(transactionService.listAllPayPatterns());
+    }
+
+    /**
+     * fz
+     * 获得支付渠道的所有状态
+     * */
+    @GetMapping("/paypatterns/states")
+    public Object listAllPayPatternStates(){
+        //TODO: qm没给出支付渠道状态图，待补
+        return new ReturnObject<>();
+    }
+
+    /**
+     * b-3 fz
+     * 平台管理员查询错账信息
+     * */
+    @GetMapping("/shops/{shopId}/erroraccounts")
+    @Audit(departName = "payment")
+    public Object listAllErrorAccountsByAdmin(@PathVariable("shopId") Long shopId,
+                                              @LoginUser Long adminId,
+                                              @RequestParam(value = "documentId", required = false) String documentId,
+                                              @RequestParam(value = "state", required = false) Byte state,
+                                              @RequestParam(value = "beginTime", required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
+                                              @RequestParam(value = "endTime", required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime endTime,
+                                              @RequestParam(value = "page", required = false) Integer page,
+                                              @RequestParam(value = "pageSize", required = false) Integer pageSize){
+        if (endTime == null){
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
+        }
+        if (shopId != 0){
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
+        }
+        if (beginTime.isAfter(endTime)){
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
+        }
+        return Common.decorateReturnObject(transactionService.listErrorAccountsByConditions(documentId,state,beginTime,endTime,page,pageSize));
+    }
+
+    /**
+     * b-3 fz
+     * 平台管理员查询错账信息详情
+     * */
+    @GetMapping("/shops/{shopId}/erroraccounts/{id}")
+    @Audit(departName = "payment")
+    public Object getDetailedErrorAccountByAdmin(@PathVariable("shopId") Long shopId,
+                                                 @PathVariable("id") Long id,
+                                                 @LoginUser Long userId){
+        if (shopId!=0){
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        return Common.decorateReturnObject(transactionService.getDetailedErrorAccount(id));
+    }
+
+    /**
+     * b-3 fz
+     * 平台管理员修改错账信息
+     * */
+    @PostMapping("/shops/{shopId}/erroraccounts/{id}")
+    public Object updateErrorAccountByAdmin(@PathVariable("shopId") Long shopId,
+                                            @PathVariable("id") Long id,
+                                            @RequestBody ErrorAccountUpdateVo updateVo){
+        return Common.decorateReturnObject(transactionService.updateErrorAccount(id, updateVo));
+    }
+
+
 }

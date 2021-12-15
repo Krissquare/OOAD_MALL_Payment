@@ -9,7 +9,7 @@ public enum OrderState {
     //200 待收货
     FINISH_PAY(201,"付款完成"),
     WAIT_GROUP(202,"待成团"),
-    NOT_FROUP(203,"未成团"),
+    NOT_FROUP(203,"已分单"),
     //300 已发货
     SEND_GOODS(300,"已发货"),
     //400 已完成
@@ -29,4 +29,5 @@ public enum OrderState {
     public String getMessage(){
         return message;
     }
+
 }
