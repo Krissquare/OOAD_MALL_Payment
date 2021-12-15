@@ -10,11 +10,12 @@ import cn.edu.xmu.oomall.transaction.util.alipay.microservice.bo.AlipayTradeStat
 import cn.edu.xmu.oomall.transaction.util.alipay.model.vo.AlipayNotifyVo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatNotifyRetVo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
-
+@Service
 public class AlipayService {
 
     @Autowired
