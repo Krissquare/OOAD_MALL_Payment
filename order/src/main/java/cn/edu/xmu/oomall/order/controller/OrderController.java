@@ -142,14 +142,15 @@ public class OrderController {
      * create by xiuchen Lang
      *
      * @param id
-     * @param userId
-     * @param username
+     * @param loginUserId
+     * @param loginUserName
      * @return
      */
     @Audit(departName = "order")
-    @PutMapping("/orders/{id}/cancel")
-    public Object cancleOrder(@PathVariable("id") Long id, @LoginUser Long userId, @LoginName String username) {
-        return Common.decorateReturnObject(orderService.cancelOrderByCustomer(id, userId, username));
+    @PutMapping("orders/{id}/cancel")
+    public Object cancelOrderByCustomer(@PathVariable("id") Long id,@LoginUser Long loginUserId,@LoginName String loginUserName)
+    {
+        return Common.decorateReturnObject(orderService.cancelOrderByCustomer(id,loginUserId,loginUserName));
     }
 
     /**
@@ -311,8 +312,8 @@ public class OrderController {
      */
     @Audit(departName = "shop")
     @PutMapping("internal/shops/{shopId}/orders/{id}/cancel")
-    public Object cancelOrderByShop(@PathVariable("shopId") Long shopId, @PathVariable("id") Long id, @LoginUser Long loginUserId, @LoginName String loginUserName) {
-        return Common.decorateReturnObject(orderService.internalcancelOrderByShop(shopId, id, loginUserId, loginUserName));
+    public Object internalCancleOrderByShop(@PathVariable("shopId")Long shopId,@PathVariable("id") Long id, @LoginUser Long userId, @LoginName String username) {
+        return Common.decorateReturnObject(orderService.internalcancelOrderByShop(shopId, id, userId, username));
     }
 
     /**

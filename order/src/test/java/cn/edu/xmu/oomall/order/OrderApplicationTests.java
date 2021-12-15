@@ -147,7 +147,7 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":0,\"data\":{\"total\":2,\"pages\":1,\"pageSize\":10,\"page\":1,\"list\":[{\"id\":2,\"customerId\":1,\"shopId\":1,\"pid\":1,\"state\":null,\"gmtCreate\":\"2021-12-02T16:41:29\",\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"grouponId\":null,\"presaleId\":null,\"shipmentSn\":null},{\"id\":9,\"customerId\":4,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-02T17:18:19\",\"originPrice\":280,\"discountPrice\":15,\"expressFee\":6,\"point\":12,\"grouponId\":null,\"presaleId\":null,\"shipmentSn\":\"36527364532\"}]},\"errmsg\":\"成功\"}";
+        String expected = "{\"errno\":0,\"data\":{\"total\":2,\"pages\":1,\"pageSize\":10,\"page\":1,\"list\":[{\"id\":2,\"customerId\":1,\"shopId\":1,\"pid\":1,\"state\":null,\"gmtCreate\":\"2021-12-02T16:41:29\",\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":9,\"customerId\":4,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-02T17:18:19\",\"originPrice\":280,\"discountPrice\":15,\"expressFee\":6,\"point\":12,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":\"36527364532\"}]},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
