@@ -259,10 +259,10 @@ public class TransactionControllerTest {
     public void notifyByAlipay() throws Exception
     {
         AlipayNotifyVo alipayNotifyVo=new AlipayNotifyVo();
-        alipayNotifyVo.setOut_biz_no(null);
-        alipayNotifyVo.setOut_trade_no("1");
-        alipayNotifyVo.setTrade_status(AlipayTradeState.TRADE_SUCCESS.getDescription());
-        alipayNotifyVo.setTrade_no("交易流水号");
+        alipayNotifyVo.setOutBizNo(null);
+        alipayNotifyVo.setOutTradeNo("1");
+        alipayNotifyVo.setTradeStatus(AlipayTradeState.TRADE_SUCCESS.getDescription());
+        alipayNotifyVo.setTradeNo("交易流水号");
         String requestJSON = JacksonUtil.toJson(alipayNotifyVo);
         String responseString = this.mvc.perform(post("/alipay/notify")
                 .contentType("application/json;charset=UTF-8")
