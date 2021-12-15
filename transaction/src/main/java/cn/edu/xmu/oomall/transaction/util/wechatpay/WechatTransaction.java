@@ -19,18 +19,18 @@ public class WechatTransaction extends TransactionPattern {
     private WechatMicroService wechatMicroService;
 
 
-    private static WechatPaymentVo createWechatRequestPaymentVo(Long requestNo, PaymentBill bill) {
+    private static WechatPaymentVo createWechatRequestPaymentVo(String requestNo, PaymentBill bill) {
         WechatPaymentVo paymentVo = new WechatPaymentVo();
 
-        paymentVo.setOutTradeNo(requestNo.toString());
+        paymentVo.setOutTradeNo(requestNo);
         paymentVo.getAmount().setTotal(bill.getAmount());
 
         return paymentVo;
     }
 
-    private static WechatRefundVo createWechatRequestRefundVo(Long requestNo, RefundBill bill) {
+    private static WechatRefundVo createWechatRequestRefundVo(String requestNo, RefundBill bill) {
         WechatRefundVo refundVo = new WechatRefundVo();
-        refundVo.setOutRefundNo(requestNo.toString());
+        refundVo.setOutRefundNo(requestNo);
         refundVo.setOutTradeNo(bill.getPaymentId().toString());
         refundVo.setReason(bill.getReason());
         refundVo.getAmount().setRefund(bill.getAmount());
@@ -40,7 +40,7 @@ public class WechatTransaction extends TransactionPattern {
 
 
     @Override
-    public void requestPayment(Long requestNo, PaymentBill bill) {
+    public void requestPayment(String requestNo, PaymentBill bill) {
         WechatPaymentVo paymentVo = WechatTransaction.createWechatRequestPaymentVo(requestNo, bill);
         WechatPaymentRetVo ret = wechatMicroService.requestPayment(paymentVo);
 
@@ -48,7 +48,7 @@ public class WechatTransaction extends TransactionPattern {
     }
 
     @Override
-    public void requestRefund(Long requestNo, RefundBill bill) {
+    public void requestRefund(String requestNo, RefundBill bill) {
         WechatRefundVo refundVo = WechatTransaction.createWechatRequestRefundVo(requestNo, bill);
         InternalReturnObject ret = wechatMicroService.requestRefund(refundVo);
 

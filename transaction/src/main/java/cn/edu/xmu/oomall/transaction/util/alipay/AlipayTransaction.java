@@ -20,18 +20,18 @@ public class AlipayTransaction extends TransactionPattern {
     @Autowired
     private AlipayMicroService alipayMicroService;
 
-    private static AlipayPaymentVo createAlipayPaymentVo(Long requestNo, PaymentBill bill) {
+    private static AlipayPaymentVo createAlipayPaymentVo(String requestNo, PaymentBill bill) {
         AlipayPaymentVo paymentVo = new AlipayPaymentVo();
-        paymentVo.setOutTradeNo(requestNo.toString());
+        paymentVo.setOutTradeNo(requestNo);
         paymentVo.setTotalAmount(bill.getAmount());
 
         return paymentVo;
     }
 
-    private static AlipayRefundVo createAlipayRefundVo(Long requestNo, RefundBill bill) {
+    private static AlipayRefundVo createAlipayRefundVo(String requestNo, RefundBill bill) {
         AlipayRefundVo refundVo = new AlipayRefundVo();
         refundVo.setOutTradeNo(bill.getPaymentId().toString());
-        refundVo.setOutRequestNo(requestNo.toString());
+        refundVo.setOutRequestNo(requestNo);
         refundVo.setRefundAmount(bill.getAmount());
 
         return refundVo;
@@ -39,7 +39,7 @@ public class AlipayTransaction extends TransactionPattern {
 
 
     @Override
-    public void requestPayment(Long requestNo, PaymentBill bill) {
+    public void requestPayment(String requestNo, PaymentBill bill) {
         AlipayPaymentVo paymentVo = createAlipayPaymentVo(requestNo, bill);
         AlipayPaymentRetVo retVo = (AlipayPaymentRetVo) alipayMicroService.gatewayDo(null,
                 AlipayMethod.PAY.getMethod(),
@@ -54,7 +54,7 @@ public class AlipayTransaction extends TransactionPattern {
     }
 
     @Override
-    public void requestRefund(Long requestNo, RefundBill bill) {
+    public void requestRefund(String requestNo, RefundBill bill) {
         AlipayRefundVo refundVo = createAlipayRefundVo(requestNo, bill);
         AlipayRefundRetVo retVo = (AlipayRefundRetVo) alipayMicroService.gatewayDo(null,
                 AlipayMethod.PAY.getMethod(),
