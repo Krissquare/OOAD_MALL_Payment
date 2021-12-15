@@ -312,18 +312,20 @@ public class OrderDao {
     }
     public ReturnObject getQuantityByGroupOnId(Long id){
         try {
+            List<Integer>stateList=new ArrayList<>();
+            stateList.add(OrderState.FINISH_PAY.getCode());
+            stateList.add(OrderState.WAIT_GROUP.getCode());
+            stateList.add(OrderState.SEND_GOODS.getCode());
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria criteria = orderPoExample.createCriteria();
             criteria.andGrouponIdEqualTo(id);
+            criteria.andStateIn(stateList);
             List<OrderPo> orderPos = orderPoMapper.selectByExample(orderPoExample);
             if (orderPos.size()==0){
                 return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
             Long quantity=0L;
             for(OrderPo orderPo:orderPos){
-                if(orderPo.getState().equals(OrderState.NEW_ORDER)||orderPo.getState().equals(OrderState.WAIT_PAY_REST)||orderPo.getState().equals(OrderState.CANCEL_ORDER)){
-                    continue;
-                }
                 ReturnObject returnObject=listOrderItemsByPOrderId(orderPo.getId());
                 List<OrderItemRetVo>list=(List<OrderItemRetVo>)returnObject.getData();
                 for(OrderItemRetVo orderItemRetVo:list){
