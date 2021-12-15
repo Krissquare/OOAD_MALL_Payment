@@ -456,6 +456,7 @@ public class OrderService {
                 return new ReturnObject(retRefund);
             }
         }
+        //TODO:在考虑一下
         order.setState(OrderState.CANCEL_ORDER.getCode());
         Common.setPoModifiedFields(order, loginUserId, loginUserName);
         if (pOrder != null) {
