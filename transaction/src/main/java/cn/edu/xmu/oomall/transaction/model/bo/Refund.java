@@ -4,18 +4,20 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Refund {
+public class Refund implements Serializable {
     private Long id;
     private String tradeSn;
     private Long patternId;
     private Long paymentId;
     private Long amount;
     private Byte state;
+    private LocalDateTime refundTime;
     private String documentId;
     private Byte documentType;
     private String descr;

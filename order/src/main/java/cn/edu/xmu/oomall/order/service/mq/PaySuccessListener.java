@@ -23,6 +23,7 @@ import static cn.edu.xmu.privilegegateway.annotation.util.Common.*;
  * @author xiuchen lang 22920192204222
  * @date 2021/12/13 21:28
  */
+//Payment-0
 @Service
 @RocketMQMessageListener(topic = "pay-success", consumerGroup = "pay-success")
 public class PaySuccessListener implements RocketMQListener<String> {

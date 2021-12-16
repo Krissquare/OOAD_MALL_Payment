@@ -8,6 +8,9 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+/**
+ * modified by gyt at 2021/12/14
+ */
 @Data
 @Getter
 @Setter
@@ -24,6 +27,6 @@ public class BriefOrderVo implements Serializable {
     private Long expressFee;
     private Long point;
     private Long grouponId;
-    private Long presaleId;
+    private Long advancesaleId;
     private String shipmentSn;
 }

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GrouponStrategyVo {
+public class GroupOnStrategyVo {
     private Integer quantity;
     private Integer percentage;
 }

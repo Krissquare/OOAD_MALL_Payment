@@ -1,15 +1,17 @@
 package cn.edu.xmu.oomall.order.microservice;
 
 
+import cn.edu.xmu.oomall.core.config.OpenFeignConfig;
 import cn.edu.xmu.oomall.order.microservice.vo.CustomerModifyPointsVo;
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
-@FeignClient(name = "custom-service")
+@FeignClient(name = "other-service",configuration= OpenFeignConfig.class)
 public interface CustomService {
-    @GetMapping("/customers/{id}")
+
+    @GetMapping("/internal/customers/{id}")
     InternalReturnObject<SimpleVo> getCustomerById(@PathVariable("id") Long id);
 
 

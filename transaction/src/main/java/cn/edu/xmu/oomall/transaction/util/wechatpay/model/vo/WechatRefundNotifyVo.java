@@ -7,6 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.zone.ZoneRules;
+import java.util.zip.ZipEntry;
 
 /**
  * @author xiuchen lang 22920192204222
@@ -22,8 +25,8 @@ public class WechatRefundNotifyVo {
     public class Amount{
         private Integer total;
         private Integer refund;
-        private Integer payer_total;
-        private Integer payer_refund;
+        private Integer payerTotal;
+        private Integer payerRefund;
     }
 
     @Data
@@ -31,13 +34,15 @@ public class WechatRefundNotifyVo {
     @AllArgsConstructor
     public static class Ciphertext{
         private String mchid;
-        private String outTrade_no;
-        private String transaction_id;
-        private String out_refund_no;
-        private String refund_id;
-        private String refund_status;
-        private String user_received_account;
+        private String outTradeNo;
+        private String transactionId;
+        private String outRefundNo;
+        private String refundId;
+        private String refundStatus;
+        private String userReceivedAccount;
         private Amount amount;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS", timezone = "GMT+8")
+        private LocalDateTime successTime;
     }
 
     @Data
@@ -45,16 +50,17 @@ public class WechatRefundNotifyVo {
     @AllArgsConstructor
     public static class Resource{
         private String algorithm;
-        private String original_type;
+        private String originalType;
         private Ciphertext ciphertext;
         private String nonce;
     }
 
     private String id;
     @JsonFormat(pattern = MyDateTime.DATE_TIME_FORMAT,timezone = "GMT+8")
-    private LocalDateTime create_time;
-    private String event_type;
-    private String resource_type;
+    private LocalDateTime createTime;
+    private String eventType;
+    private String summary;
+    private String resourceType;
     private Resource resource;
 
 }

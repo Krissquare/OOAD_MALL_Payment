@@ -29,5 +29,5 @@ public class AftersaleRetVo {
     private Long advancesaleId;
     private Long grouponId;
     private String shipmentSn;
-    private AftersaleOrderitemRetVo aftersaleOrderitemVo;
+    private SimpleOrderitemRetVo aftersaleOrderitemVo;
 }
