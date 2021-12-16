@@ -36,20 +36,22 @@ public interface TransactionService {
                                                          @RequestParam(value = "pageSize",required = false)Integer pageSize);
 
     @GetMapping("/shops/{shopId}/refund")
-    InternalReturnObject<PageVo<RefundRetVo>> getRefund(@PathVariable("shopId") Long shopId, @RequestParam(value="documentId",required = false)String documentId,
+    InternalReturnObject<PageVo<RefundRetVo>> listRefund(@PathVariable("shopId") Long shopId,
+                                                         @RequestParam(value="documentId",required = false)String documentId,
                                                         @RequestParam(value="state",required = false)Byte state,
                                                         @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
                                                         @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
                                                         @RequestParam(value = "page", required = false) Integer page,
                                                         @RequestParam(value = "pageSize", required = false) Integer pageSize);
-//    listRefund(@PathVariable("shopId") Long shopId, @RequestParam(value="documentId",required = false)String documentId,
-//                                                      @RequestParam(value="state",required = false)Byte state,
-//                                                      @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
-//                                                      @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
-//                                                      @RequestParam(value = "page", required = false) Integer page,
-//                                                      @RequestParam(value = "pageSize", required = false) Integer pageSize);
+
+    @GetMapping("/internal/payment")
+    InternalReturnObject<PageVo<PaymentRetVo>> listPaymentInternal(@RequestParam(value="documentId",required = false)String documentId,
+                                                                  @RequestParam(value="state",required = false)Byte state,
+                                                         @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
+                                                         @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
+                                                         @RequestParam(value = "page", required = false) Integer page,
+                                                         @RequestParam(value = "pageSize", required = false) Integer pageSize);
 
     @PostMapping("/internal/refunds")
     InternalReturnObject<RefundRetVo> requestRefund(@Validated @RequestBody RefundRecVo refundVo);
-    //refund(@RequestBody RefundRecVo refundRecVo);
 }
