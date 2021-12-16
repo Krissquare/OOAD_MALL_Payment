@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class WechatController {
 
     @Autowired
-    private WechatService wechatpayService;
+    private WechatService wechatService;
     /**
      * gyt
      * 微信支付通知API
@@ -24,7 +24,7 @@ public class WechatController {
      */
     @PostMapping("/wechat/payment/notify")
     public Object paymentNotifyByWechat(@RequestBody WechatPaymentNotifyVo wechatPaymentNotifyVo){
-        return wechatpayService.paymentNotifyByWechat(wechatPaymentNotifyVo);
+        return wechatService.paymentNotifyByWechat(wechatPaymentNotifyVo);
     }
 
     /**
@@ -35,7 +35,7 @@ public class WechatController {
      */
     @PostMapping("/wechat/refund/notify")
     public Object refundNotifyByWechat(@RequestBody WechatRefundNotifyVo wechatRefundNotifyVo){
-        return wechatpayService.refundNotifyByWechat(wechatRefundNotifyVo);
+        return wechatService.refundNotifyByWechat(wechatRefundNotifyVo);
     }
 
 }

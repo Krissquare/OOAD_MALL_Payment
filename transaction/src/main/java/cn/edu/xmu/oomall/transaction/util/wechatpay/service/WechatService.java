@@ -11,11 +11,13 @@ import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatRefundNotifyV
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatRefundState;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatTradeState;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
 
+@Service
 public class WechatService {
 
     @Autowired
