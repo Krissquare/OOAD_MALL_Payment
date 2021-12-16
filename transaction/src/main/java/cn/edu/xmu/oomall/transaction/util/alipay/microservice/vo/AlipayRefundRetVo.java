@@ -1,6 +1,6 @@
 package cn.edu.xmu.oomall.transaction.util.alipay.microservice.vo;
 
-import cn.edu.xmu.oomall.transaction.util.alipay.microservice.bo.AlipayReturnNo;
+import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayReturnNo;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

@@ -1,8 +1,6 @@
-package cn.edu.xmu.oomall.transaction.util;
+package cn.edu.xmu.oomall.transaction.util.mq;
 
 import cn.edu.xmu.oomall.core.util.JacksonUtil;
-import org.apache.rocketmq.client.producer.SendResult;
-import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.messaging.support.MessageBuilder;
@@ -16,15 +14,22 @@ public class MessageProducer {
     @Resource
     private RocketMQTemplate rocketMQTemplate;
 
-    public void sendPaymentMessage(NotifyMessage notifyMessage) {
+
+    public void sendNotifyMessage(NotifyMessage notifyMessage) {
         String json = JacksonUtil.toJson(notifyMessage);
         Message message = (Message) MessageBuilder.withPayload(json).build();
         String topic = String.format("%s-%s", notifyMessage.getMessageType().getDescription(),
                 notifyMessage.getDocumentType());
-        SendResult sendResult = rocketMQTemplate.syncSend(topic, message);
-        if (sendResult.getSendStatus().equals(SendStatus.SEND_OK)) {
-            rocketMQTemplate.syncSend(topic, message);
-        }
+        rocketMQTemplate.sendOneWay(topic, message);
+    }
+
+    public void sendActiveQueryDelayedMessage(ActiveQueryMessage activeQueryMessage) {
+        String json = JacksonUtil.toJson(activeQueryMessage);
+        Message message = (Message) MessageBuilder.withPayload(json).build();
+        // 30s
+        // 主题名字考虑采用PV注入
+        message.setDelayTimeLevel(4);
+        rocketMQTemplate.sendOneWay("active-query", message);
     }
 
 }

@@ -1,6 +1,5 @@
 package cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo;
 
-import cn.edu.xmu.oomall.transaction.util.MyDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,34 +8,31 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * @author xiuchen lang 22920192204222
- * @date 2021/12/09 19:48
+ * @author ziyi guo
+ * @date 2021/12/1
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class WechatPaymentNotifyVo {
 
     @Data
     @NoArgsConstructor
-    @AllArgsConstructor
-    public static class WechatTransactionVo {
+    public static class WeChatPayTransactionRetVo {
 
         @Data
         @NoArgsConstructor
         @AllArgsConstructor
-        public class TransactionAmountRetVo{
+        public class TransactionAmountRetVo {
             private Integer total;
-            private Integer payer_total;
+            private Integer payerTotal;
             private String currency;
-            private String payer_currency;
+            private String payerCurrency;
         }
 
-
         @Data
         @NoArgsConstructor
         @AllArgsConstructor
-        public class PayerRetVo{
+        public class PayerRetVo {
             private String openid;
         }
 
@@ -44,41 +40,42 @@ public class WechatPaymentNotifyVo {
 
         private String mchid;
 
-        private String out_trade_no;
+        private String outTradeNo;
 
-        private String transaction_id;
+        private String transactionId;
 
-        private String trade_type;
+        private String tradeType;
 
-        private String trade_state;
+        private String tradeState;
 
-        private String trade_state_desc;
+        private String tradeStateDesc;
 
         private TransactionAmountRetVo amount;
 
         private PayerRetVo payer;
 
-        @JsonFormat(pattern = MyDateTime.DATE_TIME_FORMAT,timezone = "GMT+8")
-        private LocalDateTime success_time;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS", timezone = "GMT+8")
+        private LocalDateTime successTime;
 
     }
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Resource{
+    public static class Resource {
         private String algorithm;
-        private String original_type;
-        private WechatTransactionVo ciphertext;
+        private String originalType;
+        private WeChatPayTransactionRetVo ciphertext;
         private String nonce;
     }
 
+
     private String id;
-    @JsonFormat(pattern = MyDateTime.DATE_TIME_FORMAT,timezone = "GMT+8")
-    private LocalDateTime create_time;
-    private String event_type;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS", timezone = "GMT+8")
+    private LocalDateTime createTime;
+    private String eventType;
     private String summary;
-    private String resource_type;
+    private String resourceType;
     private Resource resource;
 
 }

@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.transaction.util.alipay.microservice.bo;
+package cn.edu.xmu.oomall.transaction.util.alipay.model.bo;
 
 /**
  * 支付宝业务错误返回码
