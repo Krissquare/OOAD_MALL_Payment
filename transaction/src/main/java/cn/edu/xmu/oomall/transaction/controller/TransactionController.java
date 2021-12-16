@@ -187,7 +187,9 @@ public class TransactionController {
         if (shopId != 0) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
-        return Common.decorateReturnObject(transactionService.listRefund(documentId, state, beginTime, endTime, page, pageSize));
+        final ReturnObject refund = transactionService.getRefund(documentId, state, beginTime, endTime, page, pageSize);
+        System.out.println(refund);
+        return Common.decorateReturnObject(refund);
     }
 
     /**
@@ -286,11 +288,7 @@ public class TransactionController {
      * @return
      */
     @PostMapping("/internal/refunds")
-    public Object requestRefund(@Validated @RequestBody RefundVo refundVo, BindingResult bindingResult){
-        if (bindingResult.hasErrors()) {
-            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
-        }
-
+    public Object requestRefund(@Validated @RequestBody RefundVo refundVo){
         RefundBill refundBill = refundVo.createRefundBill();
         return transactionService.requestRefund(refundBill);
     }

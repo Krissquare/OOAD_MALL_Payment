@@ -19,9 +19,10 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 101.132.164.244:8888
-        username: nacos
-        password: ooad_javaee201
+         server-addr: 121.36.53.115
+#        server-addr: 101.132.164.244:8888
+#        username: nacos
+#        password: ooad_javaee201
   servlet:
     multipart:
       #是否使用http上传

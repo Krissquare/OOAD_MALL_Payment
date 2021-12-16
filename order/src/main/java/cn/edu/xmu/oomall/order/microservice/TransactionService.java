@@ -1,5 +1,6 @@
 package cn.edu.xmu.oomall.order.microservice;
 
+import cn.edu.xmu.oomall.core.config.OpenFeignConfig;
 import cn.edu.xmu.oomall.order.microservice.vo.PageVo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.microservice.vo.PaymentRetVo;
@@ -22,7 +23,7 @@ import java.util.Map;
  * @author 高艺桐 22920192204199
  * @date 2021/12/09 16:32
  */
-@FeignClient(name = "transaction-service")
+@FeignClient(name = "transaction-service",configuration= OpenFeignConfig.class)
 public interface TransactionService {
 
     @GetMapping("/shops/{shopId}/payment")

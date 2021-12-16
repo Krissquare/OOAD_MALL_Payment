@@ -1,5 +1,6 @@
 package cn.edu.xmu.oomall.order.microservice;
 
+import cn.edu.xmu.oomall.core.config.OpenFeignConfig;
 import cn.edu.xmu.oomall.order.microservice.vo.FreightCalculatingPostVo;
 import cn.edu.xmu.oomall.order.microservice.vo.FreightCalculatingRetVo;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
@@ -14,7 +15,7 @@ import java.util.List;
  * @author xiuchen lang 22920192204222
  * @date 2021/12/07 17:12
  */
-@FeignClient(name = "freight-service")
+@FeignClient(name = "freight-service",configuration= OpenFeignConfig.class)
 public interface FreightService {
     /**
      * regions/{rid}/price（2021-2-2）

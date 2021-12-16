@@ -105,7 +105,7 @@ public class TransactionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":504,\"errmsg\":\"操作的资源id不存在\"}";
+        String expected = "{\"errno\":0,\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
@@ -194,8 +194,8 @@ public class TransactionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse=" {\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":{\"id\":1,\"tradeSn\":null,\"patternId\":null,\"amount\":null,\"actualAmount\":null,\"documentId\":null,\"documentType\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null,\"state\":2,\"descr\":\"已对账噢\",\"adjust\":{\"id\":null,\"name\":null},\"adjustTime\":null,\"creator\":{\"id\":null,\"name\":null},\"gmtCreate\":null,\"gmtModified\":\"2021-12-15T19:08:08.5297115\",\"modifier\":{\"id\":1,\"name\":\"admin\"}}}";
-        JSONAssert.assertEquals(expectedResponse, responseString, true);
+        String expectedResponse=" {\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":{\"id\":1,\"tradeSn\":null,\"patternId\":null,\"amount\":null,\"actualAmount\":null,\"documentId\":null,\"documentType\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null,\"state\":2,\"descr\":\"已对账噢\",\"adjust\":{\"id\":null,\"name\":null},\"adjustTime\":null,\"creator\":{\"id\":null,\"name\":null},\"gmtCreate\":null,\"modifier\":{\"id\":1,\"name\":\"admin\"}}}";
+        JSONAssert.assertEquals(expectedResponse, responseString, false);
     }
     /**
      * 微信支付通知API

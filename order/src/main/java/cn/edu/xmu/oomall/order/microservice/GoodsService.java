@@ -1,5 +1,6 @@
 package cn.edu.xmu.oomall.order.microservice;
 
+import cn.edu.xmu.oomall.core.config.OpenFeignConfig;
 import cn.edu.xmu.oomall.order.microservice.vo.OnSaleVo;
 import cn.edu.xmu.oomall.order.microservice.vo.ProductVo;
 import cn.edu.xmu.oomall.order.microservice.vo.QuantityVo;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  * @author xiuchen lang 22920192204222
  * @date 2021/12/07 16:16
  */
-@FeignClient(name = "goods-service")
+@FeignClient(name = "goods-service",configuration= OpenFeignConfig.class)
 public interface GoodsService {
     /**
      * /internal/onsales/{id}
@@ -24,7 +25,7 @@ public interface GoodsService {
      * @return cn.edu.xmu.oomall.ooad201.order.microService.vo.OnSaleVo
      */
     @GetMapping("/internal/onsales/{id}")
-    InternalReturnObject<OnSaleVo> getOnsaleById(@PathVariable Long id);
+    InternalReturnObject<OnSaleVo> selectFullOnsale(@PathVariable("id")Long id);
 
     /**
      * /products/{id}
@@ -34,7 +35,7 @@ public interface GoodsService {
      * @return cn.edu.xmu.oomall.ooad201.order.microService.vo.ProductVo
      */
     @GetMapping("/products/{id}")
-    InternalReturnObject<ProductVo> getProductById(@PathVariable Long id);
+    InternalReturnObject<ProductVo> getProductDetails(@PathVariable Long id) ;
 
 
     /**
