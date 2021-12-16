@@ -8,7 +8,7 @@ import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
-@FeignClient(name = "custom-service",configuration= OpenFeignConfig.class)
+@FeignClient(name = "other-service",configuration= OpenFeignConfig.class)
 public interface CustomService {
 
     @GetMapping("/internal/customers/{id}")

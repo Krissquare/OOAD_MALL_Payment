@@ -53,8 +53,8 @@ class OrderApplicationTests {
 //    @MockBean
 //    private ShopService shopService;
 
-//    @MockBean
-//    private CustomService customService;
+    @Autowired
+    private CustomService customService;
 //    @MockBean
 //    private TransactionService transactionService;
 
@@ -388,8 +388,13 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":0,\"data\":{\"orderSn\":null,\"customer\":{\"id\":1,\"name\":\"aaa\"},\"shop\":{\"id\":1,\"name\":\"aaa\"},\"pid\":0,\"state\":201,\"confirmTime\":null,\"discountPrice\":0,\"originPrice\":0,\"point\":0,\"expressFee\":null,\"consignee\":\"222\",\"regionId\":5,\"address\":null,\"mobile\":\"13056766288\",\"message\":null,\"advancesaleId\":null,\"grouponId\":null,\"shipmentSn\":null,\"aftersaleOrderitemVo\":{\"productId\":1,\"name\":\"123\",\"quantity\":5,\"price\":0}},\"errmsg\":\"成功\"}";
+        String expected = "{\"errno\":0,\"data\":{\"orderSn\":null,\"customer\":{\"id\":1,\"name\":\"李智樑\"},\"shop\":{\"id\":10,\"name\":\"商铺10\"},\"pid\":0,\"state\":201,\"confirmTime\":null,\"discountPrice\":0,\"originPrice\":0,\"point\":0,\"expressFee\":null,\"consignee\":\"222\",\"regionId\":5,\"address\":null,\"mobile\":\"13056766288\",\"message\":null,\"advancesaleId\":null,\"grouponId\":null,\"shipmentSn\":null,\"aftersaleOrderitemVo\":{\"productId\":1550,\"name\":\"欢乐家久宝桃罐头\",\"quantity\":5,\"price\":0}},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, response, false);
+    }
+
+    @Test
+    public void test(){
+        System.out.println(customService.getCustomerById(1L).getData());
     }
 
 }

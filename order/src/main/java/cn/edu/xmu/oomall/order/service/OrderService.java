@@ -860,7 +860,7 @@ public class OrderService {
             return ret2;
         }
         AftersaleRetVo aftersaleRetVo = cloneVo(order1, AftersaleRetVo.class);
-        InternalReturnObject customer = customService.getCustomerById(order1.getCustomerId());
+        InternalReturnObject<SimpleVo> customer = customService.getCustomerById(order1.getCustomerId());
         aftersaleRetVo.setCustomer((SimpleVo) customer.getData());
         InternalReturnObject shop = shopService.getSimpleShopById(shopId);
         aftersaleRetVo.setShop((SimpleVo) shop.getData());
