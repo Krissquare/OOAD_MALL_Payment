@@ -11,6 +11,7 @@ import cn.edu.xmu.oomall.transaction.model.bo.Payment;
 import cn.edu.xmu.oomall.transaction.model.bo.PaymentPattern;
 import cn.edu.xmu.oomall.transaction.model.po.*;
 import cn.edu.xmu.oomall.transaction.model.vo.*;
+import cn.edu.xmu.privilegegateway.annotation.util.RedisUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.slf4j.Logger;
@@ -18,7 +19,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import cn.edu.xmu.oomall.transaction.mapper.RefundPoMapper;
 import cn.edu.xmu.oomall.transaction.model.bo.Refund;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
+
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +45,20 @@ public class TransactionDao {
     @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     private PaymentPatternPoMapper paymentPatternPoMapper;
 
+    @Autowired
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+    private ErrorAccountPoMapper errorAccountPoMapper;
+
+    @Autowired
+    RedisUtil redisUtil;
+
+    @Value("${oomall.transaction.expiretime}")
+    private long transactionExpireTime;
+
+    final static String PAYMENT_KEY = "payment_%d";
+    final static String REFUND_KEY = "refund_%d";
+    final static String PATTERN_KEY = "pattern_%d";
+
     public ReturnObject insertPayment(Payment payment) {
         try {
             PaymentPo po = cloneVo(payment, PaymentPo.class);
@@ -52,33 +70,26 @@ public class TransactionDao {
         }
     }
 
-    @Autowired
-    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-    private ErrorAccountPoMapper errorAccountPoMapper;
-
-    public ReturnObject listPayment(Long patternId,String documentId,Byte documentType, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize)
-    {
+    public ReturnObject listPayment(Long patternId, String documentId, Byte documentType, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
         try {
             PaymentPoExample example = new PaymentPoExample();
             PaymentPoExample.Criteria criteria = example.createCriteria();
-            if(patternId!=null)
-            {
+            if (patternId != null) {
                 criteria.andPatternIdEqualTo(patternId);
             }
-            if(documentId!=null){
+            if (documentId != null) {
                 criteria.andDocumentIdEqualTo(documentId);
             }
             if (documentType != null) {
                 criteria.andDocumentTypeEqualTo(documentType);
             }
-            if(state!=null)
-            {
+            if (state != null) {
                 criteria.andStateEqualTo(state);
             }
-            if(beginTime!=null){
+            if (beginTime != null) {
                 criteria.andPayTimeGreaterThan(beginTime);
             }
-            if(endTime!=null){
+            if (endTime != null) {
                 criteria.andPayTimeLessThan(endTime);
             }
             PageHelper.startPage(page, pageSize);
@@ -93,18 +104,21 @@ public class TransactionDao {
     }
 
 
-    public ReturnObject getPaymentById(Long id)
-    {
-        try{
-            PaymentPo paymentPo=paymentPoMapper.selectByPrimaryKey(id);
-            if(paymentPo==null)
-            {
+    public ReturnObject getPaymentById(Long id) {
+        try {
+            String key = String.format(PAYMENT_KEY, id);
+            Payment payment = (Payment) redisUtil.get(key);
+            if (payment != null) {
+                return new ReturnObject(payment);
+            }
+            PaymentPo paymentPo = paymentPoMapper.selectByPrimaryKey(id);
+            if (paymentPo == null) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            //TODO:redis
-            return new ReturnObject(cloneVo(paymentPo,Payment.class));
-        }
-        catch (Exception e) {
+            payment = cloneVo(paymentPo, Payment.class);
+            redisUtil.set(key, payment, transactionExpireTime);
+            return new ReturnObject(payment);
+        } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
@@ -113,23 +127,25 @@ public class TransactionDao {
 
     /**
      * 平台管理员修改支付信息
+     *
      * @param payment
      * @return
      */
-    public ReturnObject updatePayment(Payment payment)
-    {
+    public ReturnObject updatePayment(Payment payment) {
         try {
-            PaymentPo paymentPo=cloneVo(payment,PaymentPo.class);
-            paymentPoMapper.updateByPrimaryKeySelective(paymentPo);
-            //TODO:删除redis
-            Payment payment1=cloneVo(paymentPo,Payment.class);
-            return new ReturnObject(payment1);
-
+            PaymentPo paymentPo = cloneVo(payment, PaymentPo.class);
+            int flag = paymentPoMapper.updateByPrimaryKeySelective(paymentPo);
+            if (flag == 0) {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            } else {
+                redisUtil.del(String.format(PAYMENT_KEY, payment.getId()));
+                return new ReturnObject(ReturnNo.OK);
+            }
         } catch (Exception e) {
+            logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-
 
     public ReturnObject listRefund(Long paymentId, String documentId, Byte state, Byte documentType, Long patternId, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
         try {
@@ -148,7 +164,7 @@ public class TransactionDao {
             if (documentType != null) {
                 cr.andDocumentTypeEqualTo(documentType);
             }
-            if(patternId!=null){
+            if (patternId != null) {
                 cr.andPatternIdEqualTo(patternId);
             }
             if (beginTime != null) {
@@ -172,12 +188,18 @@ public class TransactionDao {
 
     public ReturnObject getRefundById(Long id) {
         try {
+            String key = String.format(REFUND_KEY, id);
+            Refund refund = (Refund) redisUtil.get(key);
+            if (refund != null) {
+                return new ReturnObject(refund);
+            }
             RefundPo refundPo = refundPoMapper.selectByPrimaryKey(id);
             if (refundPo == null) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            //TODO:redis
-            return new ReturnObject(cloneVo(refundPo, Refund.class));
+            refund = cloneVo(refundPo, Refund.class);
+            redisUtil.set(key, refund, transactionExpireTime);
+            return new ReturnObject(refund);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
@@ -186,14 +208,21 @@ public class TransactionDao {
 
 
     public ReturnObject updateRefund(Refund refund) {
-        RefundPo refundPo = cloneVo(refund, RefundPo.class);
-        int flag = refundPoMapper.updateByPrimaryKeySelective(refundPo);
-        if (flag == 0) {
-            return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
-        } else {
-            return new ReturnObject(ReturnNo.OK);
+        try {
+            RefundPo refundPo = cloneVo(refund, RefundPo.class);
+            int flag = refundPoMapper.updateByPrimaryKeySelective(refundPo);
+            if (flag == 0) {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            } else {
+                redisUtil.del(String.format(REFUND_KEY, refund.getId()));
+                return new ReturnObject(ReturnNo.OK);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
+
     public ReturnObject insertRefund(Refund refund) {
         try {
             RefundPo refundPo = cloneVo(refund, RefundPo.class);
@@ -207,23 +236,30 @@ public class TransactionDao {
 
     public ReturnObject getPaymentPatternById(Long id) {
         try {
+            String key = String.format(PATTERN_KEY, id);
+            PaymentPattern paymentPattern = (PaymentPattern) redisUtil.get(key);
+            if (paymentPattern != null) {
+                return new ReturnObject(paymentPattern);
+            }
             PaymentPatternPo po = paymentPatternPoMapper.selectByPrimaryKey(id);
             if (po == null) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
-            //TODO:redis
-            return new ReturnObject((cloneVo(po, PaymentPattern.class)));
+            paymentPattern = cloneVo(po, PaymentPattern.class);
+            redisUtil.set(key, paymentPattern, transactionExpireTime);
+            return new ReturnObject(paymentPattern);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-    public ReturnObject listAllPayPattern(){
+
+    public ReturnObject listAllPayPattern() {
         try {
             PaymentPatternPoExample paymentPatternPoExample = new PaymentPatternPoExample();
             List<PaymentPatternPo> validPayPatterns = paymentPatternPoMapper.selectByExample(paymentPatternPoExample);
             return new ReturnObject(validPayPatterns);
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
@@ -234,50 +270,51 @@ public class TransactionDao {
                                                         LocalDateTime beginTime,
                                                         LocalDateTime endTime,
                                                         Integer page,
-                                                        Integer pageSize){
+                                                        Integer pageSize) {
         try {
             ErrorAccountPoExample errorAccountPoExample = new ErrorAccountPoExample();
             ErrorAccountPoExample.Criteria criteria = errorAccountPoExample.createCriteria();
-            if (documentId != null){
+            if (documentId != null) {
                 criteria.andDocumentIdEqualTo(documentId);
             }
-            if (state != null){
+            if (state != null) {
                 criteria.andStateEqualTo(state);
             }
-            if (beginTime != null){
+            if (beginTime != null) {
                 criteria.andTimeGreaterThanOrEqualTo(beginTime);
             }
-            if (beginTime != null){
+            if (beginTime != null) {
                 criteria.andTimeLessThanOrEqualTo(endTime);
             }
             PageHelper.startPage(page, pageSize, true, true, true);
             List<ErrorAccountPo> errorAccountPoList = errorAccountPoMapper.selectByExample(errorAccountPoExample);
             ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo<>(errorAccountPoList));
             return Common.getPageRetVo(ret, ErrorAccountVo.class);
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
 
-    public ReturnObject getErrorAccount(Long id){
-        try{
+    public ReturnObject getErrorAccount(Long id) {
+        try {
             ErrorAccountPo errorAccountPo = errorAccountPoMapper.selectByPrimaryKey(id);
             return new ReturnObject(errorAccountPo);
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
 
-    public ReturnObject updateErrorAccount(ErrorAccountPo errorAccountPo){
+    public ReturnObject updateErrorAccount(ErrorAccountPo errorAccountPo) {
         try {
-            int result = errorAccountPoMapper.updateByPrimaryKeySelective(errorAccountPo);
-            if (result == 0){
+            int flag = errorAccountPoMapper.updateByPrimaryKeySelective(errorAccountPo);
+            if (flag == 0) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            } else {
+                return new ReturnObject(ReturnNo.OK);
             }
-            else return new ReturnObject(ReturnNo.OK);
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }

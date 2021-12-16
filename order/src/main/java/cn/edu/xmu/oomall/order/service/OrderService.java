@@ -460,6 +460,7 @@ public class OrderService {
                 return new ReturnObject(retRefund);
             }
         }
+        //TODO:在考虑一下
         order.setState(OrderState.CANCEL_ORDER.getCode());
         Common.setPoModifiedFields(order, loginUserId, loginUserName);
         if (pOrder != null) {
@@ -724,12 +725,12 @@ public class OrderService {
             return returnObject;
         }
         //3.计算团购数量
-        Long quantity=(Long)orderDao.getQuantityByGroupOnId(newOrder.getGrouponId()).getData();
+        Long quantity = (Long) orderDao.getQuantityByGroupOnId(newOrder.getGrouponId()).getData();
         //4.解析团购规则，计算退款金额
         //查团购活动
-        InternalReturnObject<GrouponActivityVo>  grouponActivityVoInternalReturnObject=activityService.getGrouponsById(newOrder.getGrouponId());
-        GrouponActivityVo grouponActivityVo=grouponActivityVoInternalReturnObject.getData();
-        List<GroupOnStrategyVo> strategy=grouponActivityVo.getStrategy();
+        InternalReturnObject<GrouponActivityVo> grouponActivityVoInternalReturnObject = activityService.getGrouponsById(newOrder.getGrouponId());
+        GrouponActivityVo grouponActivityVo = grouponActivityVoInternalReturnObject.getData();
+        List<GroupOnStrategyVo> strategy = grouponActivityVo.getStrategy();
         //判断团购的数量符合哪个级别，进而算退的钱
         GroupOnStrategyVo strategyLevel=new GroupOnStrategyVo();
         for(GroupOnStrategyVo groupOnStrategyVo:strategy){
