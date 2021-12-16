@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @FeignClient(name = "other-service",configuration= OpenFeignConfig.class)
 public interface CustomService {
-//SOLVED
+//SOLVED BY HTY
     @GetMapping("/internal/customers/{id}")
     InternalReturnObject<SimpleVo> getCustomerById(@PathVariable("id") Long id);
 
