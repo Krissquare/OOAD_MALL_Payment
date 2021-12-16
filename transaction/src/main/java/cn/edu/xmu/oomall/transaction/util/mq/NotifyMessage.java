@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.transaction.util;
+package cn.edu.xmu.oomall.transaction.util.mq;
 
 
 import lombok.AllArgsConstructor;
@@ -16,9 +16,9 @@ public class NotifyMessage {
 
     private Byte state;
 
-    private MessageType messageType;
+    private NotifyMessageType messageType;
 
-    public enum MessageType {
+    public enum NotifyMessageType {
         PAYMENT((byte) 1, "PaymentMessage"),
         REFUND((byte) 2, "RefundMessage");
 
@@ -26,7 +26,7 @@ public class NotifyMessage {
 
         private String description;
 
-        MessageType(byte code, String description) {
+        NotifyMessageType(byte code, String description) {
             this.code = code;
             this.description = description;
         }
