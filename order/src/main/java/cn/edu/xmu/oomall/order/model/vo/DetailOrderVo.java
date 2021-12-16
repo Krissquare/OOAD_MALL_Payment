@@ -28,5 +28,5 @@ public class DetailOrderVo {
     private Long grouponId;
     private Long advancesaleId;
     private String shipmentSn;
-    private List<SimpleOrderItemVo> orderItems;
+    private List<SimpleOrderitemRetVo> orderItems;
 }

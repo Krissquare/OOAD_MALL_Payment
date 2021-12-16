@@ -36,138 +36,66 @@ public class TransactionService {
 
     @Autowired
     private TransactionPatternFactory transactionPatternFactory;
-
     /**
-     * gyt
-     * 平台管理员查询支付信息
-     *
-     * @param documentId
-     * @param state
-     * @param beginTime
-     * @param endTime
-     * @param page
-     * @param pageSize
-     * @return
-     */
-    @Transactional(readOnly = true)
-    public ReturnObject listPayment(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
-        return transactionDao.listPayment(null, documentId, null, state, beginTime, endTime, page, pageSize);
-    }
-
-    /**
-     * gyt
-     * 平台管理员查询支付信息详情
-     *
-     * @param id
-     * @return
-     */
-    @Transactional(readOnly = true)
-    public ReturnObject getPaymentDetails(Long id) {
-        ReturnObject returnObject = transactionDao.getPaymentById(id);
-        if (!returnObject.getCode().equals(ReturnNo.OK)) {
-            return returnObject;
+     * 2.获取当前有效的支付渠道
+     * fz
+     * */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject listAllValidPayPatterns(){
+        ReturnObject ret = transactionDao.listAllPayPattern();
+        List<PaymentPatternPo> oriList = (List<PaymentPatternPo>) ret.getData();
+        List<SimpleVo> retList = new ArrayList<>();
+        for (PaymentPatternPo item: oriList){
+            if (item.getState() == null) {
+                SimpleVo simpleVo = cloneVo(item, SimpleVo.class);
+                retList.add(simpleVo);
+            }
         }
-        PaymentDetailRetVo paymentDetailRetVo = cloneVo(returnObject.getData(), PaymentDetailRetVo.class);
-        return new ReturnObject(paymentDetailRetVo);
+        return new ReturnObject(retList);
     }
-
     /**
-     * gyt
-     * 平台管理员修改支付信息
-     *
-     * @param id
+     * 3.获得所有的支付渠道
+     * fz
+     * */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject listAllPayPatterns(){
+        ReturnObject ret = transactionDao.listAllPayPattern();
+        List<PaymentPatternPo> oriList = (List<PaymentPatternPo>) ret.getData();
+        List<PaymentPatternVo> tarList = new ArrayList<>();
+        for (PaymentPatternPo item: oriList){
+            SimpleVo creator = new SimpleVo();
+            creator.setId(item.getCreatorId());
+            creator.setName(item.getCreatorName());
+            SimpleVo modifier = new SimpleVo();
+            modifier.setId(item.getModifierId());
+            modifier.setName(item.getModifierName());
+            PaymentPatternVo tarItem = cloneVo(item, PaymentPatternVo.class);
+            tarItem.setCreator(creator);
+            tarItem.setModifier(modifier);
+            tarList.add(tarItem);
+        }
+        return new ReturnObject(tarList);
+    }
+    /**
+     * 4.获得所有支付单状态
+     * fz
+     * */
+    public ReturnObject listAllPaymentStates(){
+        HashMap<Byte, String> states = new HashMap<>();
+        for (PaymentState item: PaymentState.values()){
+            states.put(item.getCode(),item.getState());
+        }
+        return new ReturnObject(states);
+    }
+    /**
+     * 6.顾客请求支付
+     * hqg
+     * @param paymentBill
      * @param loginUserId
      * @param loginUserName
-     * @param paymentModifyVo
      * @return
      */
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject updatePayment(Long id, Long loginUserId, String loginUserName, PaymentModifyVo paymentModifyVo) {
-        ReturnObject returnObject = transactionDao.getPaymentById(id);
-        if (!returnObject.getCode().equals(ReturnNo.OK)) {
-            return returnObject;
-        }
-        Payment payment = (Payment) returnObject.getData();
-        if (payment.getState().equals(PaymentState.ALREADY_PAY.getCode()) || payment.getState().equals(PaymentState.FAIL.getCode())) {
-            Payment payment1 = cloneVo(paymentModifyVo, Payment.class);
-            payment1.setId(id);
-            setPoModifiedFields(payment1, loginUserId, loginUserName);
-            ReturnObject returnObject1 = transactionDao.updatePayment(payment1);
-            if (!returnObject1.getCode().equals(ReturnNo.OK)) {
-                return returnObject1;
-            }
-            PaymentDetailRetVo paymentDetailRetVo = cloneVo(returnObject1.getData(), PaymentDetailRetVo.class);
-            return new ReturnObject(paymentDetailRetVo);
-        } else {
-            return new ReturnObject(ReturnNo.STATENOTALLOW);
-        }
-    }
-
-    /**
-     * hty
-     * 平台管理员查询退款
-     *
-     * @param documentId
-     * @param state
-     * @param beginTime
-     * @param endTime
-     * @param page
-     * @param pageSize
-     * @return
-     */
-    public ReturnObject listRefund(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
-        return transactionDao.listRefund(null, documentId, state, null, null, beginTime, endTime, page, pageSize);
-    }
-
-    /**
-     * hty
-     * 获取退款详情
-     *
-     * @param id
-     * @return
-     */
-
-    public ReturnObject getRefundDetail(Long id) {
-        ReturnObject ret = transactionDao.getRefundById(id);
-        if (!ret.getCode().equals(ReturnNo.OK)) {
-            return ret;
-        }
-        RefundDetailVo returnDetailVo = cloneVo(ret.getData(), RefundDetailVo.class);
-        return new ReturnObject(returnDetailVo);
-    }
-
-    /**
-     * hty
-     * 修改退款信息
-     *
-     * @param id
-     * @param refundRecVo
-     * @param loginUserId
-     * @param loginUserName
-     * @return
-     */
-    public ReturnObject updateRefund(Long id, RefundRecVo refundRecVo, Long loginUserId, String loginUserName) {
-        ReturnObject ret = transactionDao.getRefundById(id);
-        if (!ret.getCode().equals(ReturnNo.OK)) {
-            return ret;
-        }
-        Refund refund1 = (Refund) ret.getData();
-        if (!refund1.getState().equals(RefundState.FINISH_REFUND.getCode())) {
-            return new ReturnObject<>(ReturnNo.STATENOTALLOW);
-        }
-        refund1.setState(refundRecVo.getState());
-        refund1.setDescr(refundRecVo.getDescr());
-        setPoModifiedFields(refund1, loginUserId, loginUserName);
-        refund1.setAdjustId(loginUserId);
-        refund1.setAdjustName(loginUserName);
-        ReturnObject returnObject = transactionDao.updateRefund(refund1);
-        if (!returnObject.getCode().equals(ReturnNo.OK.getCode())) {
-            return returnObject;
-        }
-        return new ReturnObject(cloneVo(refund1, RefundDetailVo.class));
-    }
-
-
     public ReturnObject requestPayment(PaymentBill paymentBill, Long loginUserId, String loginUserName) {
         // 根据documentId, documentType去查payment
         ReturnObject<PageInfo<Payment>> retPaymentPageInfo =
@@ -221,6 +149,190 @@ public class TransactionService {
 
         return new ReturnObject<>(ReturnNo.OK);
     }
+    /**
+     * gyt
+     * 7.平台管理员查询支付信息
+     *
+     * @param documentId
+     * @param state
+     * @param beginTime
+     * @param endTime
+     * @param page
+     * @param pageSize
+     * @return
+     */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject listPayment(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
+        return transactionDao.listPayment(null, documentId, null, state, beginTime, endTime, page, pageSize);
+    }
+
+    /**
+     * gyt
+     * 8.平台管理员查询支付信息详情
+     *
+     * @param id
+     * @return
+     */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject getPaymentDetails(Long id) {
+        ReturnObject returnObject = transactionDao.getPaymentById(id);
+        if (!returnObject.getCode().equals(ReturnNo.OK)) {
+            return returnObject;
+        }
+        PaymentDetailRetVo paymentDetailRetVo = cloneVo(returnObject.getData(), PaymentDetailRetVo.class);
+        return new ReturnObject(paymentDetailRetVo);
+    }
+
+    /**
+     * gyt
+     * 9.平台管理员修改支付信息
+     *
+     * @param id
+     * @param loginUserId
+     * @param loginUserName
+     * @param paymentModifyVo
+     * @return
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject updatePayment(Long id, Long loginUserId, String loginUserName, PaymentModifyVo paymentModifyVo) {
+        ReturnObject returnObject = transactionDao.getPaymentById(id);
+        if (!returnObject.getCode().equals(ReturnNo.OK)) {
+            return returnObject;
+        }
+        Payment payment = (Payment) returnObject.getData();
+        if (payment.getState().equals(PaymentState.ALREADY_PAY.getCode()) || payment.getState().equals(PaymentState.FAIL.getCode())) {
+            Payment payment1 = cloneVo(paymentModifyVo, Payment.class);
+            payment1.setId(id);
+            setPoModifiedFields(payment1, loginUserId, loginUserName);
+            ReturnObject returnObject1 = transactionDao.updatePayment(payment1);
+            if (!returnObject1.getCode().equals(ReturnNo.OK)) {
+                return returnObject1;
+            }
+            PaymentDetailRetVo paymentDetailRetVo = cloneVo(returnObject1.getData(), PaymentDetailRetVo.class);
+            return new ReturnObject(paymentDetailRetVo);
+        } else {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
+    }
+
+    /**
+     * hty
+     * 10.平台管理员查询退款
+     *
+     * @param documentId
+     * @param state
+     * @param beginTime
+     * @param endTime
+     * @param page
+     * @param pageSize
+     * @return
+     */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject getRefund(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
+        return transactionDao.listRefund(null, documentId, state, null, null, beginTime, endTime, page, pageSize);
+    }
+
+    /**
+     * hty
+     * 11.获取退款详情
+     *
+     * @param id
+     * @return
+     */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject getRefundDetail(Long id) {
+        ReturnObject ret = transactionDao.getRefundById(id);
+        if (!ret.getCode().equals(ReturnNo.OK)) {
+            return ret;
+        }
+        RefundDetailVo returnDetailVo = cloneVo(ret.getData(), RefundDetailVo.class);
+        return new ReturnObject(returnDetailVo);
+    }
+
+    /**
+     * hty
+     * 12.修改退款信息
+     *
+     * @param id
+     * @param refundRecVo
+     * @param loginUserId
+     * @param loginUserName
+     * @return
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject updateRefund(Long id, RefundRecVo refundRecVo, Long loginUserId, String loginUserName) {
+        ReturnObject ret = transactionDao.getRefundById(id);
+        if (!ret.getCode().equals(ReturnNo.OK)) {
+            return ret;
+        }
+        Refund refund1 = (Refund) ret.getData();
+//        if (!refund1.getState().equals(RefundState.FINISH_REFUND)) {
+//            return new ReturnObject<>(ReturnNo.STATENOTALLOW);
+//        }
+        refund1.setState(refundRecVo.getState());
+        refund1.setDescr(refundRecVo.getDescr());
+        setPoModifiedFields(refund1, loginUserId, loginUserName);
+        refund1.setAdjustId(loginUserId);
+        refund1.setAdjustName(loginUserName);
+        ReturnObject returnObject = transactionDao.updateRefund(refund1);
+        if (!returnObject.getCode().equals(ReturnNo.OK.getCode())) {
+            return returnObject;
+        }
+        return new ReturnObject(cloneVo(refund1, RefundDetailVo.class));
+    }
+
+    /**
+     * 13.平台管理员查询错账信息
+     * fz
+     * */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject listErrorAccountsByConditions(String documentId,
+                                                      Byte state,
+                                                      LocalDateTime beginTime,
+                                                      LocalDateTime endTime,
+                                                      Integer page,
+                                                      Integer pageSize){
+        return transactionDao.listErrorAccountsVoByConditions(documentId,state,beginTime,endTime,page,pageSize);
+    }
+
+    /**
+     * 14.平台管理员查询错账信息详情
+     * fz
+     * */
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject getDetailedErrorAccount(Long id){
+        ReturnObject ret = transactionDao.getErrorAccount(id);
+        if (!ret.getCode().equals(ReturnNo.OK)){
+            return ret;
+        }
+        ErrorAccountPo ori = (ErrorAccountPo) ret.getData();
+        ErrorAccountDetailedVo tar = ErrorAccountDetailedVo.generateFromErrorAccountPo(ori);
+        return new ReturnObject(tar);
+    }
+
+    /**
+     * 15.平台管理员修改错账信息
+     * fz
+     * */
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject updateErrorAccount(Long id, ErrorAccountUpdateVo updateVo){
+        ReturnObject ret = transactionDao.getErrorAccount(id);
+        if (!ret.getCode().equals(ReturnNo.OK)){
+            return ret;
+        }
+        ErrorAccountPo po = (ErrorAccountPo) ret.getData();
+        if (po.getState() != 0){
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
+        po.setDescr(updateVo.getDescr());
+        po.setState(updateVo.getState());
+        ReturnObject updRet = transactionDao.updateErrorAccount(po);
+        if (!updRet.getCode().equals(ReturnNo.OK)){
+            return ret;
+        }
+        ErrorAccountDetailedVo retData = ErrorAccountDetailedVo.generateFromErrorAccountPo(po);
+        return new ReturnObject(retData);
+    }
 
 
     /**
@@ -228,6 +340,7 @@ public class TransactionService {
      * @param
      * @return
      */
+    @Transactional(rollbackFor = Exception.class)
     public ReturnObject requestRefund(RefundBill refundBill) {
         // 查payment是否存在
         ReturnObject<Payment> retPayment = transactionDao.getPaymentById(refundBill.getPaymentId());
@@ -283,105 +396,5 @@ public class TransactionService {
         return new ReturnObject<>(ReturnNo.OK);
     }
 
-    /**
-     * fz
-     * */
-    public ReturnObject listAllPaymentStates(){
-        HashMap<Byte, String> states = new HashMap<>();
-        for (PaymentState item: PaymentState.values()){
-            states.put(item.getCode(),item.getState());
-        }
-        return new ReturnObject(states);
-    }
-
-    /**
-     * fz
-     * */
-    @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject listAllValidPayPatterns(){
-        ReturnObject ret = transactionDao.listAllPayPattern();
-        List<PaymentPatternPo> oriList = (List<PaymentPatternPo>) ret.getData();
-        List<SimpleVo> retList = new ArrayList<>();
-        for (PaymentPatternPo item: oriList){
-            if (item.getState() == null) {
-                SimpleVo simpleVo = cloneVo(item, SimpleVo.class);
-                retList.add(simpleVo);
-            }
-        }
-        return new ReturnObject(retList);
-    }
-
-    /**
-     * fz
-     * */
-    @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject listAllPayPatterns(){
-        ReturnObject ret = transactionDao.listAllPayPattern();
-        List<PaymentPatternPo> oriList = (List<PaymentPatternPo>) ret.getData();
-        List<PaymentPatternVo> tarList = new ArrayList<>();
-        for (PaymentPatternPo item: oriList){
-            SimpleVo creator = new SimpleVo();
-            creator.setId(item.getCreatorId());
-            creator.setName(item.getCreatorName());
-            SimpleVo modifier = new SimpleVo();
-            modifier.setId(item.getModifierId());
-            modifier.setName(item.getModifierName());
-            PaymentPatternVo tarItem = cloneVo(item, PaymentPatternVo.class);
-            tarItem.setCreator(creator);
-            tarItem.setModifier(modifier);
-            tarList.add(tarItem);
-        }
-        return new ReturnObject(tarList);
-    }
-
-    /**
-     * fz
-     * */
-    @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject listErrorAccountsByConditions(String documentId,
-                                                      Byte state,
-                                                      LocalDateTime beginTime,
-                                                      LocalDateTime endTime,
-                                                      Integer page,
-                                                      Integer pageSize){
-        return transactionDao.listErrorAccountsVoByConditions(documentId,state,beginTime,endTime,page,pageSize);
-    }
-
-    /**
-     * fz
-     * */
-    @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject getDetailedErrorAccount(Long id){
-        ReturnObject ret = transactionDao.getErrorAccount(id);
-        if (!ret.getCode().equals(ReturnNo.OK)){
-            return ret;
-        }
-        ErrorAccountPo ori = (ErrorAccountPo) ret.getData();
-        ErrorAccountDetailedVo tar = ErrorAccountDetailedVo.generateFromErrorAccountPo(ori);
-        return new ReturnObject(tar);
-    }
-
-    /**
-     * fz
-     * */
-    @Transactional(rollbackFor = Exception.class)
-    public ReturnObject updateErrorAccount(Long id, ErrorAccountUpdateVo updateVo){
-        ReturnObject ret = transactionDao.getErrorAccount(id);
-        if (!ret.getCode().equals(ReturnNo.OK)){
-            return ret;
-        }
-        ErrorAccountPo po = (ErrorAccountPo) ret.getData();
-        if (po.getState() != 0){
-            return new ReturnObject(ReturnNo.STATENOTALLOW);
-        }
-        po.setDescr(updateVo.getDescr());
-        po.setState(updateVo.getState());
-        ReturnObject updRet = transactionDao.updateErrorAccount(po);
-        if (!updRet.getCode().equals(ReturnNo.OK)){
-            return ret;
-        }
-        ErrorAccountDetailedVo retData = ErrorAccountDetailedVo.generateFromErrorAccountPo(po);
-        return new ReturnObject(retData);
-    }
 
 }

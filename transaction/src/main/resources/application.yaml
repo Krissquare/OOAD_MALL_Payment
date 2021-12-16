@@ -5,7 +5,7 @@ management:
         include: "*"
 
 server:
-  port: 8080
+  port: 8091
   tomcat:
     threads:
       max: 500
@@ -19,9 +19,10 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 101.132.164.244:8888
-        username: nacos
-        password: ooad_javaee201
+         server-addr: 121.36.53.115
+#        server-addr: 101.132.164.244:8888
+#        username: nacos
+#        password: ooad_javaee201
   servlet:
     multipart:
       #是否使用http上传
@@ -96,10 +97,14 @@ rocketmq:
   name-server: 121.36.76.162:9876
   producer:
     #生产者group名称
-    group: producer_group
+    group: transaction-group
     #一次发送多少数量消息
     max-message-size: 4096
     #发送消息超时时间,默认3000
     send-message-timeout: 3000
     #发送消息失败重试次数，默认2
     retry-times-when-send-async-failed: 2
+
+oomall:
+  transaction:
+    expiretime: 10000

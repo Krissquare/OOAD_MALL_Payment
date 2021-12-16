@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AftersaleOrderitemRetVo {
+public class SimpleOrderitemRetVo {
     private Long productId;
     private String name;
     private Long quantity;

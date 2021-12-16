@@ -72,10 +72,10 @@ public class TransactionControllerTest {
         adminToken = jwtHelper.createToken(1L, "admin", 0L, 3600, 0);
         String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/shops/0/refund").header("authorization", adminToken)
                 .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isNotFound())
+                .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":504,\"errmsg\":\"操作的资源id不存在\"}";
+        String expected = "{\"errno\":0,\"data\":{\"total\":1,\"pages\":1,\"pageSize\":10,\"page\":1,\"list\":[{\"id\":1,\"tradeSn\":\"34564322\",\"patternId\":1,\"amount\":5,\"state\":null,\"documentId\":\"20216453652635231006\",\"documentType\":0}]},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
@@ -85,10 +85,10 @@ public class TransactionControllerTest {
         adminToken = jwtHelper.createToken(1L, "admin", 0L, 3600, 0);
         String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/shops/0/refund/1").header("authorization", adminToken)
                 .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isNotFound())
+                .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":504,\"errmsg\":\"操作的资源id不存在\"}";
+        String expected = "{\"errno\":0,\"data\":{\"id\":1,\"tradeSn\":\"34564322\",\"patternId\":1,\"paymentId\":1,\"amount\":5,\"state\":null,\"documentId\":\"20216453652635231006\",\"documentType\":0,\"descr\":null,\"adjustId\":null,\"adjustName\":null,\"adjustTime\":null,\"creatorId\":null,\"creatorName\":null,\"gmtCreate\":\"2021-12-11T16:31:44\",\"gmtModified\":null,\"modifierId\":null,\"modifierName\":null},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
@@ -102,10 +102,10 @@ public class TransactionControllerTest {
         String requestJson= JacksonUtil.toJson(refundRecVo);
         String responseString = this.mvc.perform(MockMvcRequestBuilders.put("/shops/0/refund/1").header("authorization", adminToken)
                 .contentType("application/json;charset=UTF-8").content(requestJson))
-                .andExpect(status().isNotFound())
+                .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":504,\"errmsg\":\"操作的资源id不存在\"}";
+        String expected = "{\"errno\":0,\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
@@ -172,8 +172,7 @@ public class TransactionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse="{\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":{\"id\":1,\"tradeSn\":\"7363522113\",\"patternId\":0,\"amount\":92,\"actualAmount\":null,\"documentId\":null,\"documentType\":0,\"payTime\":\"2021-12-01T15:43:38\",\"beginTime\":null,\"endTime\":null,\"state\":1,\"descr\":null,\"adjust\":{\"id\":null,\"name\":null},\"adjustTime\":null,\"creator\":{\"id\":1,\"name\":\"gyt\"}," +
-                "\"gmtCreate\":\"2021-12-02T17:46:10\",\"gmtModified\":null,\"modifier\":{\"id\":null,\"name\":null}}}";
+        String expectedResponse="{\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":{\"id\":1,\"tradeSn\":\"7363522113\",\"patternId\":0,\"amount\":92,\"actualAmount\":76,\"documentId\":\"20216453652635231006\",\"documentType\":0,\"payTime\":\"2021-12-01T15:43:38\",\"beginTime\":null,\"endTime\":null,\"state\":1,\"descr\":null,\"adjust\":{\"id\":null,\"name\":null},\"adjustTime\":null,\"creator\":{\"id\":1,\"name\":\"gyt\"},\"gmtCreate\":\"2021-12-02T17:46:10\",\"gmtModified\":null,\"modifier\":{\"id\":null,\"name\":null}}}";
         JSONAssert.assertEquals(expectedResponse, responseString, true);
     }
 
@@ -195,8 +194,8 @@ public class TransactionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse="{\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":{\"id\":1,\"tradeSn\":null,\"patternId\":null,\"amount\":null,\"actualAmount\":null,\"documentId\":null,\"documentType\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null,\"state\":2,\"descr\":\"已对账噢\",\"adjust\":{\"id\":null,\"name\":null},\"adjustTime\":null,\"creator\":{\"id\":null,\"name\":null},\"gmtCreate\":null,\"gmtModified\":\"2021-12-09T22:44:29.1910273\",\"modifier\":{\"id\":1,\"name\":\"admin\"}}}";
-        JSONAssert.assertEquals(expectedResponse, responseString, true);
+        String expectedResponse=" {\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":{\"id\":1,\"tradeSn\":null,\"patternId\":null,\"amount\":null,\"actualAmount\":null,\"documentId\":null,\"documentType\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null,\"state\":2,\"descr\":\"已对账噢\",\"adjust\":{\"id\":null,\"name\":null},\"adjustTime\":null,\"creator\":{\"id\":null,\"name\":null},\"gmtCreate\":null,\"modifier\":{\"id\":1,\"name\":\"admin\"}}}";
+        JSONAssert.assertEquals(expectedResponse, responseString, false);
     }
     /**
      * 微信支付通知API
@@ -333,7 +332,7 @@ public class TransactionControllerTest {
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
 
-        String expected = "{\"errno\":0,\"data\":{\"0\":\"待支付\",\"1\":\"已支付\",\"2\":\"已对账\",\"3\":\"已清算\",\"5\":\"失败\"},\"errmsg\":\"成功\"}";
+        String expected = "{\"errno\":0,\"data\":{\"0\":\"待支付\",\"1\":\"已支付\",\"2\":\"已对账\",\"3\":\"已清算\",\"4\":\"取消\",\"5\":\"支付失败\"},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, response, true);
     }
 
