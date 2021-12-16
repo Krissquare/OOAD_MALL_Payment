@@ -114,6 +114,32 @@ public class TransactionController {
     }
 
     /**
+     * 内部API，只给售后用
+     * @param documentId
+     * @param state
+     * @param beginTime
+     * @param endTime
+     * @param page
+     * @param pageSize
+     * @return
+     */
+    @GetMapping("/internal/payment")
+    public Object listPaymentInternal(@RequestParam(value = "documentId",required = false)String documentId,
+                              @RequestParam(value = "state",required = false)Byte state,
+                              @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
+                              @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
+                              @RequestParam(value = "page",required = false)Integer page,
+                              @RequestParam(value = "pageSize",required = false)Integer pageSize) {
+        if (beginTime != null && endTime != null) {
+            if (beginTime.isAfter(endTime))
+            {
+                return new ReturnObject(ReturnNo.LATE_BEGINTIME);
+            }
+        }
+        return transactionService.listPayment(documentId, state, beginTime, endTime, page, pageSize);
+    }
+
+    /**
      * gyt
      * 8.平台管理员查询支付信息详情
      * @param shopId

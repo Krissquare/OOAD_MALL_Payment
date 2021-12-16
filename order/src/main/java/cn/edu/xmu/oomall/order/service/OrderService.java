@@ -745,7 +745,7 @@ public class OrderService {
         refundRecVo.setDocumentId(newOrder.getOrderSn());
         refundRecVo.setDocumentType(RefundType.ORDER.getCode());
         //查订单对应的payment
-        InternalReturnObject<PageVo<RefundRetVo>> returnObject1 = transactionService.getRefund(0L, newOrder.getOrderSn(), null, null, null, 1, 10);
+        InternalReturnObject<PageVo<RefundRetVo>> returnObject1 = transactionService.listRefund(0L, newOrder.getOrderSn(), null, null, null, 1, 10);
         if(returnObject1.getErrno().equals(ReturnNo.OK.getCode())){
             return new ReturnObject(returnObject1);
         }
@@ -885,7 +885,7 @@ public class OrderService {
         }
         Order order = (Order) ret.getData();
         String documentId = order.getOrderSn();
-        InternalReturnObject<PageVo<RefundRetVo>> returnObject = transactionService.getRefund(0L, documentId, RefundState.FINISH_REFUND.getCode(), null, null, 1, 10);
+        InternalReturnObject<PageVo<RefundRetVo>> returnObject = transactionService.listRefund(0L, documentId, RefundState.FINISH_REFUND.getCode(), null, null, 1, 10);
         if(!returnObject.getErrno().equals(ReturnNo.OK.getCode()))
         {
             return new ReturnObject(returnObject);
@@ -942,7 +942,7 @@ public class OrderService {
         }
         Order order = (Order) ret1.getData();
         String documentId = order.getOrderSn();
-        InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPaymentInternal(documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
         List<PaymentRetVo> list = returnObject.getData().getList();
         PaymentRetVo retPayment = null;
         for (PaymentRetVo paymentRetVo : list) {
