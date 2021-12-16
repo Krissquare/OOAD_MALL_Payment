@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 /**
  * @author xiuchen lang 22920192204222
@@ -19,22 +20,23 @@ public class OnSaleVo {
     private Long id;
     private Long price;
     private Integer quantity;
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS", timezone = "GMT+8")
-    private LocalDateTime beginTime;
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS", timezone = "GMT+8")
-    private LocalDateTime endTime;
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ", timezone = "GMT+8")
+//    private ZonedDateTime beginTime;
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ", timezone = "GMT+8")
+//    private ZonedDateTime endTime;
     private Byte type;
     private Long activityId;
     private Long shareActId;
     private Integer numKey;
     private Integer maxQuantity;
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS", timezone = "GMT+8")
-    private LocalDateTime gmtCreate;
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS", timezone = "GMT+8")
-    private LocalDateTime gmtModified;
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ", timezone = "GMT+8")
+//    private ZonedDateTime gmtCreate;
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ", timezone = "GMT+8")
+//    private ZonedDateTime gmtModified;
     private ProductSimpleVo product;
-    private cn.edu.xmu.oomall.order.model.vo.SimpleVo shop;
-    private cn.edu.xmu.oomall.order.model.vo.SimpleVo creator;
+    private SimpleVo shop;
+    private SimpleVo creator;
     private SimpleVo modifier;
 
+    private Byte state;
 }
