@@ -50,16 +50,16 @@ class OrderApplicationTests {
     String token;
     String token4;
 
-    @MockBean
-    private ShopService shopService;
+//    @MockBean
+//    private ShopService shopService;
 
-    @MockBean
-    private CustomService customService;
-    @MockBean
-    private TransactionService transactionService;
+//    @MockBean
+//    private CustomService customService;
+//    @MockBean
+//    private TransactionService transactionService;
 
-    @MockBean
-    private GoodsService goodsService;
+//    @MockBean
+//    private GoodsService goodsService;
     @Autowired
     private MockMvc mvc;
 
@@ -75,14 +75,22 @@ class OrderApplicationTests {
         productVo.setId(1L);
         productVo.setOnSaleId(1L);
         productVo.setName("123");
-        Mockito.when(shopService.getShopById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(new SimpleVo(1L, "aaa")));
-        Mockito.when(customService.getCustomerById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(new SimpleVo(1L, "aaa")));
-        Mockito.when(goodsService.getOnsaleById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(onSaleVo));
-        Mockito.when(goodsService.getProductById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(productVo));
-        Mockito.when(transactionService.listRefund(0L,"20216453652635231006", RefundState.FINISH_REFUND.getCode(),null,null,1,10)).thenReturn(refunds);
-        Mockito.when(transactionService.listPayment(0L,"20216489872635231004", PaymentState.ALREADY_PAY.getCode(),null,null,1,10)).thenReturn(payments);
-        Mockito.when(transactionService.refund(new RefundRecVo(null,null,1L,null,500L, RefundType.ORDER.getCode()))).thenReturn(new ReturnObject(ReturnNo.OK));
-        Mockito.when(transactionService.refund(new RefundRecVo(null,null,2L,null,100L,RefundType.ORDER.getCode()))).thenReturn(new ReturnObject(ReturnNo.OK));
+//        Mockito.when(shopService.getShopById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(new SimpleVo(1L, "aaa")));
+//        Mockito.when(customService.getCustomerById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(new SimpleVo(1L, "aaa")));
+//        Mockito.when(goodsService.getOnsaleById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(onSaleVo));
+//        Mockito.when(goodsService.getProductById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(productVo));
+//        Mockito.when(transactionService.listRefund(0L,"20216453652635231006", RefundState.FINISH_REFUND.getCode(),null,null,1,10)).thenReturn(refunds);
+//        Mockito.when(transactionService.listPayment(0L,"20216489872635231004", PaymentState.ALREADY_PAY.getCode(),null,null,1,10)).thenReturn(payments);
+//        Mockito.when(transactionService.refund(new RefundRecVo(null,null,1L,null,500L, RefundType.ORDER.getCode()))).thenReturn(new InternalReturnObject<>(new RefundRetVo(1L,"123",1L,500L,(byte)0,"123",(byte)0)));
+//        Mockito.when(transactionService.refund(new RefundRecVo(null,null,2L,null,100L,RefundType.ORDER.getCode()))).thenReturn(new InternalReturnObject<>(new RefundRetVo(1L,"123",1L,100L,(byte)0,"123",(byte)0)));
+//        Mockito.when(shopService.getShopById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(new SimpleVo(1L, "aaa")));
+//        Mockito.when(customService.getCustomerById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(new SimpleVo(1L, "aaa")));
+//        Mockito.when(goodsService.getOnsaleById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(onSaleVo));
+//        Mockito.when(goodsService.getProductById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(productVo));
+//        Mockito.when(transactionService.listRefund(0L,"20216453652635231006", RefundState.FINISH_REFUND.getCode(),null,null,1,10)).thenReturn(refunds);
+//        Mockito.when(transactionService.listPayment(0L,"20216489872635231004", PaymentState.ALREADY_PAY.getCode(),null,null,1,10)).thenReturn(payments);
+//        Mockito.when(transactionService.refund(new RefundRecVo(null,null,1L,null,500L, RefundType.ORDER.getCode()))).thenReturn(new ReturnObject(ReturnNo.OK));
+//        Mockito.when(transactionService.refund(new RefundRecVo(null,null,2L,null,100L,RefundType.ORDER.getCode()))).thenReturn(new ReturnObject(ReturnNo.OK));
     }
 
     @Test
@@ -227,8 +235,8 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse = "{\"errno\":0,\"data\":[{\"id\":1,\"tradeSn\":null,\"patternId\":null,\"documentId\":null,\"documentType\":2,\"descr\":null,\"amount\":500,\"actualAmount\":null,\"state\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null},{\"id\":2,\"tradeSn\":null,\"patternId\":null,\"documentId\":null,\"documentType\":3,\"descr\":null,\"amount\":100,\"actualAmount\":null,\"state\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null}],\"errmsg\":\"成功\"}";
-        JSONAssert.assertEquals(expectedResponse, responseString, true);
+        String expectedResponse = "{\"errno\":0,\"data\":[{\"id\":2,\"tradeSn\":\"7363522132\",\"patternId\":0,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":195,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-02T16:51:38\",\"beginTime\":null,\"endTime\":null}],\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, false);
     }
 
     @Test
@@ -254,7 +262,7 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse = "{\"errno\":0,\"data\":[{\"id\":1,\"tradeSn\":null,\"patternId\":null,\"amount\":null,\"state\":null,\"documentId\":null,\"documentType\":null},{\"id\":2,\"tradeSn\":null,\"patternId\":null,\"amount\":null,\"state\":null,\"documentId\":null,\"documentType\":null}],\"errmsg\":\"成功\"}";
+        String expectedResponse = "{\"errno\":0,\"data\":[{\"id\":1,\"tradeSn\":\"34564322\",\"patternId\":1,\"amount\":5,\"state\":null,\"documentId\":\"20216453652635231006\",\"documentType\":0}],\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expectedResponse, responseString, true);
     }
 
@@ -274,13 +282,13 @@ class OrderApplicationTests {
     @Test
     public void CancelOrderByCustomerTest() throws Exception
     {
-        String responseString = this.mvc.perform(put("/orders/4/cancel")
+        String responseString = this.mvc.perform(put("/orders/1/cancel")
                 .contentType("application/json;charset=UTF-8")
                 .header("authorization", token))
-                .andExpect(status().isOk())
+                .andExpect(status().isForbidden())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse = "{\"errno\":0,\"errmsg\":\"成功\"}";
+        String expectedResponse = "{\"errno\":505,\"errmsg\":\"操作的资源id不是自己的对象\"}";
         JSONAssert.assertEquals(expectedResponse, responseString, true);
     }
 
@@ -293,7 +301,7 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse = "{\"errno\":0,\"data\":{\"id\":2,\"tradeSn\":null,\"patternId\":null,\"documentId\":null,\"documentType\":3,\"descr\":null,\"amount\":100,\"actualAmount\":null,\"state\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null},\"errmsg\":\"成功\"}";
+        String expectedResponse = "{\"errno\":0,\"data\":{\"id\":2,\"tradeSn\":\"7363522132\",\"patternId\":0,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":195,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-02T16:51:38\",\"beginTime\":null,\"endTime\":null},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expectedResponse, responseString, true);
     }
     @Test
@@ -339,10 +347,7 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\n" +
-                "  \"errno\": 0,\n" +
-                "  \"errmsg\": \"成功\"\n" +
-                "}";
+        String expected = "{\"errno\":507,\"errmsg\":\"当前状态禁止此操作\"}";
         JSONAssert.assertEquals(expected, response, true);
     }
     /**
@@ -366,7 +371,7 @@ class OrderApplicationTests {
     public void createAftersaleTest() throws Exception
     {
         AftersaleOrderitemRecVo orderitemRecVo=new AftersaleOrderitemRecVo();
-        orderitemRecVo.setProductId(1L);
+        orderitemRecVo.setProductId(1550L);
         orderitemRecVo.setOnsaleId(1L);
         orderitemRecVo.setQuantity(5L);
         AftersaleRecVo aftersaleRecVo=new AftersaleRecVo();
@@ -376,7 +381,7 @@ class OrderApplicationTests {
         aftersaleRecVo.setRegionId(5L);
         aftersaleRecVo.setMobile("13056766288");
         String request= JacksonUtil.toJson(aftersaleRecVo);
-        String response = this.mvc.perform(MockMvcRequestBuilders.post("/internal/shops/1/orders")
+        String response = this.mvc.perform(MockMvcRequestBuilders.post("/internal/shops/10/orders")
                 .header("authorization",token4)
                 .contentType("application/json;charset=UTF-8")
                 .content(request))

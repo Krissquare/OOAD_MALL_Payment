@@ -306,8 +306,8 @@ public class OrderController {
      *
      * @param shopId
      * @param id
-     * @param loginUserId
-     * @param loginUserName
+     * @param userId
+     * @param username
      * @return
      */
     @Audit(departName = "shop")
@@ -324,17 +324,12 @@ public class OrderController {
      * @param orderVo
      * @param loginUserId
      * @param loginUserName
-     * @param bindingResult
      * @return
      */
     @Audit(departName = "shop")
     @PostMapping("internal/shops/{shopId}/orders")
     public Object createAftersaleOrder(@PathVariable("shopId") Long shopId, @RequestBody AftersaleRecVo orderVo,
-                                       @LoginUser Long loginUserId, @LoginName String loginUserName, BindingResult bindingResult) {
-        Object object = Common.processFieldErrors(bindingResult, httpServletResponse);
-        if (object != null) {
-            return object;
-        }
+                                       @LoginUser Long loginUserId, @LoginName String loginUserName) {
         return Common.decorateReturnObject(orderService.insertAftersaleOrder(shopId, orderVo, loginUserId, loginUserName));
     }
 
@@ -373,9 +368,9 @@ public class OrderController {
      * @param id
      * @return
      */
-    @Audit(departName = "order")
+//    @Audit(departName = "order")
     @GetMapping("internal/orderitems/{id}/payment")
-    public Object getPaymentByOrderItem(@PathVariable("id") Long id) {
+    public Object getPaymentByOrderItemId(@PathVariable("id") Long id) {
         return Common.decorateReturnObject(orderService.getPaymentByOrderitem(id));
     }
 
@@ -392,4 +387,13 @@ public class OrderController {
     }
 
 
+    /**
+     * 7.orderSn查orderId
+     * hty
+     */
+    @GetMapping("/internal/orders")
+    public InternalReturnObject<OrderIdRetVo> getOrderIdByOrderSn(@RequestParam(value="orderSn",required = true) String orderSn)
+    {
+        return orderService.getOrderId(orderSn);
+    }
 }

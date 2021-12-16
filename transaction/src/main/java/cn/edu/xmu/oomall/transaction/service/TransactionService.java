@@ -228,7 +228,7 @@ public class TransactionService {
      * @return
      */
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject listRefund(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
+    public ReturnObject getRefund(String documentId, Byte state, LocalDateTime beginTime, LocalDateTime endTime, Integer page, Integer pageSize) {
         return transactionDao.listRefund(null, documentId, state, null, null, beginTime, endTime, page, pageSize);
     }
 
@@ -266,9 +266,9 @@ public class TransactionService {
             return ret;
         }
         Refund refund1 = (Refund) ret.getData();
-        if (!refund1.getState().equals(RefundState.FINISH_REFUND.getCode())) {
-            return new ReturnObject<>(ReturnNo.STATENOTALLOW);
-        }
+//        if (!refund1.getState().equals(RefundState.FINISH_REFUND)) {
+//            return new ReturnObject<>(ReturnNo.STATENOTALLOW);
+//        }
         refund1.setState(refundRecVo.getState());
         refund1.setDescr(refundRecVo.getDescr());
         setPoModifiedFields(refund1, loginUserId, loginUserName);

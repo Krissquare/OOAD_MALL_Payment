@@ -1,5 +1,6 @@
 package cn.edu.xmu.oomall.order.microservice;
 
+import cn.edu.xmu.oomall.core.config.OpenFeignConfig;
 import cn.edu.xmu.oomall.order.microservice.vo.CouponActivityVo;
 import cn.edu.xmu.oomall.order.microservice.vo.ProductPostVo;
 import cn.edu.xmu.oomall.order.microservice.vo.ProductRetVo;
@@ -15,7 +16,7 @@ import java.util.List;
  * @author xiuchen lang 22920192204222
  * @date 2021/12/07 17:26
  */
-@FeignClient(name = "coupon-service")
+@FeignClient(name = "coupon-service",configuration= OpenFeignConfig.class)
 public interface CouponService {
     @PutMapping("/internal/discountprices")
     InternalReturnObject<List<ProductRetVo>> calculateDiscoutprices(@RequestBody List<ProductPostVo> productOnsaleVos);

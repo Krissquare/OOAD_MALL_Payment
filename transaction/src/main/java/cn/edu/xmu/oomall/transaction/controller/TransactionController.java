@@ -106,7 +106,9 @@ public class TransactionController {
         }
         if (beginTime != null && endTime != null) {
             if (beginTime.isAfter(endTime))
+            {
                 return new ReturnObject(ReturnNo.LATE_BEGINTIME);
+            }
         }
         return transactionService.listPayment(documentId, state, beginTime, endTime, page, pageSize);
     }
@@ -172,7 +174,7 @@ public class TransactionController {
      */
 
     @Audit(departName="transaction")
-    @GetMapping("shops/{shopId}/refund")
+    @GetMapping("/shops/{shopId}/refund")
     public Object getRefund(@PathVariable("shopId") Long shopId, @RequestParam(value="documentId",required = false)String documentId,
                             @RequestParam(value="state",required = false)Byte state,
                             @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
@@ -185,7 +187,9 @@ public class TransactionController {
         if (shopId != 0) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
-        return Common.decorateReturnObject(transactionService.listRefund(documentId, state, beginTime, endTime, page, pageSize));
+        final ReturnObject refund = transactionService.getRefund(documentId, state, beginTime, endTime, page, pageSize);
+        System.out.println(refund);
+        return Common.decorateReturnObject(refund);
     }
 
     /**
@@ -284,11 +288,7 @@ public class TransactionController {
      * @return
      */
     @PostMapping("/internal/refunds")
-    public Object requestRefund(@Validated @RequestBody RefundVo refundVo, BindingResult bindingResult){
-        if (bindingResult.hasErrors()) {
-            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
-        }
-
+    public Object requestRefund(@Validated @RequestBody RefundVo refundVo){
         RefundBill refundBill = refundVo.createRefundBill();
         return transactionService.requestRefund(refundBill);
     }

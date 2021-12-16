@@ -17,6 +17,7 @@ import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import cn.edu.xmu.privilegegateway.annotation.util.Common;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
+import com.google.protobuf.Internal;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -117,13 +118,13 @@ public class OrderService {
         for (SimpleOrderItemVo simpleOrderItemVo : orderItems) {
             OrderItem orderItem = cloneVo(simpleOrderItemVo, OrderItem.class);
             // 判断productId是否存在
-            InternalReturnObject<ProductVo> productVo = goodsService.getProductById(simpleOrderItemVo.getProductId());
+            InternalReturnObject<ProductVo> productVo = goodsService.getProductDetails(simpleOrderItemVo.getProductId());
             if (productVo.getErrno() != 0) {
                 return new ReturnObject(ReturnNo.getByCode(productVo.getErrno()));
             }
             weights.add(productVo.getData().getWeight());
             // 判断onsaleId是否存在
-            InternalReturnObject<OnSaleVo> onSaleVo = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId());
+            InternalReturnObject<OnSaleVo> onSaleVo = goodsService.selectFullOnsale(simpleOrderItemVo.getOnsaleId());
             if (onSaleVo.getErrno() != 0) {
                 return new ReturnObject(ReturnNo.getByCode(onSaleVo.getErrno()));
             }
@@ -175,7 +176,7 @@ public class OrderService {
                 return new ReturnObject(ReturnNo.getByCode(grouponsById.getErrno()));
             }
             SimpleOrderItemVo simpleOrderItemVo = orderItems.get(0);
-            InternalReturnObject<OnSaleVo> onsaleById = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId());
+            InternalReturnObject<OnSaleVo> onsaleById = goodsService.selectFullOnsale(simpleOrderItemVo.getOnsaleId());
             if (onsaleById.getErrno() != 0) {
                 return new ReturnObject(ReturnNo.getByCode(onsaleById.getErrno()));
             }
@@ -194,7 +195,7 @@ public class OrderService {
                 return new ReturnObject(ReturnNo.getByCode(advanceSaleById.getErrno()));
             }
             SimpleOrderItemVo simpleOrderItemVo = orderItems.get(0);
-            InternalReturnObject<OnSaleVo> onsaleById = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId());
+            InternalReturnObject<OnSaleVo> onsaleById = goodsService.selectFullOnsale(simpleOrderItemVo.getOnsaleId());
             if (onsaleById.getErrno() != 0) {
                 return new ReturnObject(ReturnNo.getByCode(onsaleById.getErrno()));
             }
@@ -338,7 +339,7 @@ public class OrderService {
             return new ReturnObject(ReturnNo.CUSTOMERID_NOTEXIST);
         }
         SimpleVo customerVo = (SimpleVo) customerRet.getData();
-        InternalReturnObject shopRet = shopService.getShopById(order.getShopId());
+        InternalReturnObject shopRet = shopService.getSimpleShopById(order.getShopId());
         if (!customerRet.getErrno().equals(ReturnNo.OK)) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
         }
@@ -347,9 +348,9 @@ public class OrderService {
         orderVo.setCustomerVo(customerVo);
         orderVo.setShopVo(shopVo);
         List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();
-        List<SimpleOrderItemVo> simpleOrderItemVos = new ArrayList<>();
+        List<SimpleOrderitemRetVo> simpleOrderItemVos = new ArrayList<>();
         for (OrderItem orderItem : orderItemList) {
-            SimpleOrderItemVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderItemVo.class);
+            SimpleOrderitemRetVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderitemRetVo.class);
             simpleOrderItemVos.add(simpleOrderItemVo);
         }
         orderVo.setOrderItems(simpleOrderItemVos);
@@ -444,14 +445,17 @@ public class OrderService {
             pOrder = (Order) ret1.getData();
             documentId = pOrder.getOrderSn();
         }
-        InternalReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
-        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
-        List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
+        InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        if(!returnObject.getErrno().equals(ReturnNo.OK.getCode()))
+        {
+            return new ReturnObject(returnObject);
+        }
+        List<PaymentRetVo> list = returnObject.getData().getList();
         for (PaymentRetVo paymentVo : list) {
             RefundRecVo refundRecVo = cloneVo(paymentVo, RefundRecVo.class);
             refundRecVo.setPaymentId(paymentVo.getId());
             refundRecVo.setDocumentType(RefundType.ORDER.getCode());
-            ReturnObject retRefund = transactionService.refund(refundRecVo);
+            InternalReturnObject<RefundRetVo> retRefund = transactionService.requestRefund(refundRecVo);
             if (retRefund.getData() == null) {
                 return new ReturnObject(retRefund);
             }
@@ -554,14 +558,14 @@ public class OrderService {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
         SimpleVo customerVo = customService.getCustomerById(order.getCustomerId()).getData();
-        SimpleVo shopVo = shopService.getShopById(order.getShopId()).getData();
+        SimpleVo shopVo = shopService.getSimpleShopById(order.getShopId()).getData();
         DetailOrderVo orderVo = Common.cloneVo(order, DetailOrderVo.class);
         orderVo.setCustomerVo(customerVo);
         orderVo.setShopVo(shopVo);
         List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();//根据orderId查orderItem
-        List<SimpleOrderItemVo> simpleOrderItemVos = new ArrayList<>();
+        List<SimpleOrderitemRetVo> simpleOrderItemVos = new ArrayList<>();
         for (OrderItem orderItem : orderItemList) {
-            SimpleOrderItemVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderItemVo.class);
+            SimpleOrderitemRetVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderitemRetVo.class);
             simpleOrderItemVos.add(simpleOrderItemVo);
         }
         orderVo.setOrderItems(simpleOrderItemVos);
@@ -609,7 +613,7 @@ public class OrderService {
             RefundRecVo refundRecVo = cloneVo(paymentVo, RefundRecVo.class);
             refundRecVo.setPaymentId(paymentVo.getId());
             refundRecVo.setDocumentType(RefundType.ORDER.getCode());
-            ReturnObject retRefund = transactionService.refund(refundRecVo);
+            InternalReturnObject retRefund = transactionService.requestRefund(refundRecVo);
             if (retRefund.getData() == null) {
                 return new ReturnObject(retRefund);
             }
@@ -677,12 +681,12 @@ public class OrderService {
         }
         Order order = (Order) returnObject1.getData();
         String ducumentId = order.getOrderSn();
-        InternalReturnObject returnObject = transactionService.listPayment(0L, ducumentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
-        if(returnObject.getData()==null){
+        InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, ducumentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        if(!returnObject.getErrno().equals(ReturnNo.OK.getCode()))
+        {
             return new ReturnObject(returnObject);
         }
-        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
-        List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
+        List<PaymentRetVo> list = returnObject.getData().getList();
         return new ReturnObject(list);
     }
 
@@ -740,15 +744,19 @@ public class OrderService {
         refundRecVo.setDocumentId(newOrder.getOrderSn());
         refundRecVo.setDocumentType(RefundType.ORDER.getCode());
         //查订单对应的payment
-        InternalReturnObject returnObject1 = transactionService.listRefund(0L, newOrder.getOrderSn(), null, null, null, 1, 10);
+        InternalReturnObject<PageVo<RefundRetVo>> returnObject1 = transactionService.getRefund(0L, newOrder.getOrderSn(), null, null, null, 1, 10);
         if(returnObject1.getErrno().equals(ReturnNo.OK.getCode())){
             return new ReturnObject(returnObject1);
         }
-        Map<String, Object> data = (Map<String, Object>) returnObject1.getData();
-        List<RefundRetVo> list = (List<RefundRetVo>) data.get("list");
+        List<RefundRetVo> list = (List<RefundRetVo>) returnObject1.getData().getList();
         refundRecVo.setPaymentId(list.get(0).getId());
         refundRecVo.setPatternId(list.get(0).getPatternId());
-        return transactionService.refund(refundRecVo);
+        InternalReturnObject ret=transactionService.requestRefund(refundRecVo);
+        if(!ret.getErrno().equals(ReturnNo.OK.getCode()))
+        {
+            return new ReturnObject(ret);
+        }
+        return new ReturnObject(ret.getData());
     }
 
     /*===============================================内部API=======================================*/
@@ -785,14 +793,13 @@ public class OrderService {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
         String documentId = order.getOrderSn();
-        InternalReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
-        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
-        List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
+        InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        List<PaymentRetVo> list = returnObject.getData().getList();
         for (PaymentRetVo paymentVo : list) {
             RefundRecVo refundRecVo = cloneVo(paymentVo, RefundRecVo.class);
             refundRecVo.setPaymentId(paymentVo.getId());
             refundRecVo.setDocumentType(RefundType.ORDER.getCode());
-            ReturnObject retRefund = transactionService.refund(refundRecVo);
+            InternalReturnObject<RefundRetVo> retRefund = transactionService.requestRefund(refundRecVo);
             if (retRefund.getData() == null) {
                 return new ReturnObject(retRefund);
             }
@@ -816,12 +823,12 @@ public class OrderService {
     public ReturnObject insertAftersaleOrder(Long shopId, AftersaleRecVo orderVo, Long loginUserId, String loginUserName) {
         AftersaleOrderitemRecVo simpleOrderItemVo = orderVo.getOrderItem();
         // 判断productId是否存在
-        InternalReturnObject<ProductVo> productVo = goodsService.getProductById(simpleOrderItemVo.getProductId());
+        InternalReturnObject<ProductVo> productVo = goodsService.getProductDetails(simpleOrderItemVo.getProductId());
         if (productVo.getErrno() != 0) {
             return new ReturnObject(ReturnNo.getByCode(productVo.getErrno()));
         }
         // 判断onsaleId是否存在
-        InternalReturnObject<OnSaleVo> onSaleVo = goodsService.getOnsaleById(simpleOrderItemVo.getOnsaleId());
+        InternalReturnObject<OnSaleVo> onSaleVo = goodsService.selectFullOnsale(simpleOrderItemVo.getOnsaleId());
         if (onSaleVo.getErrno() != 0) {
             return new ReturnObject(ReturnNo.getByCode(onSaleVo.getErrno()));
         }
@@ -855,10 +862,10 @@ public class OrderService {
         AftersaleRetVo aftersaleRetVo = cloneVo(order1, AftersaleRetVo.class);
         InternalReturnObject customer = customService.getCustomerById(order1.getCustomerId());
         aftersaleRetVo.setCustomer((SimpleVo) customer.getData());
-        InternalReturnObject shop = shopService.getShopById(shopId);
+        InternalReturnObject shop = shopService.getSimpleShopById(shopId);
         aftersaleRetVo.setShop((SimpleVo) shop.getData());
-        AftersaleOrderitemRetVo aftersaleOrderitemRetVo = cloneVo(orderItem, AftersaleOrderitemRetVo.class);
-        aftersaleRetVo.setAftersaleOrderitemVo(aftersaleOrderitemRetVo);
+        SimpleOrderitemRetVo simpleOrderitemRetVo = cloneVo(orderItem, SimpleOrderitemRetVo.class);
+        aftersaleRetVo.setAftersaleOrderitemVo(simpleOrderitemRetVo);
         return new ReturnObject(aftersaleRetVo);
     }
 
@@ -877,9 +884,12 @@ public class OrderService {
         }
         Order order = (Order) ret.getData();
         String documentId = order.getOrderSn();
-        InternalReturnObject returnObject = transactionService.listRefund(0L, documentId, RefundState.FINISH_REFUND.getCode(), null, null, 1, 10);
-        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
-        List<RefundRetVo> list = (List<RefundRetVo>) data.get("list");
+        InternalReturnObject<PageVo<RefundRetVo>> returnObject = transactionService.getRefund(0L, documentId, RefundState.FINISH_REFUND.getCode(), null, null, 1, 10);
+        if(!returnObject.getErrno().equals(ReturnNo.OK.getCode()))
+        {
+            return new ReturnObject(returnObject);
+        }
+        List<RefundRetVo> list = returnObject.getData().getList();
         return new ReturnObject(list);
     }
 
@@ -931,9 +941,8 @@ public class OrderService {
         }
         Order order = (Order) ret1.getData();
         String documentId = order.getOrderSn();
-        InternalReturnObject returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
-        Map<String, Object> data = (Map<String, Object>) returnObject.getData();
-        List<PaymentRetVo> list = (List<PaymentRetVo>) data.get("list");
+        InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        List<PaymentRetVo> list = returnObject.getData().getList();
         PaymentRetVo retPayment = null;
         for (PaymentRetVo paymentRetVo : list) {
             if (paymentRetVo.getDocumentType().equals(PaymentType.ORDER_ADVANCE.getCode())) {
@@ -954,6 +963,26 @@ public class OrderService {
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject listOrderItemsByOrderId(Long id) {
         return orderDao.listOrderItemsByPOrderId(id);
+    }
+
+    /**
+     * 7. orderSn查orderId
+     * hty
+     * @param orderSn
+     * @return
+     */
+    @Transactional(readOnly = true,rollbackFor = Exception.class)
+    public InternalReturnObject getOrderId(String orderSn)
+    {
+        ReturnObject ret=orderDao.getOrderByOrderSn(orderSn);
+        if(!ret.getCode().equals(ReturnNo.OK))
+        {
+            return new InternalReturnObject(ret);
+        }
+        OrderIdRetVo orderIdRetVo=new OrderIdRetVo();
+        Order order=(Order) ret.getData();
+        orderIdRetVo.setId(order.getId());
+        return new InternalReturnObject(orderIdRetVo);
     }
 
 
