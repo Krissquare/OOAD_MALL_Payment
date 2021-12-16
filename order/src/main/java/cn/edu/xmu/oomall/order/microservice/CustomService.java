@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @FeignClient(name = "other-service",configuration= OpenFeignConfig.class)
 public interface CustomService {
-
+//SOLVED
     @GetMapping("/internal/customers/{id}")
     InternalReturnObject<SimpleVo> getCustomerById(@PathVariable("id") Long id);
 
@@ -22,18 +22,21 @@ public interface CustomService {
      * @param vo
      * @return
      */
+    //TODO:LXC
     @PutMapping("/internal/point/{customerId}")
     InternalReturnObject changeCustomerPoint(@PathVariable Long customerId, @RequestBody CustomerModifyPointsVo vo);
 
     /**
      * 退款后，修改优惠券状态为已领取
      */
+    //TODO:LXC
     @PutMapping("/internal/coupons/{id}/refund")
     InternalReturnObject refundCoupon(@PathVariable Long id);
 
     /**
      * 使用优惠券消费后，修改优惠券状态为已使用
      */
+    //TODO:LXC
     @PutMapping("/internal/coupons/{id}/use")
     InternalReturnObject useCoupon( @PathVariable Long id);
 
@@ -46,6 +49,7 @@ public interface CustomService {
     /**
      * 查询优惠券是否存在
      */
+    //TODO:LXC
     @GetMapping("/internal/coupons/{id}/exists")
     InternalReturnObject isCouponExists(@PathVariable Long id);
 }
