@@ -7,6 +7,7 @@ import cn.edu.xmu.oomall.order.mapper.OrderItemPoMapper;
 import cn.edu.xmu.oomall.order.mapper.OrderPoMapper;
 import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderItem;
+import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.po.OrderItemPo;
 import cn.edu.xmu.oomall.order.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
@@ -211,7 +212,7 @@ public class OrderDao {
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-    public InternalReturnObject listOrderItemsByPOrderId(Long id){
+    public ReturnObject listOrderItemsByPOrderId(Long id){
         try{
             OrderPoExample example = new OrderPoExample();
             OrderPoExample.Criteria criteria = example.createCriteria();
@@ -238,10 +239,10 @@ public class OrderDao {
             for(OrderItemPo orderItemPo:orderItemPos){
                 list1.add(cloneVo(orderItemPo,OrderItemRetVo.class));
             }
-            return new InternalReturnObject(list1);}
+            return new ReturnObject(list1);}
         catch (Exception e){
             logger.error(e.getMessage());
-            return new InternalReturnObject(ReturnNo.INTERNAL_SERVER_ERR);
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
 
     }
@@ -304,6 +305,35 @@ public class OrderDao {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
             }
             return new ReturnObject(orderPos.get(0));
+        }catch (Exception e){
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+        }
+    }
+    public ReturnObject getQuantityByGroupOnId(Long id){
+        try {
+            List<Integer>stateList=new ArrayList<>();
+            stateList.add(OrderState.FINISH_PAY.getCode());
+            stateList.add(OrderState.WAIT_GROUP.getCode());
+            stateList.add(OrderState.SEND_GOODS.getCode());
+            OrderPoExample orderPoExample = new OrderPoExample();
+            OrderPoExample.Criteria criteria = orderPoExample.createCriteria();
+            criteria.andGrouponIdEqualTo(id);
+            criteria.andStateIn(stateList);
+            List<OrderPo> orderPos = orderPoMapper.selectByExample(orderPoExample);
+            if (orderPos.size()==0){
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            Long quantity=0L;
+            for(OrderPo orderPo:orderPos){
+                ReturnObject returnObject=listOrderItemsByPOrderId(orderPo.getId());
+                List<OrderItemRetVo>list=(List<OrderItemRetVo>)returnObject.getData();
+                for(OrderItemRetVo orderItemRetVo:list){
+                    quantity+=orderItemRetVo.getQuantity();
+                }
+            }
+            return new ReturnObject(quantity);
+
         }catch (Exception e){
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());

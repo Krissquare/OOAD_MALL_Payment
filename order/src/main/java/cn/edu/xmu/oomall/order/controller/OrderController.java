@@ -387,7 +387,7 @@ public class OrderController {
      * @return
      */
     @GetMapping("/internal/order/{id}")
-    public InternalReturnObject<List<OrderItemRetVo>> listOrderItemsByOrderId(@PathVariable(value = "id") Long id) {
+    public Object listOrderItemsByOrderId(@PathVariable(value = "id") Long id) {
         return orderService.listOrderItemsByOrderId(id);
     }
 
