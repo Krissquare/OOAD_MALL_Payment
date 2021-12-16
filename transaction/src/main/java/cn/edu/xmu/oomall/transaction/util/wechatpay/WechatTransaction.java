@@ -1,6 +1,6 @@
 package cn.edu.xmu.oomall.transaction.util.wechatpay;
 
-import cn.edu.xmu.oomall.core.util.JacksonUtil;
+
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.transaction.dao.TransactionDao;
@@ -12,17 +12,11 @@ import cn.edu.xmu.oomall.transaction.util.PaymentBill;
 import cn.edu.xmu.oomall.transaction.util.RefundBill;
 import cn.edu.xmu.oomall.transaction.util.TransactionPattern;
 import cn.edu.xmu.oomall.transaction.util.TransactionPatternFactory;
-import cn.edu.xmu.oomall.transaction.util.alipay.microservice.vo.AlipayRefundQueryRetVo;
-import cn.edu.xmu.oomall.transaction.util.alipay.microservice.vo.AlipayRefundQueryVo;
-import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayMethod;
-import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayRefundState;
-import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayTradeState;
 import cn.edu.xmu.oomall.transaction.util.mq.ActiveQueryMessage;
 import cn.edu.xmu.oomall.transaction.util.mq.MessageProducer;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.WechatMicroService;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.vo.*;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatRefundState;
-import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatReturnNo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatReturnObject;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatTradeState;
 import org.springframework.beans.factory.annotation.Autowired;

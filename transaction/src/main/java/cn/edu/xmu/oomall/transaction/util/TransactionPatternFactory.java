@@ -20,7 +20,7 @@ public class TransactionPatternFactory {
     private AlipayTransaction alipayTransaction;
 
     @Autowired
-    private WechatTransaction wechatpayTransaction;
+    private WechatTransaction wechatTransaction;
 
     @Autowired
     private TransactionDao transactionDao;
@@ -62,7 +62,7 @@ public class TransactionPatternFactory {
         PaymentPattern paymentPattern = retPaymentPattern.getData();
 
         if (paymentPattern.getId() == 1) {
-            return wechatpayTransaction;
+            return wechatTransaction;
         } else {
             return alipayTransaction;
         }
