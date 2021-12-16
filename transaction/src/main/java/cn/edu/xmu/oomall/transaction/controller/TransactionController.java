@@ -102,7 +102,7 @@ public class TransactionController {
                               @RequestParam(value = "page",required = false)Integer page,
                               @RequestParam(value = "pageSize",required = false)Integer pageSize) {
         if (shopId != 0) {
-            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
         if (beginTime != null && endTime != null) {
             if (beginTime.isAfter(endTime))
