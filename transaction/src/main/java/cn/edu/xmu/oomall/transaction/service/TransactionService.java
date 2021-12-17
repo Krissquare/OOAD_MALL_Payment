@@ -334,7 +334,7 @@ public class TransactionService {
      * fz
      * */
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject updateErrorAccount(Long id, ErrorAccountUpdateVo updateVo){
+    public ReturnObject updateErrorAccount(Long adminId, String adminName, Long id, ErrorAccountUpdateVo updateVo){
         ReturnObject ret = transactionDao.getErrorAccount(id);
         if (!ret.getCode().equals(ReturnNo.OK)){
             return ret;
@@ -345,6 +345,7 @@ public class TransactionService {
         }
         po.setDescr(updateVo.getDescr());
         po.setState(updateVo.getState());
+        setPoModifiedFields(po,adminId,adminName);
         ReturnObject updRet = transactionDao.updateErrorAccount(po);
         if (!updRet.getCode().equals(ReturnNo.OK)){
             return ret;

@@ -304,8 +304,7 @@ public class TransactionController {
     @GetMapping("/shops/{shopId}/erroraccounts/{id}")
     @Audit(departName = "payment")
     public Object getDetailedErrorAccountByAdmin(@PathVariable("shopId") Long shopId,
-                                                 @PathVariable("id") Long id,
-                                                 @LoginUser Long userId){
+                                                 @PathVariable("id") Long id){
         if (shopId!=0){
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
@@ -317,10 +316,13 @@ public class TransactionController {
      * 15.平台管理员修改错账信息
      * */
     @PostMapping("/shops/{shopId}/erroraccounts/{id}")
+    @Audit(departName = "payment")
     public Object updateErrorAccountByAdmin(@PathVariable("shopId") Long shopId,
                                             @PathVariable("id") Long id,
+                                            @LoginUser Long adminId,
+                                            @LoginUser String adminName,
                                             @RequestBody ErrorAccountUpdateVo updateVo){
-        return Common.decorateReturnObject(transactionService.updateErrorAccount(id, updateVo));
+        return Common.decorateReturnObject(transactionService.updateErrorAccount(adminId, adminName, id, updateVo));
     }
 
     /**
