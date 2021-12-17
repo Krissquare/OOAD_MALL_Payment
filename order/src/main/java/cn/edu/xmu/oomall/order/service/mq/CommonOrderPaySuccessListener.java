@@ -1,12 +1,15 @@
 package cn.edu.xmu.oomall.order.service.mq;
 
+import cn.edu.xmu.oomall.core.util.JacksonUtil;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.dao.OrderDao;
+import cn.edu.xmu.oomall.order.microservice.bo.PaymentState;
 import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderItem;
 import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
+import cn.edu.xmu.oomall.order.service.mq.vo.NotifyMessage;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,25 +23,26 @@ import java.util.Set;
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.*;
 
 /**
+ * 普通订单 团购 秒杀
  * @author xiuchen lang 22920192204222
- * @date 2021/12/13 21:28
+ * @date 2021/12/17 15:56
  */
-//Payment-0
 @Service
-@RocketMQMessageListener(topic = "pay-success", consumerGroup = "pay-success")
-public class PaySuccessListener implements RocketMQListener<String> {
-
+@RocketMQMessageListener(topic = "${oomall.order.pay.common}",consumerGroup = "${oomall.order.pay.common}")
+public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
     @Autowired
     OrderDao orderDao;
 
     @Override
-    public void onMessage(String orderSn) {
-        //TODO: message类型 假设只返回成功 暂且都当写入数据库 没写入数据库的还没有考虑
-        ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(orderSn);
-        if (orderByOrderSn.getCode() != ReturnNo.OK) {
+    public void onMessage(String message) {
+        NotifyMessage notifyMessage = JacksonUtil.toObj(message, NotifyMessage.class);
+        if(!notifyMessage.getState().equals(PaymentState.ALREADY_PAY.getCode())){
             return;
         }
-        //有这个订单
+        ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(notifyMessage.getDocumentId());
+        if (orderByOrderSn.getCode()!= ReturnNo.OK){
+            return;
+        }
         OrderPo orderPo = (OrderPo) orderByOrderSn.getData();
         Order order = cloneVo(orderPo, Order.class);
         if (order.getGrouponId() != 0) {
@@ -47,21 +51,7 @@ public class PaySuccessListener implements RocketMQListener<String> {
                 return;
             }
             order.setState(OrderState.WAIT_GROUP.getCode());
-            setPoCreatedFields(order, 0L, null);
-            orderDao.updateOrder(order);
-            return;
-        } else if (order.getAdvancesaleId() != 0) {
-            //这是预售 不用拆单子
-            if (order.getState() == OrderState.NEW_ORDER.getCode()) {
-                //定金
-                order.setState(OrderState.WAIT_PAY_REST.getCode());
-            } else if (order.getState() == OrderState.WAIT_PAY_REST.getCode()) {
-                //尾款
-                order.setState(OrderState.FINISH_PAY.getCode());
-            }else {
-                return;
-            }
-            setPoCreatedFields(order, 0L, null);
+            setPoModifiedFields(order, 0L, null);
             orderDao.updateOrder(order);
             return;
         }

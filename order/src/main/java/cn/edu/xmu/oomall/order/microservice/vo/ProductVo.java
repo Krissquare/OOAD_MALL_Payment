@@ -30,4 +30,5 @@ public class ProductVo {
     private String originPlace;
     private SimpleVo category;
     private Boolean shareable;
+    private Long freightId;
 }
