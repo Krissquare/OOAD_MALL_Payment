@@ -25,6 +25,7 @@ public interface FreightService {
      * @param items
      * @return cn.edu.xmu.oomall.ooad201.order.microService.vo.FreightCalculatingRetVo
      */
+    //TODO:LXC
     @PostMapping("/regions/{rid}/price")
     InternalReturnObject<FreightCalculatingRetVo> calculateFreight(@PathVariable Long rid, @RequestBody List<FreightCalculatingPostVo> items);
 }

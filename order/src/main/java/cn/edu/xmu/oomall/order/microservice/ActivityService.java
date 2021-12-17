@@ -21,6 +21,7 @@ public interface ActivityService {
      * @param id 预售活动id
      * @return 返回体cn.edu.xmu.oomall.ooad201.order.microService.vo.AdvanceVo
      */
+    //TODO:LXC
     @GetMapping("/advancesales/{id}")
     InternalReturnObject<AdvanceVo> getAdvanceSaleById(@PathVariable Long id);
 
@@ -31,6 +32,7 @@ public interface ActivityService {
      * @param id 团购活动id
      * @return cn.edu.xmu.oomall.ooad201.order.microService.vo.GrouponActivityVo
      */
+    //TODO:GYT
     @GetMapping("/groupons/{id}")
     InternalReturnObject<GrouponActivityVo> getGrouponsById(@PathVariable Long id);
 }
