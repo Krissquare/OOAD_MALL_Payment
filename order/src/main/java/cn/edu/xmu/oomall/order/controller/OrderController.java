@@ -113,13 +113,14 @@ public class OrderController {
     @Audit(departName = "order")
     public Object updateCustomerOrderController(@PathVariable("id") Long orderId,
                                                 @LoginUser Long userId,
+                                                @LoginUser String userName,
                                                 @RequestBody @Valid UpdateOrderVo updateOrderVo,
                                                 BindingResult bindingResult) {
         Object object = Common.processFieldErrors(bindingResult, httpServletResponse);
         if (object != null) {
             return object;
         }
-        return Common.decorateReturnObject(orderService.updateCustomerOrder(userId, orderId, updateOrderVo));
+        return Common.decorateReturnObject(orderService.updateCustomerOrder(userId,userName, orderId, updateOrderVo));
     }
 
     /**

@@ -94,6 +94,7 @@ public class TransactionService {
         }
         Payment newPayment = cloneVo(payedVo, Payment.class);
         newPayment.setId(oldPayment.getId());
+        newPayment.setPatternId(oldPayment.getPatternId());
         ReturnObject updatePaymentRet = transactionDao.updatePayment(newPayment);
         if (!updatePaymentRet.getCode().equals(ReturnNo.OK)){
             return updatePaymentRet;
