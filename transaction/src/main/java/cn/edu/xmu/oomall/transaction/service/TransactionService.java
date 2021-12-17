@@ -202,14 +202,14 @@ public class TransactionService {
         }
         Payment payment = (Payment) returnObject.getData();
         if (payment.getState().equals(PaymentState.ALREADY_PAY.getCode()) || payment.getState().equals(PaymentState.FAIL.getCode())) {
-            Payment payment1 = cloneVo(paymentModifyVo, Payment.class);
-            payment1.setId(id);
-            setPoModifiedFields(payment1, loginUserId, loginUserName);
-            ReturnObject returnObject1 = transactionDao.updatePayment(payment1);
+            payment.setState(paymentModifyVo.getState());
+            payment.setDescr(paymentModifyVo.getDescr());
+            setPoModifiedFields(payment, loginUserId, loginUserName);
+            ReturnObject returnObject1 = transactionDao.updatePayment(payment);
             if (!returnObject1.getCode().equals(ReturnNo.OK)) {
                 return returnObject1;
             }
-            PaymentDetailRetVo paymentDetailRetVo = cloneVo(returnObject1.getData(), PaymentDetailRetVo.class);
+            PaymentDetailRetVo paymentDetailRetVo = cloneVo(payment, PaymentDetailRetVo.class);
             return new ReturnObject(paymentDetailRetVo);
         } else {
             return new ReturnObject(ReturnNo.STATENOTALLOW);

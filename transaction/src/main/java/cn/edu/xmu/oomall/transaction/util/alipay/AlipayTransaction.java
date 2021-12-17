@@ -187,4 +187,32 @@ public class AlipayTransaction extends TransactionPattern {
             }
         }
     }
+    @Override
+    public void closeTransaction(String requestNo){
+        AlipayPaymentQueryVo queryVo = new AlipayPaymentQueryVo();
+        queryVo.setOutTradeNo(requestNo);
+        alipayMicroService.gatewayDo(null,
+                AlipayMethod.CLOSE.getMethod(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                JacksonUtil.toJson(queryVo));
+    }
+
+    @Override
+    public String getFundFlowBill(String billDate){
+        DownloadUrlQueryRetVo downloadUrlQueryRetVo = (DownloadUrlQueryRetVo) alipayMicroService.gatewayDo(null,
+                AlipayMethod.QUERY_DOWNLOAD_BILL.getMethod(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
+        return downloadUrlQueryRetVo.getBillDownloadUrl();
+    }
 }

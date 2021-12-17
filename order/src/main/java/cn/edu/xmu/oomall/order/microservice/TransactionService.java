@@ -25,7 +25,7 @@ import java.util.Map;
  */
 @FeignClient(name = "transaction-service",configuration= OpenFeignConfig.class)
 public interface TransactionService {
-
+//TODO:GYT
     @GetMapping("/shops/{shopId}/payment")
     InternalReturnObject<PageVo<PaymentRetVo>> listPayment(@PathVariable(value = "shopId") Long shopId,
                                                          @RequestParam(value = "documentId",required = false)String documentId,
@@ -34,7 +34,7 @@ public interface TransactionService {
                                                          @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
                                                          @RequestParam(value="page",required = false)Integer page,
                                                          @RequestParam(value = "pageSize",required = false)Integer pageSize);
-
+//TODO:HTY
     @GetMapping("/shops/{shopId}/refund")
     InternalReturnObject<PageVo<RefundRetVo>> listRefund(@PathVariable("shopId") Long shopId,
                                                          @RequestParam(value="documentId",required = false)String documentId,
@@ -43,7 +43,7 @@ public interface TransactionService {
                                                         @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
                                                         @RequestParam(value = "page", required = false) Integer page,
                                                         @RequestParam(value = "pageSize", required = false) Integer pageSize);
-
+//SOLVED BY HTY
     @GetMapping("/internal/payment")
     InternalReturnObject<PageVo<PaymentRetVo>> listPaymentInternal(@RequestParam(value="documentId",required = false)String documentId,
                                                                   @RequestParam(value="state",required = false)Byte state,
@@ -51,7 +51,7 @@ public interface TransactionService {
                                                          @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
                                                          @RequestParam(value = "page", required = false) Integer page,
                                                          @RequestParam(value = "pageSize", required = false) Integer pageSize);
-
+//TODO:GYT
     @PostMapping("/internal/refunds")
     InternalReturnObject<RefundRetVo> requestRefund(@Validated @RequestBody RefundRecVo refundVo);
 }

@@ -18,6 +18,7 @@ import java.util.List;
  */
 @FeignClient(name = "coupon-service",configuration= OpenFeignConfig.class)
 public interface CouponService {
+    //TODO:LXC
     @PutMapping("/internal/discountprices")
     InternalReturnObject<List<ProductRetVo>> calculateDiscoutprices(@RequestBody List<ProductPostVo> productOnsaleVos);
 
@@ -28,6 +29,7 @@ public interface CouponService {
      * @param id
      * @return
      */
+    //TODO:LXC
     @GetMapping("shops/{shopId}/couponactivities/{id}")
     InternalReturnObject<CouponActivityVo> getCouponActivityById(@PathVariable Long shopId,
                                                                  @PathVariable Long id);
