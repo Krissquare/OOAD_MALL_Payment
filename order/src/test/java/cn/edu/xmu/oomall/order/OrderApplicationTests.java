@@ -50,12 +50,16 @@ class OrderApplicationTests {
     private static final JwtHelper jwtHelper = new JwtHelper();
     String token;
     String token4;
+    String token1;
 
 //    @MockBean
 //    private ShopService shopService;
 
     @Autowired
     private CustomService customService;
+
+    @Autowired
+    private TransactionService transactionService;
 //    @MockBean
 //    private TransactionService transactionService;
 
@@ -68,6 +72,7 @@ class OrderApplicationTests {
     void init() {
         token = jwtHelper.createToken(2L, "lxc", 0L, 1, 3600);
         token4 = jwtHelper.createToken(4L, "lxc", 0L, 1, 3600);
+        token1 = jwtHelper.createToken(1L, "lxc", 0L, 1, 3600);
         InternalReturnObject<Map<String, Object>> refunds = CreateObject.listRefunds(1L);
         InternalReturnObject<Map<String,Object>> payments=CreateObject.listPayments(1L);
         OnSaleVo onSaleVo=new OnSaleVo();
@@ -156,7 +161,7 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":0,\"data\":{\"total\":2,\"pages\":1,\"pageSize\":10,\"page\":1,\"list\":[{\"id\":2,\"customerId\":1,\"shopId\":1,\"pid\":1,\"state\":null,\"gmtCreate\":\"2021-12-02T16:41:29\",\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":9,\"customerId\":4,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-02T17:18:19\",\"originPrice\":280,\"discountPrice\":15,\"expressFee\":6,\"point\":12,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":\"36527364532\"}]},\"errmsg\":\"成功\"}";
+        String expected = "{\"errno\":0,\"data\":{\"total\":13,\"pages\":2,\"pageSize\":10,\"page\":1,\"list\":[{\"id\":2,\"customerId\":1,\"shopId\":1,\"pid\":1,\"state\":null,\"gmtCreate\":\"2021-12-02T16:41:29\",\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":9,\"customerId\":4,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-02T17:18:19\",\"originPrice\":280,\"discountPrice\":15,\"expressFee\":6,\"point\":12,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":\"36527364532\"},{\"id\":33,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T21:22:32\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":34,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T21:45:29\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":35,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T21:52:38\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":36,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:41:57\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":37,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:49:16\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":38,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:51:11\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":39,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:52:53\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":40,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T23:23:18\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null}]},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
@@ -182,7 +187,7 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":0,\"data\":{\"id\":2,\"orderSn\":\"20216487652635231002\",\"customerVo\":{\"id\":1,\"name\":\"aaa\"},\"shopVo\":{\"id\":1,\"name\":\"aaa\"},\"pid\":1,\"state\":null,\"confirmTime\":null,\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"message\":\"好耶\",\"regionId\":1,\"address\":\"临沂\",\"mobile\":\"16253645342\",\"consignee\":\"gyt\",\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null,\"orderItems\":[{\"productId\":1,\"onsaleId\":1,\"quantity\":1,\"couponActId\":null,\"couponId\":1,\"price\":50,\"name\":\"巧克力\"}]},\"errmsg\":\"成功\"}";
+        String expected = "{\"errno\":0,\"data\":{\"id\":2,\"orderSn\":\"20216487652635231002\",\"customerVo\":{\"id\":1,\"name\":\"李智樑\"},\"shopVo\":{\"id\":1,\"name\":\"OOMALL自营商铺\"},\"pid\":1,\"state\":null,\"confirmTime\":null,\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"message\":\"好耶\",\"regionId\":1,\"address\":\"临沂\",\"mobile\":\"16253645342\",\"consignee\":\"gyt\",\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null,\"orderItems\":[{\"productId\":1,\"name\":\"巧克力\",\"quantity\":1,\"price\":50}]},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
@@ -263,7 +268,7 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse = "{\"errno\":0,\"data\":[{\"id\":1,\"tradeSn\":\"34564322\",\"patternId\":1,\"amount\":5,\"state\":null,\"documentId\":\"20216453652635231006\",\"documentType\":0}],\"errmsg\":\"成功\"}";
+        String expectedResponse = "{\"errno\":0,\"data\":[{\"id\":1,\"tradeSn\":\"34564322\",\"patternId\":1,\"amount\":5,\"state\":1,\"documentId\":\"20216453652635231006\",\"documentType\":0}],\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expectedResponse, responseString, true);
     }
 
@@ -322,14 +327,14 @@ class OrderApplicationTests {
 
     @Test
     public void getOrderDetailByCustomerTest() throws Exception {
-        String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/orders/10")
-                            .header("authorization", token4)
+        String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/orders/3")
+                            .header("authorization", token1)
                             .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
-        String expected = "{\"errno\":0,\"data\":{\"id\":10,\"orderSn\":\"20218987972635231004\",\"customerVo\":{\"id\":1,\"name\":\"aaa\"},\"shopVo\":{\"id\":1,\"name\":\"aaa\"},\"pid\":0,\"state\":400,\"confirmTime\":\"2021-11-11T17:24:20\",\"originPrice\":231,\"discountPrice\":12,\"expressFee\":8,\"point\":22,\"message\":\"啦啦\",\"regionId\":4,\"address\":\"福州\",\"mobile\":\"17276541624\",\"consignee\":\"hqg\",\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":\"65442635211\",\"orderItems\":[]},\"errmsg\":\"成功\"}";
+        String expected = "{\"errno\":0,\"data\":{\"id\":3,\"orderSn\":\"20216487872635231007\",\"customerVo\":{\"id\":1,\"name\":\"李智樑\"},\"shopVo\":{\"id\":2,\"name\":\"甜蜜之旅\"},\"pid\":1,\"state\":null,\"confirmTime\":null,\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"message\":\"好耶\",\"regionId\":1,\"address\":\"临沂\",\"mobile\":\"16253645342\",\"consignee\":\"gyt\",\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null,\"orderItems\":[{\"productId\":2,\"name\":\"薯片\",\"quantity\":1,\"price\":50}]},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
@@ -364,7 +369,7 @@ class OrderApplicationTests {
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
-        String expected="{\"errno\":0,\"errmsg\":\"成功\",\"data\":[{\"id\":1,\"orderId\":2,\"shopId\":1,\"productId\":1,\"onsaleId\":1,\"name\":\"巧克力\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":1,\"couponActivityId\":1,\"customerId\":null},{\"id\":2,\"orderId\":3,\"shopId\":2,\"productId\":2,\"onsaleId\":2,\"name\":\"薯片\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":2,\"couponActivityId\":2,\"customerId\":null}]}";
+        String expected="{\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":[{\"id\":1,\"orderId\":2,\"shopId\":1,\"productId\":1,\"onsaleId\":1,\"name\":\"巧克力\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":1,\"couponActivityId\":1,\"customerId\":null},{\"id\":2,\"orderId\":3,\"shopId\":2,\"productId\":2,\"onsaleId\":2,\"name\":\"薯片\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":2,\"couponActivityId\":2,\"customerId\":null}]}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
@@ -398,4 +403,18 @@ class OrderApplicationTests {
         System.out.println(customService.getCustomerById(1L).getData());
     }
 
+    @Test
+    public void testRequestRefund()
+    {
+        RefundRecVo refundRecVo=new RefundRecVo();
+        refundRecVo.setDocumentType((byte)0);
+        refundRecVo.setPaymentId(1L);
+        refundRecVo.setAmount(500L);
+        refundRecVo.setDescr("123");
+        refundRecVo.setReason("aaa");
+        refundRecVo.setDocumentId("2021");
+        refundRecVo.setPatternId(1L);
+        InternalReturnObject<RefundRetVo> refundRetVo=transactionService.requestRefund(refundRecVo);
+        System.out.println(refundRetVo.getData());
+    }
 }
