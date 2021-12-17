@@ -44,7 +44,7 @@ public class AlipayTransaction extends TransactionPattern {
         paymentVo.setOutTradeNo(requestNo);
         paymentVo.setTotalAmount(bill.getAmount());
 
-        alipayMicroService.gatewayDo(null,
+        Object object = alipayMicroService.gatewayDo(null,
                 AlipayMethod.PAY.getMethod(),
                 null,
                 null,

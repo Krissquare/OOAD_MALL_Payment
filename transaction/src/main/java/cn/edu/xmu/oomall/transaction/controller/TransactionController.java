@@ -73,6 +73,7 @@ public class TransactionController {
      * hqg
      */
     @PostMapping("/payments")
+    @Audit(departName = "payment")
     public Object requestPayment(@Validated @RequestBody RequestPaymentVo requestPaymentVo, BindingResult bindingResult,
                                  @LoginUser Long loginUserId, @LoginName String loginUserName) {
         if (bindingResult.hasErrors()) {

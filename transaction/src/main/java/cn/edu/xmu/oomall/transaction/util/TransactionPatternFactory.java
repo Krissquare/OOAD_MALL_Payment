@@ -61,13 +61,12 @@ public class TransactionPatternFactory {
 
         PaymentPattern paymentPattern = retPaymentPattern.getData();
 
+        // TODO: 利用Spring技术获取Bean对象
         if (paymentPattern.getId() == 2) {
             return wechatTransaction;
         } else {
             return alipayTransaction;
         }
-
-        // TODO: 利用Spring技术获取Bean对象
 
     }
 

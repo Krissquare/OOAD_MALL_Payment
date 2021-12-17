@@ -15,6 +15,7 @@ public class MessageProducer {
     private RocketMQTemplate rocketMQTemplate;
 
 
+    // TODO: 消息写法有问题
     public void sendNotifyMessage(NotifyMessage notifyMessage) {
         String json = JacksonUtil.toJson(notifyMessage);
         Message message = (Message) MessageBuilder.withPayload(json).build();
