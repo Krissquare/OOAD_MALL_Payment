@@ -360,7 +360,7 @@ public class TransactionControllerTest {
 
     @Test
     public void printToken() throws Exception{
-        adminToken = jwtHelper.createToken(1L,"admin",0L, 1,100000);
+        adminToken = jwtHelper.createToken(1L,"admin",0L, 1,1000);
         System.out.println(adminToken);
     }
 
