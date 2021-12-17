@@ -92,7 +92,7 @@ public class WechatTransaction extends TransactionPattern {
            queryMessage.setRequestNo(requestNo);
            queryMessage.setOutTradeNo(bill.getPaymentId().toString());
            queryMessage.setPatternId(bill.getPatternId());
-           // 怎么延时？
+           queryMessage.setBill(bill);
            messageProducer.sendActiveQueryDelayedMessage(queryMessage);
        }
     }

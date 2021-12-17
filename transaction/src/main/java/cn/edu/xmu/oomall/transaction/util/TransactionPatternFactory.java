@@ -54,14 +54,14 @@ public class TransactionPatternFactory {
 
     public TransactionPattern getPatternInstance(Long patternId) {
         ReturnObject<PaymentPattern> retPaymentPattern = transactionDao.getPaymentPatternById(patternId);
-        if (retPaymentPattern.getCode().equals(ReturnNo.OK)) {
+        if (!retPaymentPattern.getCode().equals(ReturnNo.OK)) {
 //            throw new ClassNotFoundException();
             return null;
         }
 
         PaymentPattern paymentPattern = retPaymentPattern.getData();
 
-        if (paymentPattern.getId() == 1) {
+        if (paymentPattern.getId() == 2) {
             return wechatTransaction;
         } else {
             return alipayTransaction;
