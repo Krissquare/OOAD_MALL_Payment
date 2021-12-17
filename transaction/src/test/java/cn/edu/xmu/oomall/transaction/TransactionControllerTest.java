@@ -2,7 +2,9 @@ package cn.edu.xmu.oomall.transaction;
 
 import cn.edu.xmu.oomall.core.util.JacksonUtil;
 import cn.edu.xmu.oomall.transaction.util.alipay.microservice.AlipayMicroService;
-import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatPaymentNotifyVo;
+import cn.edu.xmu.oomall.transaction.util.file.FileUtil;
+import cn.edu.xmu.oomall.transaction.util.file.vo.AliPayFormat;
+import cn.edu.xmu.oomall.transaction.util.file.vo.WechatFormat;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatPaymentNotifyVo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatRefundNotifyVo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.WechatMicroService;
@@ -28,12 +30,15 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -364,4 +369,19 @@ public class TransactionControllerTest {
         System.out.println(adminToken);
     }
 
+    @Test
+    public void unZipTest() throws IOException {
+        //解压 alipay 注这不是文件夹
+        FileUtil.unZip(new File("testfile/alipay/202111_2088202991815014.zip"), "testfile/alipay");
+        //解压 wechat 注这是文件夹所以还有一层目录
+        FileUtil.unZip(new File("testfile/wechat/微信支付账单(20211011-20211211).zip"), "testfile/wechat");
+        List<AliPayFormat> parsing = FileUtil.aliPayParsing(new File("testfile/alipay/20882029918150140156_202111_账务明细_1.csv"));
+        for (AliPayFormat aliPayFormat : parsing) {
+            System.out.println(aliPayFormat);
+        }
+        List<WechatFormat> parsing1 = FileUtil.wechatParsing(new File("testfile/wechat/微信支付账单(20211011-20211211)/微信支付账单(20211011-20211211).csv"));
+        for (WechatFormat wechatFormat : parsing1) {
+            System.out.println(wechatFormat);
+        }
+    }
 }

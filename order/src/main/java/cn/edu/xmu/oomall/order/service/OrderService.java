@@ -18,7 +18,6 @@ import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import cn.edu.xmu.privilegegateway.annotation.util.Common;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
-import com.google.protobuf.Internal;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -105,6 +104,7 @@ public class OrderService {
     public ReturnObject insertOrder(SimpleOrderVo simpleOrderVo, Long userId, String userName) {
         OrderAndOrderItemsVo orderAndOrderItemsVo = new OrderAndOrderItemsVo();
         List<Long> weights = new ArrayList<>();
+        List<Long> freights = new ArrayList<>();
         List<FreightCalculatingPostVo> freightCalculatingPostVos = new ArrayList<>();
         List<OrderItem> orderItemsBo = new ArrayList<>();
         Set<Long> couponIds = new HashSet<>();
@@ -123,6 +123,7 @@ public class OrderService {
             if (productVo.getErrno() != 0) {
                 return new ReturnObject(ReturnNo.getByCode(productVo.getErrno()));
             }
+            freights.add(productVo.getData().getFreightId());
             weights.add(productVo.getData().getWeight());
             // 判断onsaleId是否存在
             InternalReturnObject<OnSaleVo> onSaleVo = goodsService.selectFullOnsale(simpleOrderItemVo.getOnsaleId());
@@ -133,6 +134,7 @@ public class OrderService {
             if (!onSaleVo.getData().getId().equals(productVo.getData().getOnSaleId())) {
                 return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
             }
+
             //判断couponActId;
             if (simpleOrderItemVo.getCouponActId() != null) {
                 //因为可能不同item用一个活动，下同理
@@ -259,6 +261,7 @@ public class OrderService {
             //运费
             FreightCalculatingPostVo freightCalculatingPostVo = cloneVo(orderItem, FreightCalculatingPostVo.class);
             freightCalculatingPostVo.setWeight(weights.get(i));
+            freightCalculatingPostVo.setFreightId(freights.get(i));
             freightCalculatingPostVos.add(freightCalculatingPostVo);
             //减少库存量 redis
             InternalReturnObject internalReturnObject = goodsService.decreaseOnSale(orderItem.getShopId(), orderItem.getOnsaleId(), new QuantityVo(orderItem.getQuantity()));

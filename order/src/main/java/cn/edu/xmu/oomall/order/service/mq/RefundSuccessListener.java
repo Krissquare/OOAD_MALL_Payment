@@ -4,6 +4,7 @@ import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.dao.OrderDao;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
+import cn.edu.xmu.oomall.order.service.mq.vo.NotifyMessage;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,15 +15,16 @@ import org.springframework.stereotype.Service;
  * @date 2021/12/14 9:25
  */
 @Service
-@RocketMQMessageListener(consumerGroup = "refund-success", topic = "refund-success")
-public class RefundSuccessListener implements RocketMQListener<String> {
+@RocketMQMessageListener(consumerGroup = "${oomall.order.refund}", topic = "${oomall.order.refund}")
+public class RefundSuccessListener implements RocketMQListener<NotifyMessage> {
     @Autowired
     OrderDao orderDao;
+
     @Override
-    public void onMessage(String documentId) {
+    public void onMessage(NotifyMessage message) {
         //假设只传documentId，跟据取消规则，只能取消未分单的订单 在退款那里（有102 201 202 三个状态有关）
         //更改父订单状态
-        ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(documentId);
+        ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(message.getDocumentId());
         if (orderByOrderSn.getCode()!= ReturnNo.OK){
             return;
         }
@@ -33,6 +35,5 @@ public class RefundSuccessListener implements RocketMQListener<String> {
         //退积点
         //退优惠券
         //添加库存
-
     }
 }
