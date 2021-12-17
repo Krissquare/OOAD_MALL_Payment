@@ -10,6 +10,7 @@ import cn.edu.xmu.oomall.transaction.util.RefundBill;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
+import cn.edu.xmu.privilegegateway.annotation.util.JwtHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.BindingResult;
@@ -66,11 +67,13 @@ public class TransactionController {
         return Common.decorateReturnObject(transactionService.listAllPaymentStates());
     }
     //TODO:5.顾客支付已建立的支付单
+
     /**
      * 6.顾客请求支付
      * hqg
      */
     @PostMapping("/payments")
+    @Audit(departName = "payment")
     public Object requestPayment(@Validated @RequestBody RequestPaymentVo requestPaymentVo, BindingResult bindingResult,
                                  @LoginUser Long loginUserId, @LoginName String loginUserName) {
         if (bindingResult.hasErrors()) {

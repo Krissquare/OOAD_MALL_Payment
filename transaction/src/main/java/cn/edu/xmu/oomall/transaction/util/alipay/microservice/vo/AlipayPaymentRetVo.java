@@ -50,19 +50,5 @@ public class AlipayPaymentRetVo {
     @JsonProperty("trade_no")
     private String tradeNo;
 
-    public AlipayPaymentRetVo(AlipayReturnNo alipayReturnNo) {
-        this.code="40004";
-        this.msg="Business Failed";
-        this.subCode=alipayReturnNo.getSubCode();
-        this.subMsg=alipayReturnNo.getSubMsg();
-    }
 
-    public void setDefault()
-    {
-        code="10000";
-        msg="Success";
-        tradeNo="2013112011001004330000121536";
-        merchantOrderNo="20161008001";
-        sellerId="2088111111116894";
-    }
 }
