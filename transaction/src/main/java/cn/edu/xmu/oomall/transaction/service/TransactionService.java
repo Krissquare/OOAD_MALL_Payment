@@ -63,15 +63,7 @@ public class TransactionService {
         List<PaymentPatternPo> oriList = (List<PaymentPatternPo>) ret.getData();
         List<PaymentPatternVo> tarList = new ArrayList<>();
         for (PaymentPatternPo item: oriList){
-            SimpleVo creator = new SimpleVo();
-            creator.setId(item.getCreatorId());
-            creator.setName(item.getCreatorName());
-            SimpleVo modifier = new SimpleVo();
-            modifier.setId(item.getModifierId());
-            modifier.setName(item.getModifierName());
             PaymentPatternVo tarItem = cloneVo(item, PaymentPatternVo.class);
-            tarItem.setCreator(creator);
-            tarItem.setModifier(modifier);
             tarList.add(tarItem);
         }
         return new ReturnObject(tarList);
