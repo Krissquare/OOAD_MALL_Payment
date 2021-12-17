@@ -41,17 +41,17 @@ public class AliPayFormat {
      */
     String transNo;
     /**
-     * 收入
+     * 收入 单位分
      */
-    String income;
+    Long income;
     /**
-     * 支出
+     * 支出 单位分 （已经乘以-1）
      */
-    String outlay;
+    Long outlay;
     /**
-     * 账户余额
+     * 账户余额 单位分
      */
-    String balance;
+    Long balance;
     /**
      * 交易渠道
      */

@@ -1,5 +1,7 @@
 package cn.edu.xmu.oomall.transaction.util.file;
 
+import cn.edu.xmu.oomall.transaction.util.file.bo.WechatState;
+import cn.edu.xmu.oomall.transaction.util.file.bo.WechatTypeState;
 import cn.edu.xmu.oomall.transaction.util.file.vo.AliPayFormat;
 import cn.edu.xmu.oomall.transaction.util.file.vo.WechatFormat;
 import com.opencsv.CSVParser;
@@ -102,13 +104,13 @@ public class FileUtil {
                     aliPayFormat.setOutTradeNo(objects.get(2));
                     aliPayFormat.setGoodsName(objects.get(3));
                     aliPayFormat.setTradeCreateTime(LocalDateTime.parse(objects.get(4), df));
-                    aliPayFormat.setTransNo(objects.get(4));
-                    aliPayFormat.setIncome(objects.get(5));
-                    aliPayFormat.setOutlay(objects.get(6));
-                    aliPayFormat.setBalance(objects.get(7));
-                    aliPayFormat.setTradingChannel(objects.get(8));
-                    aliPayFormat.setBusinessType(objects.get(9));
-                    aliPayFormat.setRemark(objects.get(10));
+                    aliPayFormat.setTransNo(objects.get(5));
+                    aliPayFormat.setIncome(Long.valueOf(objects.get(6).split("[.]")[0])*100+Long.valueOf(objects.get(6).split("[.]")[1]));
+                    aliPayFormat.setOutlay(-(Long.valueOf(objects.get(7).split("[.]")[0])*100-Long.valueOf(objects.get(7).split("[.]")[1])));
+                    aliPayFormat.setBalance((Long.valueOf(objects.get(8).split("[.]")[0])*100+Long.valueOf(objects.get(8).split("[.]")[1])));
+                    aliPayFormat.setTradingChannel(objects.get(9));
+                    aliPayFormat.setBusinessType(objects.get(10));
+                    aliPayFormat.setRemark(objects.get(11));
                     list.add(aliPayFormat);
                 }
             }
@@ -141,10 +143,20 @@ public class FileUtil {
                     wechatFormat.setBusinessType(objects.get(1));
                     wechatFormat.setTransNo(objects.get(2));
                     wechatFormat.setGoods(objects.get(3));
-                    wechatFormat.setType(objects.get(4));
-                    wechatFormat.setAmount(objects.get(5));
+                    if (objects.get(4).equals(WechatTypeState.PAY.getDescription())){
+                        wechatFormat.setType(WechatTypeState.PAY);
+                    }else if (objects.get(4).equals(WechatTypeState.REFUND.getDescription())){
+                        wechatFormat.setType(WechatTypeState.REFUND);
+                    }
+                    wechatFormat.setAmount((Long.valueOf(objects.get(5).substring(1).split("[.]")[0])*100+Long.valueOf(objects.get(5).substring(1 ).split("[.]")[1])));
                     wechatFormat.setTradingChannel(objects.get(6));
-                    wechatFormat.setState(objects.get(7));
+                    if (objects.get(7).equals(WechatState.FULLY_REFUND.getDescription())){
+                        wechatFormat.setState(WechatState.FULLY_REFUND);
+                    }else if (objects.get(7).equals(WechatState.PAY_SUCCESS.getDescription())){
+                        wechatFormat.setState(WechatState.PAY_SUCCESS);
+                    }else if(objects.get(7).equals(WechatState.TRANSFER_ACCOUNT.getDescription())){
+                        wechatFormat.setState(WechatState.TRANSFER_ACCOUNT);
+                    }
                     wechatFormat.setTradeNo(objects.get(8));
                     wechatFormat.setOutTradeNo(objects.get(9));
                     wechatFormat.setRemark(objects.get(10));

@@ -1,5 +1,7 @@
 package cn.edu.xmu.oomall.transaction.util.file.vo;
 
+import cn.edu.xmu.oomall.transaction.util.file.bo.WechatTypeState;
+import cn.edu.xmu.oomall.transaction.util.file.bo.WechatState;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,11 +37,11 @@ public class WechatFormat {
     /**
      * 收支
      */
-    String type;
+    WechatTypeState type;
     /**
-     * 金额 元
+     * 金额 单位分
      */
-    String amount;
+    Long amount;
     /**
      * 支付方式
      */
@@ -47,7 +49,7 @@ public class WechatFormat {
     /**
      * 当前状态
      */
-    String state;
+    WechatState state;
     /**
      * 业务流水号
      */
