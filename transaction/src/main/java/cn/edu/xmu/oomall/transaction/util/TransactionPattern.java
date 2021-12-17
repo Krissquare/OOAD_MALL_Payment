@@ -11,4 +11,8 @@ public abstract class TransactionPattern {
 
     public abstract void queryRefund(String requestNo, RefundBill bill);
 
+    public abstract void closeTransaction(String requestNo);
+
+    public abstract String getFundFlowBill(String billDate);
+
 }
