@@ -161,4 +161,14 @@ public class WechatTransaction extends TransactionPattern {
             }
         }
     }
+    @Override
+    public void closeTransaction(String requestNo){
+        wechatMicroService.closeTransaction(requestNo);
+    }
+    @Override
+    public String getFundFlowBill(String billDate){
+        WechatReturnObject<WeChatPayFundFlowBillRetVo> wechatReturnObject=wechatMicroService.getFundFlowBill(billDate);
+        WeChatPayFundFlowBillRetVo weChatPayFundFlowBillRetVo=wechatReturnObject.getData();
+        return weChatPayFundFlowBillRetVo.getDownloadUrl();
+    }
 }
