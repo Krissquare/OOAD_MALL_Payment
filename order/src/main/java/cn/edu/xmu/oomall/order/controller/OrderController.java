@@ -341,7 +341,7 @@ public class OrderController {
      * @return
      */
     @Audit(departName = "order")
-    @GetMapping("orders/{id}/refund")
+    @GetMapping("/orders/{id}/refund")
     public Object listOrderRefunds(@PathVariable("id") Long id) {
         ReturnObject ret = orderService.listOrderRefunds(id);
         return Common.decorateReturnObject(ret);

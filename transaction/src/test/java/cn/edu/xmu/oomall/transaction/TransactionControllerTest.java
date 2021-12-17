@@ -75,7 +75,7 @@ public class TransactionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":0,\"data\":{\"total\":1,\"pages\":1,\"pageSize\":10,\"page\":1,\"list\":[{\"id\":1,\"tradeSn\":\"34564322\",\"patternId\":1,\"amount\":5,\"state\":null,\"documentId\":\"20216453652635231006\",\"documentType\":0}]},\"errmsg\":\"成功\"}";
+        String expected = "{\"errno\":0,\"data\":{\"total\":1,\"pages\":1,\"pageSize\":10,\"page\":1,\"list\":[{\"id\":1,\"tradeSn\":\"34564322\",\"patternId\":1,\"amount\":5,\"state\":1,\"documentId\":\"20216453652635231006\",\"documentType\":0}]},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
@@ -88,7 +88,7 @@ public class TransactionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":0,\"data\":{\"id\":1,\"tradeSn\":\"34564322\",\"patternId\":1,\"paymentId\":1,\"amount\":5,\"state\":null,\"documentId\":\"20216453652635231006\",\"documentType\":0,\"descr\":null,\"adjustId\":null,\"adjustName\":null,\"adjustTime\":null,\"creatorId\":null,\"creatorName\":null,\"gmtCreate\":\"2021-12-11T16:31:44\",\"gmtModified\":null,\"modifierId\":null,\"modifierName\":null},\"errmsg\":\"成功\"}";
+        String expected = "{\"errno\":0,\"data\":{\"id\":1,\"tradeSn\":\"34564322\",\"patternId\":1,\"paymentId\":1,\"amount\":5,\"state\":1,\"documentId\":\"20216453652635231006\",\"documentType\":0,\"descr\":null,\"adjustId\":null,\"adjustName\":null,\"adjustTime\":null,\"creatorId\":null,\"creatorName\":null,\"gmtCreate\":\"2021-12-11T16:31:44\",\"gmtModified\":null,\"modifierId\":null,\"modifierName\":null},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
