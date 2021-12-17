@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 
@@ -52,8 +53,8 @@ public class OrderController {
     public Object listCustomerBriefOrdersController(@LoginUser Long userId,
                                                     @RequestParam(value = "orderSn", required = false) String orderSn,
                                                     @RequestParam(value = "state", required = false) Integer state,
-                                                    @RequestParam(value = "beginTime", required = false) @DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
-                                                    @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime endTime,
+                                                    @RequestParam(value = "beginTime", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime beginTime,
+                                                    @RequestParam(value = "endTime", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endTime,
                                                     @RequestParam(value = "page", required = false) Integer pageNumber,
                                                     @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         if (beginTime != null && endTime != null) {
@@ -61,7 +62,7 @@ public class OrderController {
                 return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
             }
         }
-        return Common.decorateReturnObject(orderService.listCustomerBriefOrder(userId, orderSn, state, beginTime, endTime, pageNumber, pageSize));
+        return Common.decorateReturnObject(orderService.listCustomerBriefOrder(userId, orderSn, state, beginTime.toLocalDateTime(), endTime.toLocalDateTime(), pageNumber, pageSize));
     }
 
     /**

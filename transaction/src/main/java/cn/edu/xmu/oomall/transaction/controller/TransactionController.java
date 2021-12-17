@@ -17,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 
 import cn.edu.xmu.oomall.core.util.Common;
@@ -266,8 +267,8 @@ public class TransactionController {
                                               @LoginUser Long adminId,
                                               @RequestParam(value = "documentId", required = false) String documentId,
                                               @RequestParam(value = "state", required = false) Byte state,
-                                              @RequestParam(value = "beginTime", required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
-                                              @RequestParam(value = "endTime", required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime endTime,
+                                              @RequestParam(value = "beginTime", required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime beginTime,
+                                              @RequestParam(value = "endTime", required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endTime,
                                               @RequestParam(value = "page", required = false) Integer page,
                                               @RequestParam(value = "pageSize", required = false) Integer pageSize){
         if (endTime == null || beginTime == null){
@@ -279,7 +280,7 @@ public class TransactionController {
         if (beginTime.isAfter(endTime)){
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
         }
-        return Common.decorateReturnObject(transactionService.listErrorAccountsByConditions(documentId,state,beginTime,endTime,page,pageSize));
+        return Common.decorateReturnObject(transactionService.listErrorAccountsByConditions(documentId,state,beginTime.toLocalDateTime(),endTime.toLocalDateTime(),page,pageSize));
     }
 
     /**
