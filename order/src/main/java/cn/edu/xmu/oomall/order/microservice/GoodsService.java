@@ -24,6 +24,7 @@ public interface GoodsService {
      * @param id
      * @return cn.edu.xmu.oomall.ooad201.order.microService.vo.OnSaleVo
      */
+    //SOLVED BY HTY
     @GetMapping("/internal/onsales/{id}")
     InternalReturnObject<OnSaleVo> selectFullOnsale(@PathVariable("id")Long id);
 
@@ -34,6 +35,7 @@ public interface GoodsService {
      * @param id
      * @return cn.edu.xmu.oomall.ooad201.order.microService.vo.ProductVo
      */
+    //SOVLED BY HTY
     @GetMapping("/products/{id}")
     InternalReturnObject<ProductVo> getProductDetails(@PathVariable Long id) ;
 
@@ -46,6 +48,7 @@ public interface GoodsService {
      * @param vo
      * @return
      */
+    //TODO:LXC
     @PutMapping("internal/shops/{did}/onsales/{id}/decr")
     InternalReturnObject decreaseOnSale(@PathVariable Long did, @PathVariable Long id,@RequestBody QuantityVo vo);
 }
