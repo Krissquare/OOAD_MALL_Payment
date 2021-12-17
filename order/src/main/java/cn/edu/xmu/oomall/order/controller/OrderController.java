@@ -381,9 +381,9 @@ public class OrderController {
      * @param id
      * @return
      */
-    @GetMapping("/internal/order/{id}")
+    @GetMapping("/internal/orders/{id}/orderitems")
     public Object listOrderItemsByOrderId(@PathVariable(value = "id") Long id) {
-        return orderService.listOrderItemsByOrderId(id);
+        return Common.decorateReturnObject(orderService.listOrderItemsByOrderId(id));
     }
 
 
@@ -391,9 +391,9 @@ public class OrderController {
      * 7.orderSn查orderId
      * hty
      */
-    @GetMapping("/internal/orders")
-    public InternalReturnObject<OrderIdRetVo> getOrderIdByOrderSn(@RequestParam(value="orderSn",required = true) String orderSn)
+    @GetMapping("/internal/orderid")
+    public Object getOrderIdByOrderSn(@RequestParam(value="orderSn") String orderSn)
     {
-        return orderService.getOrderId(orderSn);
+        return Common.decorateReturnObject(orderService.getOrderId(orderSn));
     }
 }

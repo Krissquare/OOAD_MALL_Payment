@@ -13,6 +13,7 @@ import cn.edu.xmu.oomall.order.microservice.vo.*;
 import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderItem;
 import cn.edu.xmu.oomall.order.model.bo.OrderState;
+import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import cn.edu.xmu.privilegegateway.annotation.util.Common;
@@ -981,17 +982,14 @@ public class OrderService {
      * @return
      */
     @Transactional(readOnly = true,rollbackFor = Exception.class)
-    public InternalReturnObject getOrderId(String orderSn)
+    public ReturnObject getOrderId(String orderSn)
     {
-        ReturnObject ret=orderDao.getOrderByOrderSn(orderSn);
-        if(!ret.getCode().equals(ReturnNo.OK))
-        {
-            return new InternalReturnObject(ret);
+        ReturnObject ret = orderDao.getOrderByOrderSn(orderSn);
+        if (!ret.getCode().equals(ReturnNo.OK)) {
+            return ret;
         }
-        OrderIdRetVo orderIdRetVo=new OrderIdRetVo();
-        Order order=(Order) ret.getData();
-        orderIdRetVo.setId(order.getId());
-        return new InternalReturnObject(orderIdRetVo);
+        var order = (OrderPo) ret.getData();
+        return new ReturnObject(new OrderIdRetVo(order.getId()));
     }
 
 
