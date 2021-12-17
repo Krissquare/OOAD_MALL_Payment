@@ -66,7 +66,21 @@ public class TransactionController {
     public Object listAllPaymentStates(){
         return Common.decorateReturnObject(transactionService.listAllPaymentStates());
     }
-    //TODO:5.顾客支付已建立的支付单
+
+    /**
+     * @author fz
+     * 顾客支付已建立的支付单
+     * */
+    @PutMapping("/payments/{pid}/pay")
+    public Object paymentPayedByCustomer(@LoginUser Long userId,
+                                         @PathVariable("pid") Long pid,
+                                         @Validated @RequestBody PaymentBePayedVo payedVo, BindingResult bindingResult){
+        if (bindingResult.hasErrors()) {
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
+        }
+        return Common.decorateReturnObject(transactionService.paymentPayedByCustomer(pid,userId,payedVo));
+    }
+
     /**
      * 6.顾客请求支付
      * hqg

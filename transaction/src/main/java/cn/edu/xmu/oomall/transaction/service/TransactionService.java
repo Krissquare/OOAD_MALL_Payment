@@ -80,6 +80,32 @@ public class TransactionService {
         return new ReturnObject(states);
     }
     /**
+     * 5.顾客支付已建立的支付单
+     * */
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject paymentPayedByCustomer(Long paymentId, Long customerId, PaymentBePayedVo payedVo){
+        ReturnObject oriPaymentRet = transactionDao.getPaymentById(paymentId);
+        if (!oriPaymentRet.getCode().equals(ReturnNo.OK)){
+            return oriPaymentRet;
+        }
+        Payment oldPayment = (Payment) oriPaymentRet.getData();
+        if (!oldPayment.getCreatorId().equals(customerId)){
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
+        Payment newPayment = cloneVo(payedVo, Payment.class);
+        newPayment.setId(oldPayment.getId());
+        ReturnObject updatePaymentRet = transactionDao.updatePayment(newPayment);
+        if (!updatePaymentRet.getCode().equals(ReturnNo.OK)){
+            return updatePaymentRet;
+        }
+        ReturnObject newPaymentRet = transactionDao.getPaymentById(paymentId);
+        if (!newPaymentRet.getCode().equals(ReturnNo.OK)){
+            return newPaymentRet;
+        }
+        PaymentRetVo paymentRetVo = cloneVo(newPaymentRet.getData(), PaymentRetVo.class);
+        return new ReturnObject(paymentRetVo);
+    }
+    /**
      * 6.顾客请求支付
      * hqg
      * @param paymentBill
