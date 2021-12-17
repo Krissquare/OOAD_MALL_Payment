@@ -194,7 +194,7 @@ public class TransactionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse=" {\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":{\"id\":1,\"tradeSn\":null,\"patternId\":null,\"amount\":null,\"actualAmount\":null,\"documentId\":null,\"documentType\":null,\"payTime\":null,\"beginTime\":null,\"endTime\":null,\"state\":2,\"descr\":\"已对账噢\",\"adjust\":{\"id\":null,\"name\":null},\"adjustTime\":null,\"creator\":{\"id\":null,\"name\":null},\"gmtCreate\":null,\"modifier\":{\"id\":1,\"name\":\"admin\"}}}";
+        String expectedResponse="{\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":{\"id\":1,\"tradeSn\":\"7363522113\",\"patternId\":0,\"amount\":92,\"actualAmount\":76,\"documentId\":\"20216453652635231006\",\"documentType\":0,\"payTime\":\"2021-12-01T15:43:38\",\"beginTime\":null,\"endTime\":null,\"state\":2,\"descr\":\"已对账噢\",\"adjust\":{\"id\":null,\"name\":null},\"adjustTime\":null,\"creator\":{\"id\":1,\"name\":\"gyt\"},\"gmtCreate\":\"2021-12-02T17:46:10\",\"modifier\":{\"id\":1,\"name\":\"admin\"}}}";
         JSONAssert.assertEquals(expectedResponse, responseString, false);
     }
     /**
