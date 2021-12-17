@@ -364,6 +364,12 @@ public class TransactionControllerTest {
     }
 
     @Test
+    public void printToken() throws Exception{
+        adminToken = jwtHelper.createToken(1L,"admin",0L, 1,1000);
+        System.out.println(adminToken);
+    }
+
+    @Test
     public void unZipTest() throws IOException {
         //解压 alipay 注这不是文件夹
         FileUtil.unZip(new File("testfile/alipay/202111_2088202991815014.zip"), "testfile/alipay");

@@ -132,8 +132,9 @@ public class TransactionService {
         // 不存在匹配的流水，则需要新建
         if (validExistedPayment == null) {
             Payment payment = cloneVo(paymentBill, Payment.class);
-            setPoCreatedFields(payment, loginUserId, loginUserName);
-            setPoModifiedFields(payment, loginUserId, loginUserName);
+            // TODO: userId和userName
+            setPoCreatedFields(payment, 1L, "hqg");
+            setPoModifiedFields(payment, 1L, "hqg");
             ReturnObject<Payment> retPayment = transactionDao.insertPayment(payment);
             if (!retPayment.getCode().equals(ReturnNo.OK)) {
                 return retPayment;

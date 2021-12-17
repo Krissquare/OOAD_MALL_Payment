@@ -16,7 +16,6 @@ import cn.edu.xmu.oomall.transaction.util.alipay.microservice.AlipayMicroService
 import cn.edu.xmu.oomall.transaction.util.alipay.microservice.vo.*;
 import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayMethod;
 import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayRefundState;
-import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayReturnNo;
 import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayTradeState;
 import cn.edu.xmu.oomall.transaction.util.mq.ActiveQueryMessage;
 import cn.edu.xmu.oomall.transaction.util.mq.MessageProducer;
@@ -45,8 +44,8 @@ public class AlipayTransaction extends TransactionPattern {
         paymentVo.setOutTradeNo(requestNo);
         paymentVo.setTotalAmount(bill.getAmount());
 
-        AlipayPaymentRetVo alipayPaymentRetVo = (AlipayPaymentRetVo) alipayMicroService.gatewayDo(null,
-                AlipayMethod.QUERY_PAY.getMethod(),
+        Object object = alipayMicroService.gatewayDo(null,
+                AlipayMethod.PAY.getMethod(),
                 null,
                 null,
                 null,
@@ -55,6 +54,7 @@ public class AlipayTransaction extends TransactionPattern {
                 null,
                 JacksonUtil.toJson(paymentVo));
 
+       // AlipayPaymentRetVo alipayPaymentRetVo = warpRetObject.getAlipayPaymentRetVo();
         ActiveQueryMessage queryMessage = new ActiveQueryMessage();
         queryMessage.setMessageType(ActiveQueryMessage.QueryMessageType.QUERY_PAYMENT);
         queryMessage.setRequestNo(requestNo);
