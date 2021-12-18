@@ -13,6 +13,7 @@ import cn.edu.xmu.oomall.order.microservice.vo.*;
 import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderItem;
 import cn.edu.xmu.oomall.order.model.bo.OrderState;
+import cn.edu.xmu.oomall.order.model.po.OrderItemPo;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
@@ -307,21 +308,18 @@ public class OrderService {
         Message message = MessageBuilder.withPayload(json).build();
         SendResult sendResult = rocketMQTemplate.syncSend("insert-order", message);
         if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
-            sendResult = rocketMQTemplate.syncSend("insert-order", message);
-            if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
-                //回滚积点,优惠卷
-                internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(orderAndOrderItemsVo.getOrder().getPoint()));
-                if (internalReturnObject1.getErrno() != 0) {
-                    return new ReturnObject(ReturnNo.getByCode(internalReturnObject1.getErrno()));
-                }
-                for (Long id : couponIds) {
-                    InternalReturnObject internalReturnObject = customService.refundCoupon(id);
-                    if (internalReturnObject.getErrno() != 0) {
-                        return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
-                    }
-                }
-                return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, "发送消息失败");
+            //回滚积点,优惠卷
+            internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(orderAndOrderItemsVo.getOrder().getPoint()));
+            if (internalReturnObject1.getErrno() != 0) {
+                return new ReturnObject(internalReturnObject1);
             }
+            for (Long id : couponIds) {
+                InternalReturnObject internalReturnObject = customService.refundCoupon(id);
+                if (internalReturnObject.getErrno() != 0) {
+                    return new ReturnObject(internalReturnObject);
+                }
+            }
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, "发送消息失败");
         }
         return new ReturnObject();
     }
@@ -442,8 +440,17 @@ public class OrderService {
         }
         String documentId;
         Order pOrder = null;
+        List<OrderItemPo> orderItemPos = null;
+        Long totalPoint=0L;
         if (order.getPid() == 0) {
             documentId = order.getOrderSn();
+            ReturnObject returnObject = orderDao.listOrderItemsByPOrderId(order.getId());
+            if (returnObject.getCode()!=ReturnNo.OK){
+                return returnObject;
+            }
+            //要退优惠券的item
+            orderItemPos= (List<OrderItemPo>) returnObject.getData();
+            totalPoint=order.getPoint();
         } else {
             ReturnObject ret1 = orderDao.getOrderById(order.getPid());
             if (!ret1.getCode().equals(ReturnNo.OK)) {
@@ -451,10 +458,17 @@ public class OrderService {
             }
             pOrder = (Order) ret1.getData();
             documentId = pOrder.getOrderSn();
+            ReturnObject returnObject = orderDao.listOrderItemsByOrderId(pOrder.getId());
+            if(returnObject.getCode()!=ReturnNo.OK){
+                return returnObject;
+            }
+            //要退优惠券的item
+            orderItemPos = (List<OrderItemPo>)returnObject.getData();
+            totalPoint=pOrder.getPoint();
         }
+
         InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
-        if(!returnObject.getErrno().equals(ReturnNo.OK.getCode()))
-        {
+        if (!returnObject.getErrno().equals(ReturnNo.OK.getCode())) {
             return new ReturnObject(returnObject);
         }
         List<PaymentRetVo> list = returnObject.getData().getList();
@@ -463,11 +477,28 @@ public class OrderService {
             refundRecVo.setPaymentId(paymentVo.getId());
             refundRecVo.setDocumentType(RefundType.ORDER.getCode());
             InternalReturnObject<RefundRetVo> retRefund = transactionService.requestRefund(refundRecVo);
-            if (retRefund.getData() == null) {
+            if (retRefund.getErrno() != 0) {
                 return new ReturnObject(retRefund);
             }
         }
-        //TODO:在考虑一下
+        //回滚积点
+        InternalReturnObject internalReturnObject = customService.changeCustomerPoint(loginUserId, new CustomerModifyPointsVo(totalPoint));
+        if (internalReturnObject.getErrno() != 0) {
+            return new ReturnObject(internalReturnObject);
+        }
+        Set<Long> couponIds=new HashSet<>();
+        for (OrderItemPo orderItemPo:orderItemPos){
+            if (orderItemPo.getCouponId()!=null&&orderItemPo.getCouponId()!=0){
+                couponIds.add(orderItemPo.getCouponId());
+            }
+        }
+        //退优惠卷
+        for (Long id : couponIds) {
+            internalReturnObject = customService.refundCoupon(id);
+            if (internalReturnObject.getErrno() != 0) {
+                return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
+            }
+        }
         order.setState(OrderState.CANCEL_ORDER.getCode());
         Common.setPoModifiedFields(order, loginUserId, loginUserName);
         if (pOrder != null) {
@@ -554,7 +585,6 @@ public class OrderService {
      * @param orderId
      * @return
      */
-
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject getOrderDetail(Long shopId, Long orderId) {
         ReturnObject ret = orderDao.getOrderById(orderId);
@@ -583,6 +613,7 @@ public class OrderService {
     /**
      * 12.管理员取消本店铺订单。
      * gyt
+     *
      * @param shopId
      * @param orderId
      * @param loginUserId
@@ -604,8 +635,17 @@ public class OrderService {
         }
         String documentId;
         Order pOrder = null;
+        List<OrderItemPo> orderItemPos = null;
+        Long totalPoion=0L;
         if (order.getPid() == 0) {
             documentId = order.getOrderSn();
+            ReturnObject returnObject = orderDao.listOrderItemsByPOrderId(order.getId());
+            if (returnObject.getCode()!=ReturnNo.OK){
+                return returnObject;
+            }
+            //要退优惠券的item
+            orderItemPos= (List<OrderItemPo>) returnObject.getData();
+            totalPoion=order.getPoint();
         } else {
             ReturnObject ret1 = orderDao.getOrderById(order.getPid());
             if (!ret1.getCode().equals(ReturnNo.OK)) {
@@ -613,6 +653,13 @@ public class OrderService {
             }
             pOrder = (Order) ret1.getData();
             documentId = pOrder.getOrderSn();
+            ReturnObject returnObject = orderDao.listOrderItemsByOrderId(pOrder.getId());
+            if(returnObject.getCode()!=ReturnNo.OK){
+                return returnObject;
+            }
+            //要退优惠券的item
+            orderItemPos = (List<OrderItemPo>)returnObject.getData();
+            totalPoion=pOrder.getPoint();
         }
         InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
         List<PaymentRetVo> list = returnObject.getData().getList();
@@ -625,6 +672,25 @@ public class OrderService {
                 return new ReturnObject(retRefund);
             }
         }
+        //回滚积点
+        InternalReturnObject internalReturnObject = customService.changeCustomerPoint(loginUserId, new CustomerModifyPointsVo(totalPoion));
+        if (internalReturnObject.getErrno() != 0) {
+            return new ReturnObject(internalReturnObject);
+        }
+        Set<Long> couponIds=new HashSet<>();
+        for (OrderItemPo orderItemPo:orderItemPos){
+            if (orderItemPo.getCouponId()!=null&&orderItemPo.getCouponId()!=0){
+                couponIds.add(orderItemPo.getCouponId());
+            }
+        }
+        //退优惠卷
+        for (Long id : couponIds) {
+            internalReturnObject = customService.refundCoupon(id);
+            if (internalReturnObject.getErrno() != 0) {
+                return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
+            }
+        }
+
         order.setState(OrderState.CANCEL_ORDER.getCode());
         Common.setPoModifiedFields(order, loginUserId, loginUserName);
         if (pOrder != null) {
@@ -689,8 +755,7 @@ public class OrderService {
         Order order = (Order) returnObject1.getData();
         String ducumentId = order.getOrderSn();
         InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, ducumentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
-        if(!returnObject.getErrno().equals(ReturnNo.OK.getCode()))
-        {
+        if (!returnObject.getErrno().equals(ReturnNo.OK.getCode())) {
             return new ReturnObject(returnObject);
         }
         List<PaymentRetVo> list = returnObject.getData().getList();
@@ -727,7 +792,7 @@ public class OrderService {
         newOrder.setState(OrderState.FINISH_PAY.getCode());
         Common.setPoModifiedFields(newOrder, loginUserId, loginUserName);
         ReturnObject returnObject = orderDao.updateOrder(newOrder);
-        if(!returnObject.getCode().equals(ReturnNo.OK)){
+        if (!returnObject.getCode().equals(ReturnNo.OK)) {
             return returnObject;
         }
         //3.计算团购数量
@@ -738,29 +803,28 @@ public class OrderService {
         GrouponActivityVo grouponActivityVo = grouponActivityVoInternalReturnObject.getData();
         List<GroupOnStrategyVo> strategy = grouponActivityVo.getStrategy();
         //判断团购的数量符合哪个级别，进而算退的钱
-        GroupOnStrategyVo strategyLevel=new GroupOnStrategyVo();
-        for(GroupOnStrategyVo groupOnStrategyVo:strategy){
-            if(quantity<=groupOnStrategyVo.getQuantity()){
-                strategyLevel=groupOnStrategyVo;
+        GroupOnStrategyVo strategyLevel = new GroupOnStrategyVo();
+        for (GroupOnStrategyVo groupOnStrategyVo : strategy) {
+            if (quantity <= groupOnStrategyVo.getQuantity()) {
+                strategyLevel = groupOnStrategyVo;
             }
         }
-        Long refundAmount=newOrder.getOriginPrice()*(1-strategyLevel.getPercentage());
+        Long refundAmount = newOrder.getOriginPrice() * (1 - strategyLevel.getPercentage());
         //5.退款 TODO：按比例退款
-        RefundRecVo refundRecVo=new RefundRecVo();
+        RefundRecVo refundRecVo = new RefundRecVo();
         refundRecVo.setAmount(refundAmount);
         refundRecVo.setDocumentId(newOrder.getOrderSn());
         refundRecVo.setDocumentType(RefundType.ORDER.getCode());
         //查订单对应的payment
         InternalReturnObject<PageVo<RefundRetVo>> returnObject1 = transactionService.listRefund(0L, newOrder.getOrderSn(), null, null, null, 1, 10);
-        if(returnObject1.getErrno().equals(ReturnNo.OK.getCode())){
+        if (returnObject1.getErrno().equals(ReturnNo.OK.getCode())) {
             return new ReturnObject(returnObject1);
         }
         List<RefundRetVo> list = (List<RefundRetVo>) returnObject1.getData().getList();
         refundRecVo.setPaymentId(list.get(0).getId());
         refundRecVo.setPatternId(list.get(0).getPatternId());
-        InternalReturnObject ret=transactionService.requestRefund(refundRecVo);
-        if(!ret.getErrno().equals(ReturnNo.OK.getCode()))
-        {
+        InternalReturnObject ret = transactionService.requestRefund(refundRecVo);
+        if (!ret.getErrno().equals(ReturnNo.OK.getCode())) {
             return new ReturnObject(ret);
         }
         return new ReturnObject(ret.getData());
@@ -811,6 +875,12 @@ public class OrderService {
                 return new ReturnObject(retRefund);
             }
         }
+        //回滚积点
+        InternalReturnObject internalReturnObject = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo((order.getPoint())));
+        if (internalReturnObject.getErrno() != 0) {
+            return new ReturnObject(internalReturnObject);
+        }
+
         order.setState(OrderState.CANCEL_ORDER.getCode());
         Common.setPoModifiedFields(order, userId, userName);
         return orderDao.updateOrder(order);
@@ -890,19 +960,16 @@ public class OrderService {
             return ret;
         }
         Order order = (Order) ret.getData();
-        if(order.getPid()!=0)
-        {
-            ReturnObject returnObject=orderDao.getOrderById(order.getId());
-            if(!returnObject.getCode().equals(ReturnNo.OK))
-            {
+        if (order.getPid() != 0) {
+            ReturnObject returnObject = orderDao.getOrderById(order.getId());
+            if (!returnObject.getCode().equals(ReturnNo.OK)) {
                 return returnObject;
             }
-            order=(Order)returnObject.getData();
+            order = (Order) returnObject.getData();
         }
         String documentId = order.getOrderSn();
         InternalReturnObject<PageVo<RefundRetVo>> returnObject = transactionService.listRefund(0L, documentId, RefundState.FINISH_REFUND.getCode(), null, null, 1, 10);
-        if(!returnObject.getErrno().equals(ReturnNo.OK.getCode()))
-        {
+        if (!returnObject.getErrno().equals(ReturnNo.OK.getCode())) {
             return new ReturnObject(returnObject);
         }
         List<RefundRetVo> list = returnObject.getData().getList();
@@ -984,12 +1051,12 @@ public class OrderService {
     /**
      * 7. orderSn查orderId
      * hty
+     *
      * @param orderSn
      * @return
      */
-    @Transactional(readOnly = true,rollbackFor = Exception.class)
-    public ReturnObject getOrderId(String orderSn)
-    {
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject getOrderId(String orderSn) {
         ReturnObject ret = orderDao.getOrderByOrderSn(orderSn);
         if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;
