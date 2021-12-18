@@ -264,7 +264,7 @@ public class OrderService {
         }
         order.setCustomerId(userId);
         order.setPid(0L);
-        //TODO 订单号 生成算法
+        order.setOrderSn(genSeqNum(1));
         order.setState(OrderState.NEW_ORDER.getCode());
         order.setBeDeleted((byte) 0);
         setPoCreatedFields(order, userId, userName);

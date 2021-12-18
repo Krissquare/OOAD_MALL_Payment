@@ -109,7 +109,8 @@ public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
             order.setId(null);
             order.setExpressFee(null);
             order.setShopId(shopId);
-            //TODO:子订单生成订单号
+            //子订单生成订单号
+            order.setOrderSn(genSeqNum(1));
             setPoCreatedFields(order, 0L, null);
             setPoModifiedFields(order, 0L, null);
             for (OrderItem orderItem : orderItemList) {
