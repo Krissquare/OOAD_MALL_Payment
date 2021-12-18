@@ -236,6 +236,27 @@ public class OrderService {
         }
 
         Order order = cloneVo(simpleOrderVo, Order.class);
+        //计算运费
+        InternalReturnObject<FreightCalculatingRetVo> freightCalculatingRetVoInternalReturnObject = freightService.calculateFreight(order.getRegionId(), freightCalculatingPostVos);
+        if (freightCalculatingRetVoInternalReturnObject.getErrno() != 0) {
+            return new ReturnObject(ReturnNo.getByCode(freightCalculatingRetVoInternalReturnObject.getErrno()));
+        }
+        order.setExpressFee(freightCalculatingRetVoInternalReturnObject.getData().getFreightPrice());
+        orderAndOrderItemsVo.setOrder(order);
+
+        //减少积点,减少优惠卷
+        InternalReturnObject<CustomerModifyPointsVo> internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(-orderAndOrderItemsVo.getOrder().getPoint()));
+        if (internalReturnObject1.getErrno() != 0) {
+            return new ReturnObject(ReturnNo.getByCode(internalReturnObject1.getErrno()));
+        }
+        //积点不够用就能用多少用多少
+        order.setPoint(internalReturnObject1.getData().getPoints());
+        for (Long id : couponIds) {
+            InternalReturnObject internalReturnObject = customService.useCoupon(id);
+            if (internalReturnObject.getErrno() != 0) {
+                return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
+            }
+        }
         if (shopIds.size() == 1) {
             Iterator it = shopIds.iterator();
             order.setShopId((Long) it.next());
@@ -279,25 +300,7 @@ public class OrderService {
         }
         order.setOriginPrice(sumOrigin);
         order.setDiscountPrice(sumDiscount);
-        //计算运费
-        InternalReturnObject<FreightCalculatingRetVo> freightCalculatingRetVoInternalReturnObject = freightService.calculateFreight(order.getRegionId(), freightCalculatingPostVos);
-        if (freightCalculatingRetVoInternalReturnObject.getErrno() != 0) {
-            return new ReturnObject(ReturnNo.getByCode(freightCalculatingRetVoInternalReturnObject.getErrno()));
-        }
-        order.setExpressFee(freightCalculatingRetVoInternalReturnObject.getData().getFreightPrice());
-        orderAndOrderItemsVo.setOrder(order);
 
-        //减少积点,减少优惠卷
-        InternalReturnObject internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(-orderAndOrderItemsVo.getOrder().getPoint()));
-        if (internalReturnObject1.getErrno() != 0) {
-            return new ReturnObject(ReturnNo.getByCode(internalReturnObject1.getErrno()));
-        }
-        for (Long id : couponIds) {
-            InternalReturnObject internalReturnObject = customService.useCoupon(id);
-            if (internalReturnObject.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
-            }
-        }
         //todo: redis暂存 以防没插进去就支付
         //发消息
         String json = JacksonUtil.toJson(orderAndOrderItemsVo);
