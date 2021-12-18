@@ -23,7 +23,7 @@ public interface ActivityService {
      */
     //TODO:LXC
     @GetMapping("/advancesales/{id}")
-    InternalReturnObject<AdvanceVo> getAdvanceSaleById(@PathVariable Long id);
+    InternalReturnObject<AdvanceVo> queryOnlineAdvanceSaleInfo(@PathVariable(name = "id") Long id);
 
     /**
      * /groupons/{id}

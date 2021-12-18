@@ -190,7 +190,7 @@ public class OrderService {
             }
         } else if (simpleOrderVo.getAdvancesaleId() != null) {
             // 预售订单
-            InternalReturnObject<AdvanceVo> advanceSaleById = activityService.getAdvanceSaleById(simpleOrderVo.getAdvancesaleId());
+            InternalReturnObject<AdvanceVo> advanceSaleById = activityService.queryOnlineAdvanceSaleInfo(simpleOrderVo.getAdvancesaleId());
             if (simpleOrderVo.getOrderItems().size() != 1) {
                 return new ReturnObject(ReturnNo.FIELD_NOTVALID);
             }
