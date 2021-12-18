@@ -14,6 +14,5 @@ import javax.validation.constraints.Min;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QuantityVo {
-    @Min(1)
     private  Long quantity;
 }

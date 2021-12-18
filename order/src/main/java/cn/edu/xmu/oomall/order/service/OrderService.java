@@ -490,6 +490,11 @@ public class OrderService {
         for (OrderItemPo orderItemPo:orderItemPos){
             if (orderItemPo.getCouponId()!=null&&orderItemPo.getCouponId()!=0){
                 couponIds.add(orderItemPo.getCouponId());
+                //增加库存
+                internalReturnObject = goodsService.decreaseOnSale(orderItemPo.getShopId(), orderItemPo.getOnsaleId(), new QuantityVo(orderItemPo.getQuantity()));
+                if (internalReturnObject.getErrno()!=0){
+                    return new ReturnObject(internalReturnObject);
+                }
             }
         }
         //退优惠卷
@@ -681,6 +686,11 @@ public class OrderService {
         for (OrderItemPo orderItemPo:orderItemPos){
             if (orderItemPo.getCouponId()!=null&&orderItemPo.getCouponId()!=0){
                 couponIds.add(orderItemPo.getCouponId());
+                //增加库存
+                internalReturnObject = goodsService.decreaseOnSale(orderItemPo.getShopId(), orderItemPo.getOnsaleId(), new QuantityVo(orderItemPo.getQuantity()));
+                if (internalReturnObject.getErrno()!=0){
+                    return new ReturnObject(internalReturnObject);
+                }
             }
         }
         //退优惠卷
@@ -880,7 +890,17 @@ public class OrderService {
         if (internalReturnObject.getErrno() != 0) {
             return new ReturnObject(internalReturnObject);
         }
-
+        ReturnObject returnObject1 = orderDao.listOrderItemsByPOrderId(order.getId());
+        if (returnObject1.getCode()!=ReturnNo.OK){
+            return returnObject1;
+        }
+        List<OrderItemPo> list1 = (List<OrderItemPo>) returnObject1.getData();
+        for(OrderItemPo orderItemPo:list1){
+            InternalReturnObject internalReturnObject1 = goodsService.decreaseOnSale(orderItemPo.getShopId(), orderItemPo.getOnsaleId(), new QuantityVo(orderItemPo.getQuantity()));
+            if(internalReturnObject1.getErrno()!=0){
+                return new ReturnObject(internalReturnObject1);
+            }
+        }
         order.setState(OrderState.CANCEL_ORDER.getCode());
         Common.setPoModifiedFields(order, userId, userName);
         return orderDao.updateOrder(order);
