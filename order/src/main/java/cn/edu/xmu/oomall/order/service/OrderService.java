@@ -174,7 +174,7 @@ public class OrderService {
             if (orderItems.size() != 1) {
                 return new ReturnObject(ReturnNo.FIELD_NOTVALID);
             }
-            InternalReturnObject<GrouponActivityVo> grouponsById = activityService.getGrouponsById(simpleOrderVo.getGrouponId());
+            InternalReturnObject<GrouponActivityVo> grouponsById = activityService.getOnlineGroupOnActivity(simpleOrderVo.getGrouponId());
             if (grouponsById.getErrno() != 0) {
                 return new ReturnObject(ReturnNo.getByCode(grouponsById.getErrno()));
             }
@@ -731,9 +731,13 @@ public class OrderService {
         Long quantity = (Long) orderDao.getQuantityByGroupOnId(newOrder.getGrouponId()).getData();
         //4.解析团购规则，计算退款金额
         //查团购活动
-        InternalReturnObject<GrouponActivityVo> grouponActivityVoInternalReturnObject = activityService.getGrouponsById(newOrder.getGrouponId());
+        InternalReturnObject<GrouponActivityVo> grouponActivityVoInternalReturnObject = activityService.getOnlineGroupOnActivity(newOrder.getGrouponId());
         GrouponActivityVo grouponActivityVo = grouponActivityVoInternalReturnObject.getData();
         List<GroupOnStrategyVo> strategy = grouponActivityVo.getStrategy();
+        if(strategy==null)
+        {
+            return new ReturnObject(ReturnNo.OK);
+        }
         //判断团购的数量符合哪个级别，进而算退的钱
         GroupOnStrategyVo strategyLevel=new GroupOnStrategyVo();
         for(GroupOnStrategyVo groupOnStrategyVo:strategy){
@@ -756,11 +760,12 @@ public class OrderService {
         refundRecVo.setPaymentId(list.get(0).getId());
         refundRecVo.setPatternId(list.get(0).getPatternId());
         InternalReturnObject ret=transactionService.requestRefund(refundRecVo);
-        if(!ret.getErrno().equals(ReturnNo.OK.getCode()))
-        {
-            return new ReturnObject(ret);
-        }
-        return new ReturnObject(ret.getData());
+//        if(!ret.getErrno().equals(ReturnNo.OK.getCode()))
+//        {
+//            return new ReturnObject(ret);
+//        }
+//        return new ReturnObject(ret.getData());
+        return new ReturnObject(ret);
     }
 
     /*===============================================内部API=======================================*/

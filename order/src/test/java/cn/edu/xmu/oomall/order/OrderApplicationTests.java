@@ -362,14 +362,14 @@ class OrderApplicationTests {
      */
     @Test
     public void listOrderItemsByOrderId() throws Exception {
-        String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/internal/order/1")
+        String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/internal/orders/1/orderitems")
                 .header("authorization", token4)
                 .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
-        String expected="{\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":[{\"id\":1,\"orderId\":2,\"shopId\":1,\"productId\":1,\"onsaleId\":1,\"name\":\"巧克力\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":1,\"couponActivityId\":1,\"customerId\":null},{\"id\":2,\"orderId\":3,\"shopId\":2,\"productId\":2,\"onsaleId\":2,\"name\":\"薯片\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":2,\"couponActivityId\":2,\"customerId\":null}]}";
+        String expected="{\"errno\":0,\"data\":[{\"id\":1,\"orderId\":2,\"shopId\":1,\"productId\":1,\"onsaleId\":1,\"name\":\"巧克力\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":1,\"couponActivityId\":1,\"customerId\":null},{\"id\":2,\"orderId\":3,\"shopId\":2,\"productId\":2,\"onsaleId\":2,\"name\":\"薯片\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":2,\"couponActivityId\":2,\"customerId\":null}],\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
@@ -409,11 +409,11 @@ class OrderApplicationTests {
         RefundRecVo refundRecVo=new RefundRecVo();
         refundRecVo.setDocumentType((byte)0);
         refundRecVo.setPaymentId(1L);
-        refundRecVo.setAmount(500L);
+        refundRecVo.setAmount(50L);
         refundRecVo.setDescr("123");
         refundRecVo.setReason("aaa");
         refundRecVo.setDocumentId("2021");
-        refundRecVo.setPatternId(1L);
+        refundRecVo.setPatternId(0L);
         InternalReturnObject<RefundRetVo> refundRetVo=transactionService.requestRefund(refundRecVo);
         System.out.println(refundRetVo.getData());
     }

@@ -34,5 +34,5 @@ public interface ActivityService {
      */
     //TODO:GYT
     @GetMapping("/groupons/{id}")
-    InternalReturnObject<GrouponActivityVo> getGrouponsById(@PathVariable Long id);
+    InternalReturnObject<GrouponActivityVo> getOnlineGroupOnActivity(@PathVariable Long id);
 }
