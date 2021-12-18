@@ -20,7 +20,7 @@ import java.util.List;
 public interface CouponService {
     //TODO:LXC
     @PutMapping("/internal/discountprices")
-    InternalReturnObject<List<ProductRetVo>> calculateDiscoutprices(@RequestBody List<ProductPostVo> productOnsaleVos);
+    InternalReturnObject<List<ProductRetVo>> calculateDiscount(@RequestBody List<ProductPostVo>items);
 
 
     /**
@@ -31,6 +31,6 @@ public interface CouponService {
      */
     //TODO:LXC
     @GetMapping("shops/{shopId}/couponactivities/{id}")
-    InternalReturnObject<CouponActivityVo> getCouponActivityById(@PathVariable Long shopId,
-                                                                 @PathVariable Long id);
+    InternalReturnObject<CouponActivityVo> showOwnCouponActivityInfo(@PathVariable Long shopId,
+                                                                     @PathVariable Long id);
 }
