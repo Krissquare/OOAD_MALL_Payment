@@ -411,7 +411,7 @@ public class OrderService {
                 return new ReturnObject(productInterRet);
             }
             oneFreightVo.setWeight(productInterRet.getData().getWeight());
-            //TODO: freight id
+            oneFreightVo.setFreightId(productInterRet.getData().getFreightId());
             freightVoList.add(oneFreightVo);
         }
         //query freight fee via internal api
