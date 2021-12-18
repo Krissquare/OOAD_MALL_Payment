@@ -22,18 +22,7 @@ public class RefundSuccessListener implements RocketMQListener<NotifyMessage> {
 
     @Override
     public void onMessage(NotifyMessage message) {
-        //假设只传documentId，跟据取消规则，只能取消未分单的订单 在退款那里（有102 201 202 三个状态有关）
-        //更改父订单状态
-        ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(message.getDocumentId());
-        if (orderByOrderSn.getCode()!= ReturnNo.OK){
-            return;
-        }
-        OrderPo orderPo = (OrderPo) orderByOrderSn.getData();
-        if (orderPo.getGrouponId()!=null){
-        }
-        //如果有子订单更改状态
-        //退积点
-        //退优惠券
-        //添加库存
+        //因为退款成不成功与订单无关所以不处理
+        return;
     }
 }

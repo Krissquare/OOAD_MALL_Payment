@@ -78,7 +78,7 @@ public class OrderDao {
             cr.andPidEqualTo(order.getPid());
             OrderPo orderPo = cloneVo(order, OrderPo.class);
             orderPoMapper.updateByExampleSelective(orderPo, orderPoExample);
-            //TODO:删redis问题
+            //TODO:在考虑一下 怎么删除redis
             return new ReturnObject(ReturnNo.OK);
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -200,6 +200,7 @@ public class OrderDao {
             if (endTime != null){
                 cr.andConfirmTimeLessThanOrEqualTo(endTime);
             }
+            orderPoExample.setOrderByClause("gmt_create DESC");
             List<OrderPo> orderPoList = orderPoMapper.selectByExample(orderPoExample);
             ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo(orderPoList));
             return Common.getPageRetVo(ret, BriefOrderVo.class);

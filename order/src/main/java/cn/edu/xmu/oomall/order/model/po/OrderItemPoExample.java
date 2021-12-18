@@ -1115,63 +1115,63 @@ public class OrderItemPoExample {
             return (Criteria) this;
         }
 
-        public Criteria andModifierByIsNull() {
-            addCriterion("`modifier_by` is null");
+        public Criteria andModifierIdIsNull() {
+            addCriterion("`modifier_id` is null");
             return (Criteria) this;
         }
 
-        public Criteria andModifierByIsNotNull() {
-            addCriterion("`modifier_by` is not null");
+        public Criteria andModifierIdIsNotNull() {
+            addCriterion("`modifier_id` is not null");
             return (Criteria) this;
         }
 
-        public Criteria andModifierByEqualTo(Long value) {
-            addCriterion("`modifier_by` =", value, "modifierBy");
+        public Criteria andModifierIdEqualTo(Long value) {
+            addCriterion("`modifier_id` =", value, "modifierId");
             return (Criteria) this;
         }
 
-        public Criteria andModifierByNotEqualTo(Long value) {
-            addCriterion("`modifier_by` <>", value, "modifierBy");
+        public Criteria andModifierIdNotEqualTo(Long value) {
+            addCriterion("`modifier_id` <>", value, "modifierId");
             return (Criteria) this;
         }
 
-        public Criteria andModifierByGreaterThan(Long value) {
-            addCriterion("`modifier_by` >", value, "modifierBy");
+        public Criteria andModifierIdGreaterThan(Long value) {
+            addCriterion("`modifier_id` >", value, "modifierId");
             return (Criteria) this;
         }
 
-        public Criteria andModifierByGreaterThanOrEqualTo(Long value) {
-            addCriterion("`modifier_by` >=", value, "modifierBy");
+        public Criteria andModifierIdGreaterThanOrEqualTo(Long value) {
+            addCriterion("`modifier_id` >=", value, "modifierId");
             return (Criteria) this;
         }
 
-        public Criteria andModifierByLessThan(Long value) {
-            addCriterion("`modifier_by` <", value, "modifierBy");
+        public Criteria andModifierIdLessThan(Long value) {
+            addCriterion("`modifier_id` <", value, "modifierId");
             return (Criteria) this;
         }
 
-        public Criteria andModifierByLessThanOrEqualTo(Long value) {
-            addCriterion("`modifier_by` <=", value, "modifierBy");
+        public Criteria andModifierIdLessThanOrEqualTo(Long value) {
+            addCriterion("`modifier_id` <=", value, "modifierId");
             return (Criteria) this;
         }
 
-        public Criteria andModifierByIn(List<Long> values) {
-            addCriterion("`modifier_by` in", values, "modifierBy");
+        public Criteria andModifierIdIn(List<Long> values) {
+            addCriterion("`modifier_id` in", values, "modifierId");
             return (Criteria) this;
         }
 
-        public Criteria andModifierByNotIn(List<Long> values) {
-            addCriterion("`modifier_by` not in", values, "modifierBy");
+        public Criteria andModifierIdNotIn(List<Long> values) {
+            addCriterion("`modifier_id` not in", values, "modifierId");
             return (Criteria) this;
         }
 
-        public Criteria andModifierByBetween(Long value1, Long value2) {
-            addCriterion("`modifier_by` between", value1, value2, "modifierBy");
+        public Criteria andModifierIdBetween(Long value1, Long value2) {
+            addCriterion("`modifier_id` between", value1, value2, "modifierId");
             return (Criteria) this;
         }
 
-        public Criteria andModifierByNotBetween(Long value1, Long value2) {
-            addCriterion("`modifier_by` not between", value1, value2, "modifierBy");
+        public Criteria andModifierIdNotBetween(Long value1, Long value2) {
+            addCriterion("`modifier_id` not between", value1, value2, "modifierId");
             return (Criteria) this;
         }
 

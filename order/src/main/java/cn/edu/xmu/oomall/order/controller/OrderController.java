@@ -9,8 +9,6 @@ import cn.edu.xmu.oomall.order.util.MyDateTime;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
-import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
-import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.BindingResult;
@@ -20,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 
@@ -52,8 +51,8 @@ public class OrderController {
     public Object listCustomerBriefOrdersController(@LoginUser Long userId,
                                                     @RequestParam(value = "orderSn", required = false) String orderSn,
                                                     @RequestParam(value = "state", required = false) Integer state,
-                                                    @RequestParam(value = "beginTime", required = false) @DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
-                                                    @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime endTime,
+                                                    @RequestParam(value = "beginTime", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime beginTime,
+                                                    @RequestParam(value = "endTime", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endTime,
                                                     @RequestParam(value = "page", required = false) Integer pageNumber,
                                                     @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         if (beginTime != null && endTime != null) {
@@ -61,7 +60,7 @@ public class OrderController {
                 return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
             }
         }
-        return Common.decorateReturnObject(orderService.listCustomerBriefOrder(userId, orderSn, state, beginTime, endTime, pageNumber, pageSize));
+        return Common.decorateReturnObject(orderService.listCustomerBriefOrder(userId, orderSn, state, beginTime.toLocalDateTime(), endTime.toLocalDateTime(), pageNumber, pageSize));
     }
 
     /**
@@ -112,13 +111,14 @@ public class OrderController {
     @Audit(departName = "order")
     public Object updateCustomerOrderController(@PathVariable("id") Long orderId,
                                                 @LoginUser Long userId,
+                                                @LoginUser String userName,
                                                 @RequestBody @Valid UpdateOrderVo updateOrderVo,
                                                 BindingResult bindingResult) {
         Object object = Common.processFieldErrors(bindingResult, httpServletResponse);
         if (object != null) {
             return object;
         }
-        return Common.decorateReturnObject(orderService.updateCustomerOrder(userId, orderId, updateOrderVo));
+        return Common.decorateReturnObject(orderService.updateCustomerOrder(userId,userName, orderId, updateOrderVo));
     }
 
     /**

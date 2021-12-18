@@ -14,10 +14,7 @@ import cn.edu.xmu.oomall.order.microservice.vo.OnSaleVo;
 import cn.edu.xmu.oomall.order.microservice.vo.ProductVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRecVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRetVo;
-import cn.edu.xmu.oomall.order.model.vo.AftersaleOrderitemRecVo;
-import cn.edu.xmu.oomall.order.model.vo.AftersaleRecVo;
-import cn.edu.xmu.oomall.order.model.vo.MarkShipmentVo;
-import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
+import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.util.CreateObject;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import cn.edu.xmu.privilegegateway.annotation.util.JwtHelper;
@@ -36,6 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -99,10 +98,28 @@ class OrderApplicationTests {
 //        Mockito.when(transactionService.refund(new RefundRecVo(null,null,2L,null,100L,RefundType.ORDER.getCode()))).thenReturn(new ReturnObject(ReturnNo.OK));
     }
 
+    //什么活动也不参加
     @Test
     public void testAddOrder() throws Exception {
-
-//TODO: Test goes here...
+        SimpleOrderVo simpleOrderVo = new SimpleOrderVo(null, "lxc", 1L, "厦门大学", "15165666666", "没有留言",
+                null, null, 666L, 100L);
+        List<SimpleOrderItemVo> list = new ArrayList<>();
+        SimpleOrderItemVo simpleOrderItemVo = new SimpleOrderItemVo();
+        simpleOrderItemVo.setProductId(1550L);
+        simpleOrderItemVo.setOnsaleId(1L);
+        simpleOrderItemVo.setQuantity(10L);
+        list.add(simpleOrderItemVo);
+        simpleOrderVo.setOrderItems(list);
+        String requestJSON = JacksonUtil.toJson(simpleOrderVo);
+        String responseString = mvc.perform(post("/orders")
+                        .header("authorization", token)
+                        .contentType("application/json;charset=UTF-8")
+                        .content(requestJSON))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectString = "";
+        JSONAssert.assertEquals(expectString, responseString, true);
     }
 
 
