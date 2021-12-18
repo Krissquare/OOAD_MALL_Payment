@@ -42,8 +42,6 @@ public class InsertOrderListener implements RocketMQListener<String>
             for (OrderItem orderItem:orderItems){
                 orderItem.setOrderId(orderPo.getId());
                 orderDao.insertOrderItem(orderItem);
-                //减少库存
-                goodsService.decreaseOnSale(orderItem.getShopId(), orderItem.getOnsaleId(), new QuantityVo(-orderItem.getQuantity()));
             }
         }
     }
