@@ -106,7 +106,7 @@ CREATE TABLE `oomall_order_item` (
   `commented` tinyint(4) DEFAULT NULL,
   `creator_id` bigint(20) DEFAULT NULL,
   `creator_name` varchar(128) DEFAULT NULL,
-  `modifier_by` bigint(20) DEFAULT NULL,
+  `modifier_id` bigint(20) DEFAULT NULL,
   `modifier_name` varchar(128) DEFAULT NULL,
   `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `gmt_modified` datetime DEFAULT NULL,
