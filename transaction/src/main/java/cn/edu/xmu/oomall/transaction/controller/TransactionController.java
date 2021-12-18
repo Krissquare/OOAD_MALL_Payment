@@ -310,6 +310,12 @@ public class TransactionController {
                                             @RequestBody ErrorAccountUpdateVo updateVo){
         return Common.decorateReturnObject(transactionService.updateErrorAccount(id, updateVo));
     }
+    @GetMapping("/shops/{id}/reconciliation")
+    public Object reconciliation(@PathVariable("id") Long id,
+                                 @RequestParam(value = "beginTime")LocalDateTime beginTime,
+                                 @RequestParam(value = "endTime")LocalDateTime endTime){
+        return Common.decorateReturnObject(transactionService.reconciliation(beginTime,endTime));
+    }
 
     /**
      * 内部API退款

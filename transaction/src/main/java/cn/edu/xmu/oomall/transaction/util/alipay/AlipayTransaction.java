@@ -4,10 +4,8 @@ import cn.edu.xmu.oomall.core.util.JacksonUtil;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.transaction.dao.TransactionDao;
-import cn.edu.xmu.oomall.transaction.model.bo.Payment;
-import cn.edu.xmu.oomall.transaction.model.bo.PaymentState;
-import cn.edu.xmu.oomall.transaction.model.bo.Refund;
-import cn.edu.xmu.oomall.transaction.model.bo.RefundState;
+import cn.edu.xmu.oomall.transaction.model.bo.*;
+import cn.edu.xmu.oomall.transaction.model.vo.ReconciliationRetVo;
 import cn.edu.xmu.oomall.transaction.util.PaymentBill;
 import cn.edu.xmu.oomall.transaction.util.RefundBill;
 import cn.edu.xmu.oomall.transaction.util.TransactionPattern;
@@ -17,10 +15,16 @@ import cn.edu.xmu.oomall.transaction.util.alipay.microservice.vo.*;
 import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayMethod;
 import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayRefundState;
 import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayTradeState;
+import cn.edu.xmu.oomall.transaction.util.file.FileUtil;
+import cn.edu.xmu.oomall.transaction.util.file.vo.AliPayFormat;
 import cn.edu.xmu.oomall.transaction.util.mq.ActiveQueryMessage;
 import cn.edu.xmu.oomall.transaction.util.mq.MessageProducer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.io.File;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 public class AlipayTransaction extends TransactionPattern {
@@ -214,5 +218,130 @@ public class AlipayTransaction extends TransactionPattern {
                 null,
                 null);
         return downloadUrlQueryRetVo.getBillDownloadUrl();
+    }
+    @Override
+    public ReturnObject reconciliation(LocalDateTime beginTime,LocalDateTime endTime){
+        Integer success=0;
+        Integer error=0;
+        Integer extra=0;
+        //1.提取支付宝流水
+        String url=getFundFlowBill("这个没用");
+        //TODO:拿到下载地址后下载，得到zip
+
+        FileUtil.unZip(new File("testfile/alipay/202111_2088202991815014.zip"), "testfile/alipay");
+        List<AliPayFormat> list = FileUtil.aliPayParsing(new File("testfile/alipay/20882029918150140156_202111_账务明细_1.csv"));
+        //2.遍历支付宝流水，进行对账
+        for(AliPayFormat aliPayFormat:list){
+            //时间不符
+            if(!(aliPayFormat.getTradeCreateTime().isAfter(beginTime)&&aliPayFormat.getTradeCreateTime().isBefore(endTime))){
+                break;
+            }
+            //平台收入，对应Payment
+            if(aliPayFormat.getIncome()>0){
+                ReturnObject returnObject=transactionDao.getPaymentByTradeSn(aliPayFormat.getAccountSerialNumber());
+                if(!returnObject.getCode().equals(ReturnNo.OK)){
+                    return returnObject;
+                }
+                //商城没有：长账,插入错误账
+                if(returnObject.getData()==null){
+                    ErrorAccount errorAccount=new ErrorAccount();
+                    errorAccount.setTradeSn(aliPayFormat.getTradeNo());
+                    errorAccount.setPatternId(1L);
+                    errorAccount.setIncome(aliPayFormat.getIncome());
+                    errorAccount.setExpenditure(aliPayFormat.getOutlay());
+                    errorAccount.setState((byte)0);
+                    errorAccount.setTime(aliPayFormat.getTradeCreateTime());
+                    transactionDao.insertErrorAccount(errorAccount);
+                    extra++;
+                }
+                else{
+                    Payment payment=(Payment)returnObject.getData();
+                    //错账，插入错误账
+                    if(!payment.getActualAmount().equals(aliPayFormat.getIncome())){
+                        ErrorAccount errorAccount=new ErrorAccount();
+                        errorAccount.setTradeSn(aliPayFormat.getTradeNo());
+                        errorAccount.setPatternId(1L);
+                        errorAccount.setIncome(aliPayFormat.getIncome());
+                        errorAccount.setExpenditure(aliPayFormat.getOutlay());
+                        errorAccount.setState((byte)0);
+                        errorAccount.setTime(aliPayFormat.getTradeCreateTime());
+                        ReturnObject returnObject1=transactionDao.insertErrorAccount(errorAccount);
+                        if(!returnObject1.getCode().equals(ReturnNo.OK.getCode()))
+                        {
+                            return returnObject1;
+                        }
+                        error++;
+                    }
+                    //对账成功，更改状态
+                    else {
+                        payment.setState(PaymentState.ALREADY_RECONCILIATION.getCode());
+                        ReturnObject returnObject1=transactionDao.updatePayment(payment);
+                        if(!returnObject1.getCode().equals(ReturnNo.OK.getCode()))
+                        {
+                            return returnObject1;
+                        }
+                        success++;
+                    }
+
+                }
+            }
+            //平台支出，对应refund
+            else{
+                ReturnObject returnObject=transactionDao.getRefundByTradeSn(aliPayFormat.getAccountSerialNumber());
+                if(!returnObject.getCode().equals(ReturnNo.OK)){
+                    return returnObject;
+                }
+                //商城没有：长账，插入错误账
+                if(returnObject.getData()==null){
+                    ErrorAccount errorAccount=new ErrorAccount();
+                    errorAccount.setTradeSn(aliPayFormat.getTradeNo());
+                    errorAccount.setPatternId(1L);
+                    errorAccount.setIncome(aliPayFormat.getIncome());
+                    errorAccount.setExpenditure(aliPayFormat.getOutlay());
+                    errorAccount.setState((byte)0);
+                    errorAccount.setTime(aliPayFormat.getTradeCreateTime());
+                    transactionDao.insertErrorAccount(errorAccount);
+                    extra++;
+                }
+                else{
+                    Refund refund=(Refund)returnObject.getData();
+                    //错账，插入错误账
+                    if(!refund.getAmount().equals(aliPayFormat.getOutlay())){
+                        ErrorAccount errorAccount=new ErrorAccount();
+                        errorAccount.setTradeSn(aliPayFormat.getTradeNo());
+                        errorAccount.setPatternId(1L);
+                        errorAccount.setIncome(aliPayFormat.getIncome());
+                        errorAccount.setExpenditure(aliPayFormat.getOutlay());
+                        errorAccount.setState((byte)0);
+                        errorAccount.setTime(aliPayFormat.getTradeCreateTime());
+                        ReturnObject returnObject1=transactionDao.insertErrorAccount(errorAccount);
+                        if(!returnObject1.getCode().equals(ReturnNo.OK.getCode()))
+                        {
+                            return returnObject1;
+                        }
+                        error++;
+                    }
+                    //对账成功，更改状态
+                    else {
+                        refund.setState(RefundState.FINISH_RECONCILIATION.getCode());
+                        ReturnObject returnObject1=transactionDao.updateRefund(refund);
+                        if(!returnObject1.getCode().equals(ReturnNo.OK.getCode()))
+                        {
+                            return returnObject1;
+                        }
+                        success++;
+                    }
+
+                }
+
+            }
+
+        }
+        ReconciliationRetVo reconciliationRetVo=new ReconciliationRetVo();
+        reconciliationRetVo.setError(error);
+        reconciliationRetVo.setSuccess(success);
+        reconciliationRetVo.setExtra(extra);
+        return new ReturnObject(reconciliationRetVo);
+
     }
 }

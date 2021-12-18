@@ -396,6 +396,28 @@ public class TransactionService {
 
         return new ReturnObject<>(ReturnNo.OK);
     }
+    public ReturnObject reconciliation(LocalDateTime beginTime,LocalDateTime endTime){
+        //支付宝对账
+        TransactionPattern pattern = transactionPatternFactory.getPatternInstance(1L);
+        ReturnObject returnObject=pattern.reconciliation(beginTime,endTime);
+        if(!returnObject.getCode().equals(ReturnNo.OK)){
+            return returnObject;
+        }
+        ReconciliationRetVo aliPay=(ReconciliationRetVo) returnObject.getData();
+        //微信支付对账
+        TransactionPattern pattern1 = transactionPatternFactory.getPatternInstance(2L);
+        ReturnObject returnObject1=pattern1.reconciliation(beginTime,endTime);
+        if(!returnObject1.getCode().equals(ReturnNo.OK)){
+            return returnObject1;
+        }
+        ReconciliationRetVo wechatPay=(ReconciliationRetVo) returnObject1.getData();
+        ReconciliationRetVo reconciliationRetVo=new ReconciliationRetVo();
+        reconciliationRetVo.setSuccess(aliPay.getSuccess()+wechatPay.getSuccess());
+        reconciliationRetVo.setError(aliPay.getError()+wechatPay.getError());
+        reconciliationRetVo.setExtra(aliPay.getExtra()+wechatPay.getExtra());
+        return new ReturnObject(reconciliationRetVo);
+    }
+
 
 
 }
