@@ -109,3 +109,12 @@ rocketmq:
 oomall:
   order:
     expiretime: 10000
+    insert: insert-order
+    #支付回调
+    pay:
+      common: PaymentMessage-0
+      advance:
+        deposit: PaymentMessage-2
+        balance: PaymentMessage-3
+    refund: RefundMessage-0
+

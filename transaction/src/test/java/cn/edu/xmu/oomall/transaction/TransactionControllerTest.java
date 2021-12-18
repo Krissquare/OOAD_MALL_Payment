@@ -2,7 +2,9 @@ package cn.edu.xmu.oomall.transaction;
 
 import cn.edu.xmu.oomall.core.util.JacksonUtil;
 import cn.edu.xmu.oomall.transaction.util.alipay.microservice.AlipayMicroService;
-import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatPaymentNotifyVo;
+import cn.edu.xmu.oomall.transaction.util.file.FileUtil;
+import cn.edu.xmu.oomall.transaction.util.file.vo.AliPayFormat;
+import cn.edu.xmu.oomall.transaction.util.file.vo.WechatFormat;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatPaymentNotifyVo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatRefundNotifyVo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.WechatMicroService;
@@ -28,12 +30,15 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -123,8 +128,7 @@ public class TransactionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse="{\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":{\"total\":9,\"pages\":1,\"pageSize\":10,\"page\":1,\"list\":[{\"id\":1,\"tradeSn\":\"7363522113\",\"patternId\":0,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":92,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-01T15:43:38\",\"beginTime\":null,\"endTime\":null},{\"id\":2,\"tradeSn\":\"7363522132\",\"patternId\":0,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":195,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-02T16:51:38\",\"beginTime\":null,\"endTime\":null},{\"id\":3,\"tradeSn\":\"7363872113\",\"patternId\":1,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":232,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-02T00:36:19\",\"beginTime\":null,\"endTime\":null},{\"id\":4,\"tradeSn\":\"7363598113\",\"patternId\":1,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":103,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-01T00:36:56\",\"beginTime\":null,\"endTime\":null},{\"id\":5,\"tradeSn\":\"8963522113\",\"patternId\":1,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":123,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-01T00:40:57\",\"beginTime\":null,\"endTime\":null},{\"id\":6,\"tradeSn\":\"7363522113\",\"patternId\":1,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":233,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-01T00:42:22\",\"beginTime\":null,\"endTime\":null},{\"id\":7,\"tradeSn\":\"7363522178\",\"patternId\":0,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":259,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-01T14:33:43\",\"beginTime\":null,\"endTime\":null},{\"id\":8,\"tradeSn\":\"7363522195\",\"patternId\":1,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":205,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-02T14:35:07\",\"beginTime\":null,\"endTime\":null},{\"id\":9,\"tradeSn\":\"5363522113\",\"patternId\":1," +
-                "\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":466,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-02T14:37:18\",\"beginTime\":null,\"endTime\":null}]}}";
+        String expectedResponse="{\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":{\"total\":10,\"pages\":1,\"pageSize\":10,\"page\":1,\"list\":[{\"id\":1,\"tradeSn\":\"7363522113\",\"patternId\":0,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":92,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-01T15:43:38\",\"beginTime\":null,\"endTime\":null},{\"id\":2,\"tradeSn\":\"7363522132\",\"patternId\":0,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":195,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-02T16:51:38\",\"beginTime\":null,\"endTime\":null},{\"id\":3,\"tradeSn\":\"7363872113\",\"patternId\":1,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":232,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-02T00:36:19\",\"beginTime\":null,\"endTime\":null},{\"id\":4,\"tradeSn\":\"7363598113\",\"patternId\":1,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":103,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-01T00:36:56\",\"beginTime\":null,\"endTime\":null},{\"id\":5,\"tradeSn\":\"8963522113\",\"patternId\":1,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":123,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-01T00:40:57\",\"beginTime\":null,\"endTime\":null},{\"id\":6,\"tradeSn\":\"7363522113\",\"patternId\":1,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":233,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-01T00:42:22\",\"beginTime\":null,\"endTime\":null},{\"id\":7,\"tradeSn\":\"7363522178\",\"patternId\":0,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":259,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-01T14:33:43\",\"beginTime\":null,\"endTime\":null},{\"id\":8,\"tradeSn\":\"7363522195\",\"patternId\":1,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":205,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-02T14:35:07\",\"beginTime\":null,\"endTime\":null},{\"id\":9,\"tradeSn\":\"5363522113\",\"patternId\":1,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":466,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-02T14:37:18\",\"beginTime\":null,\"endTime\":null},{\"id\":63,\"tradeSn\":null,\"patternId\":1,\"documentId\":null,\"documentType\":0,\"descr\":\"string\",\"amount\":100,\"actualAmount\":null,\"state\":0,\"payTime\":null,\"beginTime\":\"2021-12-16T13:28:02\",\"endTime\":\"2021-12-16T13:54:01\"}]}}";
         JSONAssert.assertEquals(expectedResponse, responseString, true);
     }
     //2.按documentId和state查询
@@ -358,4 +362,25 @@ public class TransactionControllerTest {
         JSONAssert.assertEquals(expected, response, true);
     }
 
+    @Test
+    public void printToken() throws Exception{
+        adminToken = jwtHelper.createToken(1L,"admin",0L, 1,1000);
+        System.out.println(adminToken);
+    }
+
+    @Test
+    public void unZipTest() throws IOException {
+        //解压 alipay 注这不是文件夹
+        FileUtil.unZip(new File("testfile/alipay/202111_2088202991815014.zip"), "testfile/alipay");
+        //解压 wechat 注这是文件夹所以还有一层目录
+        FileUtil.unZip(new File("testfile/wechat/微信支付账单(20211011-20211211).zip"), "testfile/wechat");
+        List<AliPayFormat> parsing = FileUtil.aliPayParsing(new File("testfile/alipay/20882029918150140156_202111_账务明细_1.csv"));
+        for (AliPayFormat aliPayFormat : parsing) {
+            System.out.println(aliPayFormat);
+        }
+        List<WechatFormat> parsing1 = FileUtil.wechatParsing(new File("testfile/wechat/微信支付账单(20211011-20211211)/微信支付账单(20211011-20211211).csv"));
+        for (WechatFormat wechatFormat : parsing1) {
+            System.out.println(wechatFormat);
+        }
+    }
 }

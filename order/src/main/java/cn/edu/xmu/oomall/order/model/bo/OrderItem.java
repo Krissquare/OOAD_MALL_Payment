@@ -44,7 +44,7 @@ public class OrderItem {
 
     private String creatorName;
 
-    private Long modifierBy;
+    private Long modifierId;
 
     private String modifierName;
 

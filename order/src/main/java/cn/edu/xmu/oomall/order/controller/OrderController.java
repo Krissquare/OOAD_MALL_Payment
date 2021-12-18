@@ -9,8 +9,6 @@ import cn.edu.xmu.oomall.order.util.MyDateTime;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
-import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
-import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.BindingResult;
@@ -383,9 +381,9 @@ public class OrderController {
      * @param id
      * @return
      */
-    @GetMapping("/internal/order/{id}")
+    @GetMapping("/internal/orders/{id}/orderitems")
     public Object listOrderItemsByOrderId(@PathVariable(value = "id") Long id) {
-        return orderService.listOrderItemsByOrderId(id);
+        return Common.decorateReturnObject(orderService.listOrderItemsByOrderId(id));
     }
 
 
@@ -393,9 +391,9 @@ public class OrderController {
      * 7.orderSn查orderId
      * hty
      */
-    @GetMapping("/internal/orders")
-    public InternalReturnObject<OrderIdRetVo> getOrderIdByOrderSn(@RequestParam(value="orderSn",required = true) String orderSn)
+    @GetMapping("/internal/orderid")
+    public Object getOrderIdByOrderSn(@RequestParam(value="orderSn") String orderSn)
     {
-        return orderService.getOrderId(orderSn);
+        return Common.decorateReturnObject(orderService.getOrderId(orderSn));
     }
 }
