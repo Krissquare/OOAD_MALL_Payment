@@ -14,10 +14,7 @@ import cn.edu.xmu.oomall.order.microservice.vo.OnSaleVo;
 import cn.edu.xmu.oomall.order.microservice.vo.ProductVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRecVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRetVo;
-import cn.edu.xmu.oomall.order.model.vo.AftersaleOrderitemRecVo;
-import cn.edu.xmu.oomall.order.model.vo.AftersaleRecVo;
-import cn.edu.xmu.oomall.order.model.vo.MarkShipmentVo;
-import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
+import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.util.CreateObject;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import cn.edu.xmu.privilegegateway.annotation.util.JwtHelper;
@@ -36,6 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -63,7 +62,7 @@ class OrderApplicationTests {
 //    @MockBean
 //    private TransactionService transactionService;
 
-//    @MockBean
+    //    @MockBean
 //    private GoodsService goodsService;
     @Autowired
     private MockMvc mvc;
@@ -74,10 +73,10 @@ class OrderApplicationTests {
         token4 = jwtHelper.createToken(4L, "lxc", 0L, 1, 3600);
         token1 = jwtHelper.createToken(1L, "lxc", 0L, 1, 3600);
         InternalReturnObject<Map<String, Object>> refunds = CreateObject.listRefunds(1L);
-        InternalReturnObject<Map<String,Object>> payments=CreateObject.listPayments(1L);
-        OnSaleVo onSaleVo=new OnSaleVo();
+        InternalReturnObject<Map<String, Object>> payments = CreateObject.listPayments(1L);
+        OnSaleVo onSaleVo = new OnSaleVo();
         onSaleVo.setId(1L);
-        ProductVo productVo=new ProductVo();
+        ProductVo productVo = new ProductVo();
         productVo.setId(1L);
         productVo.setOnSaleId(1L);
         productVo.setName("123");
@@ -99,17 +98,36 @@ class OrderApplicationTests {
 //        Mockito.when(transactionService.refund(new RefundRecVo(null,null,2L,null,100L,RefundType.ORDER.getCode()))).thenReturn(new ReturnObject(ReturnNo.OK));
     }
 
+    //什么活动也不参加
     @Test
     public void testAddOrder() throws Exception {
-//TODO: Test goes here...
+        SimpleOrderVo simpleOrderVo = new SimpleOrderVo(null, "lxc", 1L, "厦门大学", "15165666666", "没有留言",
+                null, null, 666L, 100L);
+        List<SimpleOrderItemVo> list = new ArrayList<>();
+        SimpleOrderItemVo simpleOrderItemVo = new SimpleOrderItemVo();
+        simpleOrderItemVo.setProductId(1550L);
+        simpleOrderItemVo.setOnsaleId(1L);
+        simpleOrderItemVo.setQuantity(10L);
+        list.add(simpleOrderItemVo);
+        simpleOrderVo.setOrderItems(list);
+        String requestJSON = JacksonUtil.toJson(simpleOrderVo);
+        String responseString = mvc.perform(post("/orders")
+                        .header("authorization", token)
+                        .contentType("application/json;charset=UTF-8")
+                        .content(requestJSON))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectString = "";
+        JSONAssert.assertEquals(expectString, responseString, true);
     }
 
 
     @Test
     public void testDeleteOrderByCustomer() throws Exception {
         String responseString = mvc.perform(delete("/orders/1")
-                .header("authorization", token)
-                .contentType("application/json;charset=UTF-8"))
+                        .header("authorization", token)
+                        .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isForbidden())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
@@ -117,8 +135,8 @@ class OrderApplicationTests {
         JSONAssert.assertEquals(expectString, responseString, true);
 
         String responseString1 = mvc.perform(delete("/orders/10")
-                .header("authorization", token4)
-                .contentType("application/json;charset=UTF-8"))
+                        .header("authorization", token4)
+                        .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
@@ -131,8 +149,8 @@ class OrderApplicationTests {
     @Test
     public void internalCancelOrderByShopTest() throws Exception {
         String responseString = mvc.perform(put("/internal/shops/2/orders/4/cancel")
-                .header("authorization", token)
-                .contentType("application/json;charset=UTF-8"))
+                        .header("authorization", token)
+                        .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
@@ -144,7 +162,7 @@ class OrderApplicationTests {
     public void confirmOrderTest() throws Exception {
         adminToken = jwtHelper.createToken(1L, "admin", 0L, 3600, 0);
         String responseString = this.mvc.perform(MockMvcRequestBuilders.put("/orders/1/confirm").header("authorization", adminToken)
-                .contentType("application/json;charset=UTF-8"))
+                        .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
@@ -156,7 +174,7 @@ class OrderApplicationTests {
     public void searchBriefOrderTest() throws Exception {
         adminToken = jwtHelper.createToken(1L, "admin", 0L, 3600, 0);
         String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/shops/1/orders").header("authorization", adminToken)
-                .contentType("application/json;charset=UTF-8"))
+                        .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
@@ -169,7 +187,7 @@ class OrderApplicationTests {
         adminToken = jwtHelper.createToken(1L, "admin", 0L, 3600, 0);
         String requestJson = "{\"message\":\"修改商品\"}";
         String responseString = this.mvc.perform(MockMvcRequestBuilders.put("/shops/1/orders/2").header("authorization", adminToken)
-                .contentType("application/json;charset=UTF-8").content(requestJson))
+                        .contentType("application/json;charset=UTF-8").content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
@@ -181,8 +199,8 @@ class OrderApplicationTests {
     public void getOrderDetailTest() throws Exception {
         adminToken = jwtHelper.createToken(1L, "admin", 0L, 3600, 0);
         String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/shops/1/orders/2")
-                .header("authorization", adminToken)
-                .contentType("application/json;charset=UTF-8"))
+                        .header("authorization", adminToken)
+                        .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
@@ -192,34 +210,35 @@ class OrderApplicationTests {
 
     /**
      * 管理员取消本店铺订单
+     *
      * @throws Exception
      */
     @Test
-    public void cancelOrderByShop() throws Exception
-    {
+    public void cancelOrderByShop() throws Exception {
         String responseString = this.mvc.perform(delete("/shops/2/orders/4")
-                .contentType("application/json;charset=UTF-8")
-                .header("authorization", token))
+                        .contentType("application/json;charset=UTF-8")
+                        .header("authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
         String expectedResponse = "{\"errno\":0,\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expectedResponse, responseString, true);
     }
+
     /**
      * 店家对订单标记发货。（a-4）
+     *
      * @throws Exception
      */
     @Test
-    public void markShipment() throws Exception
-    {
-        MarkShipmentVo markShipmentVo=new MarkShipmentVo();
+    public void markShipment() throws Exception {
+        MarkShipmentVo markShipmentVo = new MarkShipmentVo();
         markShipmentVo.setShipmentSn("123456");
         String requestJSON = JacksonUtil.toJson(markShipmentVo);
         String responseString = this.mvc.perform(put("/shops/3/orders/5/deliver")
-                .contentType("application/json;charset=UTF-8")
-                .header("authorization", token)
-                .content(requestJSON))
+                        .contentType("application/json;charset=UTF-8")
+                        .header("authorization", token)
+                        .content(requestJSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
@@ -229,14 +248,14 @@ class OrderApplicationTests {
 
     /**
      * 查询自己订单的支付信息（a-4）
+     *
      * @throws Exception
      */
     @Test
-    public void getPaymentByOrderId() throws Exception
-    {
+    public void getPaymentByOrderId() throws Exception {
         String responseString = this.mvc.perform(get("/orders/4/payment")
-                .contentType("application/json;charset=UTF-8")
-                .header("authorization", token))
+                        .contentType("application/json;charset=UTF-8")
+                        .header("authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
@@ -245,11 +264,10 @@ class OrderApplicationTests {
     }
 
     @Test
-    public void confirmGrouponOrder() throws Exception
-    {
+    public void confirmGrouponOrder() throws Exception {
         String responseString = this.mvc.perform(put("/internal/shops/3/grouponorders/6/confirm")
-                .contentType("application/json;charset=UTF-8")
-                .header("authorization", token))
+                        .contentType("application/json;charset=UTF-8")
+                        .header("authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
@@ -259,11 +277,10 @@ class OrderApplicationTests {
 
 
     @Test
-    public void listOrderRefundsTest() throws Exception
-    {
+    public void listOrderRefundsTest() throws Exception {
         String responseString = this.mvc.perform(get("/orders/1/refund")
-                .contentType("application/json;charset=UTF-8")
-                .header("authorization", token))
+                        .contentType("application/json;charset=UTF-8")
+                        .header("authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
@@ -272,11 +289,10 @@ class OrderApplicationTests {
     }
 
     @Test
-    public void getOrderItemTest() throws Exception
-    {
+    public void getOrderItemTest() throws Exception {
         String responseString = this.mvc.perform(get("/internal/orderitems/1")
-                .contentType("application/json;charset=UTF-8")
-                .header("authorization", token))
+                        .contentType("application/json;charset=UTF-8")
+                        .header("authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
@@ -285,11 +301,10 @@ class OrderApplicationTests {
     }
 
     @Test
-    public void CancelOrderByCustomerTest() throws Exception
-    {
+    public void CancelOrderByCustomerTest() throws Exception {
         String responseString = this.mvc.perform(put("/orders/1/cancel")
-                .contentType("application/json;charset=UTF-8")
-                .header("authorization", token))
+                        .contentType("application/json;charset=UTF-8")
+                        .header("authorization", token))
                 .andExpect(status().isForbidden())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
@@ -298,19 +313,19 @@ class OrderApplicationTests {
     }
 
     @Test
-    public void getPaymentByOrderitemTest() throws Exception
-    {
+    public void getPaymentByOrderitemTest() throws Exception {
         String responseString = this.mvc.perform(get("/internal/orderitems/3/payment")
-                .contentType("application/json;charset=UTF-8")
-                .header("authorization", token))
+                        .contentType("application/json;charset=UTF-8")
+                        .header("authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
         String expectedResponse = "{\"errno\":0,\"data\":{\"id\":2,\"tradeSn\":\"7363522132\",\"patternId\":0,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":195,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-02T16:51:38\",\"beginTime\":null,\"endTime\":null},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expectedResponse, responseString, true);
     }
+
     @Test
-    public void getTokens(){
+    public void getTokens() {
         System.out.println();
         System.out.println();
         System.out.println(token4);
@@ -327,8 +342,8 @@ class OrderApplicationTests {
     @Test
     public void getOrderDetailByCustomerTest() throws Exception {
         String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/orders/3")
-                            .header("authorization", token1)
-                            .contentType("application/json;charset=UTF-8"))
+                        .header("authorization", token1)
+                        .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
@@ -338,7 +353,7 @@ class OrderApplicationTests {
     }
 
     @Test
-    public void updateOrderByCustomerTest() throws Exception{
+    public void updateOrderByCustomerTest() throws Exception {
         String voStr = "{\n" +
                 "  \"consignee\": \"update-test-consignee\",\n" +
                 "  \"regionId\": 6666,\n" +
@@ -346,7 +361,7 @@ class OrderApplicationTests {
                 "  \"mobile\": \"13822223333\"\n" +
                 "}";
         String response = this.mvc.perform(MockMvcRequestBuilders.put("/orders/10")
-                        .header("authorization",token4)
+                        .header("authorization", token4)
                         .contentType("application/json;charset=UTF-8")
                         .content(voStr))
                 .andExpect(status().isOk())
@@ -355,41 +370,42 @@ class OrderApplicationTests {
         String expected = "{\"errno\":507,\"errmsg\":\"当前状态禁止此操作\"}";
         JSONAssert.assertEquals(expected, response, true);
     }
+
     /**
      * orderId查item
+     *
      * @throws Exception
      */
     @Test
     public void listOrderItemsByOrderId() throws Exception {
         String responseString = this.mvc.perform(MockMvcRequestBuilders.get("/internal/order/1")
-                .header("authorization", token4)
-                .contentType("application/json;charset=UTF-8"))
+                        .header("authorization", token4)
+                        .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
-        String expected="{\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":[{\"id\":1,\"orderId\":2,\"shopId\":1,\"productId\":1,\"onsaleId\":1,\"name\":\"巧克力\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":1,\"couponActivityId\":1,\"customerId\":null},{\"id\":2,\"orderId\":3,\"shopId\":2,\"productId\":2,\"onsaleId\":2,\"name\":\"薯片\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":2,\"couponActivityId\":2,\"customerId\":null}]}";
+        String expected = "{\"code\":\"OK\",\"errmsg\":\"成功\",\"data\":[{\"id\":1,\"orderId\":2,\"shopId\":1,\"productId\":1,\"onsaleId\":1,\"name\":\"巧克力\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":1,\"couponActivityId\":1,\"customerId\":null},{\"id\":2,\"orderId\":3,\"shopId\":2,\"productId\":2,\"onsaleId\":2,\"name\":\"薯片\",\"quantity\":1,\"price\":50,\"discountPrice\":5,\"point\":3,\"couponId\":2,\"couponActivityId\":2,\"customerId\":null}]}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
     @Test
-    public void createAftersaleTest() throws Exception
-    {
-        AftersaleOrderitemRecVo orderitemRecVo=new AftersaleOrderitemRecVo();
+    public void createAftersaleTest() throws Exception {
+        AftersaleOrderitemRecVo orderitemRecVo = new AftersaleOrderitemRecVo();
         orderitemRecVo.setProductId(1550L);
         orderitemRecVo.setOnsaleId(1L);
         orderitemRecVo.setQuantity(5L);
-        AftersaleRecVo aftersaleRecVo=new AftersaleRecVo();
+        AftersaleRecVo aftersaleRecVo = new AftersaleRecVo();
         aftersaleRecVo.setOrderItem(orderitemRecVo);
         aftersaleRecVo.setCustomerId(1L);
         aftersaleRecVo.setConsignee("222");
         aftersaleRecVo.setRegionId(5L);
         aftersaleRecVo.setMobile("13056766288");
-        String request= JacksonUtil.toJson(aftersaleRecVo);
+        String request = JacksonUtil.toJson(aftersaleRecVo);
         String response = this.mvc.perform(MockMvcRequestBuilders.post("/internal/shops/10/orders")
-                .header("authorization",token4)
-                .contentType("application/json;charset=UTF-8")
-                .content(request))
+                        .header("authorization", token4)
+                        .contentType("application/json;charset=UTF-8")
+                        .content(request))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
@@ -398,22 +414,21 @@ class OrderApplicationTests {
     }
 
     @Test
-    public void test(){
+    public void test() {
         System.out.println(customService.getCustomerById(1L).getData());
     }
 
     @Test
-    public void testRequestRefund()
-    {
-        RefundRecVo refundRecVo=new RefundRecVo();
-        refundRecVo.setDocumentType((byte)0);
+    public void testRequestRefund() {
+        RefundRecVo refundRecVo = new RefundRecVo();
+        refundRecVo.setDocumentType((byte) 0);
         refundRecVo.setPaymentId(1L);
         refundRecVo.setAmount(500L);
         refundRecVo.setDescr("123");
         refundRecVo.setReason("aaa");
         refundRecVo.setDocumentId("2021");
         refundRecVo.setPatternId(1L);
-        InternalReturnObject<RefundRetVo> refundRetVo=transactionService.requestRefund(refundRecVo);
+        InternalReturnObject<RefundRetVo> refundRetVo = transactionService.requestRefund(refundRecVo);
         System.out.println(refundRetVo.getData());
     }
 }

@@ -237,13 +237,6 @@ public class OrderService {
         }
 
         Order order = cloneVo(simpleOrderVo, Order.class);
-        //计算运费
-        InternalReturnObject<FreightCalculatingRetVo> freightCalculatingRetVoInternalReturnObject = freightService.calculateFreight(order.getRegionId(), freightCalculatingPostVos);
-        if (freightCalculatingRetVoInternalReturnObject.getErrno() != 0) {
-            return new ReturnObject(ReturnNo.getByCode(freightCalculatingRetVoInternalReturnObject.getErrno()));
-        }
-        order.setExpressFee(freightCalculatingRetVoInternalReturnObject.getData().getFreightPrice());
-        orderAndOrderItemsVo.setOrder(order);
 
         //减少积点,减少优惠卷
         InternalReturnObject<CustomerModifyPointsVo> internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(-orderAndOrderItemsVo.getOrder().getPoint()));
@@ -301,7 +294,13 @@ public class OrderService {
         }
         order.setOriginPrice(sumOrigin);
         order.setDiscountPrice(sumDiscount);
-
+        //计算运费
+        InternalReturnObject<FreightCalculatingRetVo> freightCalculatingRetVoInternalReturnObject = freightService.calculateFreight(order.getRegionId(), freightCalculatingPostVos);
+        if (freightCalculatingRetVoInternalReturnObject.getErrno() != 0) {
+            return new ReturnObject(ReturnNo.getByCode(freightCalculatingRetVoInternalReturnObject.getErrno()));
+        }
+        order.setExpressFee(freightCalculatingRetVoInternalReturnObject.getData().getFreightPrice());
+        orderAndOrderItemsVo.setOrder(order);
         //todo: redis暂存 以防没插进去就支付
         //发消息
         String json = JacksonUtil.toJson(orderAndOrderItemsVo);
