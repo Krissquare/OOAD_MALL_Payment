@@ -141,7 +141,7 @@ public class OrderService {
                 //因为可能不同item用一个活动，下同理
                 if (!couponActivityIds.contains(simpleOrderItemVo.getCouponActId())) {
                     couponActivityIds.add(simpleOrderItemVo.getCouponActId());
-                    InternalReturnObject couponActivityById = couponService.getCouponActivityById(onSaleVo.getData().getShop().getId(), simpleOrderItemVo.getCouponId());
+                    InternalReturnObject couponActivityById = couponService.showOwnCouponActivityInfo(onSaleVo.getData().getShop().getId(), simpleOrderItemVo.getCouponId());
                     if (couponActivityById.getErrno() != 0) {
                         return new ReturnObject(ReturnNo.getByCode(couponActivityById.getErrno()));
                     }
@@ -224,7 +224,7 @@ public class OrderService {
                 }
             }
             if (disList.size() != 0) {
-                InternalReturnObject internalReturnObject = couponService.calculateDiscoutprices(disList);
+                InternalReturnObject internalReturnObject = couponService.calculateDiscount(disList);
                 if (internalReturnObject.getErrno() != 0) {
                     return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
                 }
