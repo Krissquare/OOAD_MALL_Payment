@@ -299,7 +299,11 @@ public class TransactionDao {
     public ReturnObject getErrorAccount(Long id) {
         try {
             ErrorAccountPo errorAccountPo = errorAccountPoMapper.selectByPrimaryKey(id);
-            return new ReturnObject(errorAccountPo);
+            if (errorAccountPo == null) {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            } else {
+                return new ReturnObject(errorAccountPo);
+            }
         } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
