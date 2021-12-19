@@ -107,11 +107,11 @@ public class OrderController {
      *
      * @author Fang Zheng
      */
-    @PutMapping("orders/{id}")
+    @PutMapping("/orders/{id}")
     @Audit(departName = "order")
     public Object updateCustomerOrderController(@PathVariable("id") Long orderId,
                                                 @LoginUser Long userId,
-                                                @LoginUser String userName,
+                                                @LoginName String userName,
                                                 @RequestBody @Valid UpdateOrderVo updateOrderVo,
                                                 BindingResult bindingResult) {
         Object object = Common.processFieldErrors(bindingResult, httpServletResponse);
