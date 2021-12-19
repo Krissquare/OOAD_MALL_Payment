@@ -32,4 +32,5 @@ public interface WechatMicroService {
 
     @GetMapping("/internal/wechat/bill/fundflowbill")
     WechatReturnObject<WeChatPayFundFlowBillRetVo> getFundFlowBill(@RequestParam("bill_date") String billDate);
+
 }
