@@ -4,13 +4,10 @@ import cn.edu.xmu.oomall.core.util.JacksonUtil;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.dao.OrderDao;
-import cn.edu.xmu.oomall.order.microservice.GoodsService;
-import cn.edu.xmu.oomall.order.microservice.vo.QuantityVo;
 import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderItem;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.model.vo.OrderAndOrderItemsVo;
-import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +26,6 @@ public class InsertOrderListener implements RocketMQListener<String>
 {
     @Autowired
     OrderDao orderDao;
-    @Autowired
-    GoodsService goodsService;
     @Override
     public void onMessage(String message) {
         OrderAndOrderItemsVo orderAndOrderItemsVo = JacksonUtil.toObj(message, OrderAndOrderItemsVo.class);

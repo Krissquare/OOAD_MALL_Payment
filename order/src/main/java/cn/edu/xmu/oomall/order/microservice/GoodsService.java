@@ -47,12 +47,15 @@ public interface GoodsService {
     /**
      * internal/shops/{did}/onsales/{id}/decr
      * 内部API-扣减库存数量（2021-3-2）
+     * solved:LXC
      * @param did
      * @param id
      * @param vo
      * @return
      */
-    //TODO:LXC
     @PutMapping("internal/shops/{did}/onsales/{id}/decr")
     InternalReturnObject decreaseOnSale(@PathVariable Long did, @PathVariable Long id, @Validated @RequestBody QuantityVo vo);
+
+    @PutMapping("internal/shops/{did}/onsales/{id}/incr")
+    InternalReturnObject increaseOnSale(@PathVariable Long did, @PathVariable Long id, @Validated @RequestBody QuantityVo vo);
 }

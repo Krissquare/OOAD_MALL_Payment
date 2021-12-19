@@ -10,19 +10,18 @@ import org.springframework.web.bind.annotation.*;
 
 @FeignClient(name = "other-service",configuration= OpenFeignConfig.class)
 public interface CustomService {
-//SOLVED BY HTY
+    //SOLVED BY HTY
     @GetMapping("/internal/customers/{id}")
     InternalReturnObject<SimpleVo> getCustomerById(@PathVariable("id") Long id);
 
 
     /**
-     * 增加减少优惠券  由正负区别
-     *
+     * 增加减少积点  由正负区别
+     * solvedby:LXC
      * @param customerId
      * @param vo
      * @return
      */
-    //TODO:LXC
     @PutMapping("/internal/point/{customerId}")
     InternalReturnObject<CustomerModifyPointsVo> changeCustomerPoint(@PathVariable Long customerId, @RequestBody CustomerModifyPointsVo vo);
 

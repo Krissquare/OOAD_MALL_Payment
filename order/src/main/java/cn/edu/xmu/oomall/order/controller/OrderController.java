@@ -23,7 +23,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping(value = "/", produces = "application/json;charset=UTF-8")
+@RequestMapping(value = "/", produces = "application/json;charset=UTF-8",consumes = "application/json;charset=UTF-8")
 public class OrderController {
     @Autowired
     private OrderService orderService;
