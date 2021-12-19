@@ -24,7 +24,7 @@ public interface CustomService {
      */
     //TODO:LXC
     @PutMapping("/internal/point/{customerId}")
-    InternalReturnObject<CustomerModifyPointsVo> changeCustomerPoint(@PathVariable Long customerId, @RequestBody CustomerModifyPointsVo vo);
+    InternalReturnObject<Long> changeCustomerPoint(@PathVariable Long customerId, @RequestBody CustomerModifyPointsVo vo);
 
     /**
      * 退款后，修改优惠券状态为已领取

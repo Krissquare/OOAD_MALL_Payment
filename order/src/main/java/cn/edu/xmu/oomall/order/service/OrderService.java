@@ -239,12 +239,12 @@ public class OrderService {
         Order order = cloneVo(simpleOrderVo, Order.class);
 
         //减少积点,减少优惠卷
-        InternalReturnObject<CustomerModifyPointsVo> internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(-orderAndOrderItemsVo.getOrder().getPoint()));
+        InternalReturnObject<Long> internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(-order.getPoint()));
         if (internalReturnObject1.getErrno() != 0) {
             return new ReturnObject(ReturnNo.getByCode(internalReturnObject1.getErrno()));
         }
         //积点不够用就能用多少用多少
-        order.setPoint(internalReturnObject1.getData().getPoints());
+        order.setPoint(internalReturnObject1.getData());
         for (Long id : couponIds) {
             InternalReturnObject internalReturnObject = customService.useCoupon(id);
             if (internalReturnObject.getErrno() != 0) {
