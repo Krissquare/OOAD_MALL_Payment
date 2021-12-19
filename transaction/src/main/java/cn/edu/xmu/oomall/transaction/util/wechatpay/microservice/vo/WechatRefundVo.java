@@ -13,12 +13,13 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class WechatRefundVo {
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public class RefundAmountVo {
+    public static class RefundAmountVo {
         private Long refund;
         private Long total;
         private String currency;
@@ -38,8 +39,6 @@ public class WechatRefundVo {
 
     private String reason;
 
-
     private String notifyUrl;
-
 
 }

@@ -27,8 +27,6 @@ public class WechatService {
     @Autowired
     private MessageProducer messageProducer;
 
-    @Autowired
-    private TransactionPatternFactory transactionPatternFactory;
 
     /**
      * gyt
@@ -53,9 +51,8 @@ public class WechatService {
         PaymentNotifyMessage paymentNotifyMessage = createPaymentNotifyMessage(wechatPaymentNotifyVo);
         messageProducer.sendPaymentNotifyMessage(paymentNotifyMessage);
 
-        String paymentId = (String) transactionPatternFactory
-                .decodeRequestNo(wechatPaymentNotifyVo.getResource().getCiphertext().getOutTradeNo())
-                .get("id");
+        String paymentId = (String) TransactionPatternFactory
+                .decodeRequestNo(wechatPaymentNotifyVo.getResource().getCiphertext().getOutTradeNo()).get("id");
         payment.setId(Long.parseLong(paymentId));
         payment.setPayTime(wechatPaymentNotifyVo.getResource().getCiphertext().getSuccessTime());
         payment.setTradeSn(wechatPaymentNotifyVo.getResource().getCiphertext().getTransactionId());
@@ -76,18 +73,17 @@ public class WechatService {
     public Object refundNotifyByWechat(WechatRefundNotifyVo wechatRefundNotifyVo) {
         Refund refund = new Refund();
         if (wechatRefundNotifyVo.getResource().getCiphertext().getRefundStatus().equals(WechatRefundState.SUCCESS.getState())) {
-            refund.setState(RefundState.FAILED.getCode());
-        } else {
             refund.setState(RefundState.FINISH_REFUND.getCode());
+        } else {
+            refund.setState(RefundState.FAILED.getCode());
         }
 
         // 创建refundMessage，通过rocketMQ生产者发送
         RefundNotifyMessage refundNotifyMessage = createRefundNotifyMessage(wechatRefundNotifyVo);
         messageProducer.sendRefundNotifyMessage(refundNotifyMessage);
 
-        String refundId =(String) transactionPatternFactory
-                .decodeRequestNo(wechatRefundNotifyVo.getResource().getCiphertext().getOutRefundNo())
-                .get("id");
+        String refundId =(String) TransactionPatternFactory
+                .decodeRequestNo(wechatRefundNotifyVo.getResource().getCiphertext().getOutRefundNo()).get("id");
         refund.setId(Long.parseLong(refundId));
         refund.setRefundTime(wechatRefundNotifyVo.getResource().getCiphertext().getSuccessTime());
         refund.setTradeSn(wechatRefundNotifyVo.getResource().getCiphertext().getRefundId());
@@ -106,10 +102,10 @@ public class WechatService {
             message.setPaymentState(PaymentState.ALREADY_PAY);
         }
 
-        Map<String, Object> map = transactionPatternFactory
+        Map<String, Object> map = TransactionPatternFactory
                 .decodeRequestNo(wechatPaymentNotifyVo.getResource().getCiphertext().getOutTradeNo());
         message.setDocumentId((String) map.get("documentId"));
-        message.setDocumentType((Byte) map.get("documentType"));
+        message.setDocumentType(Byte.parseByte((String) map.get("documentType")));
         return message;
     }
 
@@ -123,10 +119,10 @@ public class WechatService {
             message.setRefundState(RefundState.FINISH_REFUND);
         }
 
-        Map<String, Object> map = transactionPatternFactory
+        Map<String, Object> map = TransactionPatternFactory
                 .decodeRequestNo(wechatRefundNotifyVo.getResource().getCiphertext().getOutRefundNo());
         message.setDocumentId((String) map.get("documentId"));
-        message.setDocumentType((Byte) map.get("documentType"));
+        message.setDocumentType(Byte.parseByte((String) map.get("documentType")));
         return message;
     }
 }

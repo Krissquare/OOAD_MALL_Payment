@@ -25,10 +25,6 @@ public class AlipayService {
     @Autowired
     private MessageProducer messageProducer;
 
-    @Autowired
-    private TransactionPatternFactory transactionPatternFactory;
-
-
     @Transactional()
     public Object paymentNotifyByAlipay(AlipayNotifyVo alipayNotifyVo) {
         Payment payment = new Payment();
@@ -47,7 +43,7 @@ public class AlipayService {
         messageProducer.sendPaymentNotifyMessage(paymentNotifyMessage);
 
         // 根据请求号解码出Id
-        String paymentId = (String) transactionPatternFactory
+        String paymentId = (String) TransactionPatternFactory
                 .decodeRequestNo(alipayNotifyVo.getOutTradeNo()).get("id");
         payment.setId(Long.parseLong(paymentId));
         payment.setPayTime(alipayNotifyVo.getGmtPayment());
@@ -74,7 +70,7 @@ public class AlipayService {
         RefundNotifyMessage refundNotifyMessage = createRefundNotifyMessage(alipayNotifyVo);
         messageProducer.sendRefundNotifyMessage(refundNotifyMessage);
 
-        String refundId = (String) transactionPatternFactory
+        String refundId = (String) TransactionPatternFactory
                 .decodeRequestNo(alipayNotifyVo.getOutBizNo()).get("id");
         refund.setId(Long.parseLong(refundId));
         refund.setRefundTime(alipayNotifyVo.getGmtRefund());
@@ -94,7 +90,7 @@ public class AlipayService {
             message.setPaymentState(PaymentState.ALREADY_PAY);
         }
 
-        Map<String, Object> map = transactionPatternFactory.decodeRequestNo(alipayNotifyVo.getOutTradeNo());
+        Map<String, Object> map = TransactionPatternFactory.decodeRequestNo(alipayNotifyVo.getOutTradeNo());
         message.setDocumentId((String) map.get("documentId"));
         message.setDocumentType(Byte.parseByte((String) map.get("documentType")));
         return message;
@@ -109,7 +105,7 @@ public class AlipayService {
             message.setRefundState(RefundState.FINISH_REFUND);
         }
 
-        Map<String, Object> map = transactionPatternFactory.decodeRequestNo(alipayNotifyVo.getOutTradeNo());
+        Map<String, Object> map = TransactionPatternFactory.decodeRequestNo(alipayNotifyVo.getOutTradeNo());
         message.setDocumentId((String) map.get("documentId"));
         message.setDocumentType(Byte.parseByte((String) map.get("documentType")));
         return message;
