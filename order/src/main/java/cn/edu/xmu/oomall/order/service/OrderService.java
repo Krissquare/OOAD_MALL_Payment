@@ -22,7 +22,10 @@ import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,8 @@ import static cn.edu.xmu.privilegegateway.annotation.util.Common.*;
 
 @Service
 public class OrderService {
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
+
     @Autowired
     OrderDao orderDao;
 
@@ -61,6 +66,9 @@ public class OrderService {
 
     @Autowired
     RocketMQTemplate rocketMQTemplate;
+
+    @Value("${oomall.order.insert}")
+    String INSERT_ORDER_TOPIC;
 
     /**
      * 1.获得订单的所有状态
@@ -103,236 +111,231 @@ public class OrderService {
      */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject insertOrder(SimpleOrderVo simpleOrderVo, Long userId, String userName) {
-        OrderAndOrderItemsVo orderAndOrderItemsVo = new OrderAndOrderItemsVo();
-        List<Long> weights = new ArrayList<>();
-        List<Long> freights = new ArrayList<>();
-        List<FreightCalculatingPostVo> freightCalculatingPostVos = new ArrayList<>();
-        List<OrderItem> orderItemsBo = new ArrayList<>();
-        Set<Long> couponIds = new HashSet<>();
-        Set<Long> couponActivityIds = new HashSet<>();
-        Set<Long> shopIds = new HashSet<>();
-        // 订单的orderItem不能为空
-        List<SimpleOrderItemVo> orderItems = simpleOrderVo.getOrderItems();
-        if (orderItems.size() == 0) {
-            return new ReturnObject(ReturnNo.FIELD_NOTVALID);
-        }
-        //验证orderItem的所有可能会不存在的id,以及组装orderitem
-        for (SimpleOrderItemVo simpleOrderItemVo : orderItems) {
-            OrderItem orderItem = cloneVo(simpleOrderItemVo, OrderItem.class);
-            // 判断productId是否存在
-            InternalReturnObject<ProductVo> productVo = goodsService.getProductDetails(simpleOrderItemVo.getProductId());
-            if (productVo.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(productVo.getErrno()));
+        try {
+            OrderAndOrderItemsVo orderAndOrderItemsVo = new OrderAndOrderItemsVo();
+            List<Long> weights = new ArrayList<>();
+            List<Long> freights = new ArrayList<>();
+            List<FreightCalculatingPostVo> freightCalculatingPostVos = new ArrayList<>();
+            List<OrderItem> orderItemsBo = new ArrayList<>();
+            Set<Long> couponIds = new HashSet<>();
+            Set<Long> couponActivityIds = new HashSet<>();
+            Set<Long> shopIds = new HashSet<>();
+            // 订单的orderItem不能为空
+            List<SimpleOrderItemVo> orderItems = simpleOrderVo.getOrderItems();
+            if (orderItems.size() == 0) {
+                return new ReturnObject(ReturnNo.FIELD_NOTVALID);
             }
-            freights.add(productVo.getData().getFreightId());
-            weights.add(productVo.getData().getWeight());
-            // 判断onsaleId是否存在
-            InternalReturnObject<OnSaleVo> onSaleVo = goodsService.selectFullOnsale(simpleOrderItemVo.getOnsaleId());
-            if (onSaleVo.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(onSaleVo.getErrno()));
+            //验证orderItem的所有可能会不存在的id,以及组装orderitem
+            for (SimpleOrderItemVo simpleOrderItemVo : orderItems) {
+                OrderItem orderItem = cloneVo(simpleOrderItemVo, OrderItem.class);
+                // 判断productId是否存在
+                InternalReturnObject<ProductVo> productVo = goodsService.getProductDetails(simpleOrderItemVo.getProductId());
+                if (productVo.getErrno() != 0) {
+                    return new ReturnObject(ReturnNo.getByCode(productVo.getErrno()));
+                }
+                freights.add(productVo.getData().getFreightId());
+                weights.add(productVo.getData().getWeight());
+                // 判断onsaleId是否存在
+                InternalReturnObject<OnSaleVo> onSaleVo = goodsService.selectFullOnsale(simpleOrderItemVo.getOnsaleId());
+                if (onSaleVo.getErrno() != 0) {
+                    return new ReturnObject(ReturnNo.getByCode(onSaleVo.getErrno()));
+                }
+                // 判断回传的Product中的OnsaleId（某一时刻唯一）是否和传入的OnsaleId对应
+                if (!onSaleVo.getData().getId().equals(productVo.getData().getOnSaleId())) {
+                    return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+                }
+
+                //判断couponActId;
+                if (simpleOrderItemVo.getCouponActId() != null) {
+                    //因为可能不同item用一个活动，下同理
+                    if (!couponActivityIds.contains(simpleOrderItemVo.getCouponActId())) {
+                        couponActivityIds.add(simpleOrderItemVo.getCouponActId());
+                        InternalReturnObject couponActivityById = couponService.showOwnCouponActivityInfo(onSaleVo.getData().getShop().getId(), simpleOrderItemVo.getCouponId());
+                        if (couponActivityById.getErrno() != 0) {
+                            return new ReturnObject(ReturnNo.getByCode(couponActivityById.getErrno()));
+                        }
+                    }
+                }
+                //
+                if (simpleOrderItemVo.getCouponId() != null) {
+                    if (!couponIds.contains(simpleOrderItemVo.getCouponId())) {
+                        couponIds.add(simpleOrderItemVo.getCouponId());
+                        InternalReturnObject couponById = customService.isCouponExists(simpleOrderItemVo.getCouponId());
+                        if (couponById.getErrno() != 0) {
+                            return new ReturnObject(ReturnNo.getByCode(couponById.getErrno()));
+                        }
+                    }
+                }
+                orderItem.setShopId(productVo.getData().getShop().getId());
+                orderItem.setPrice(onSaleVo.getData().getPrice() * simpleOrderItemVo.getQuantity());
+                //如果是优惠 就重新set
+                orderItem.setDiscountPrice(0L);
+                orderItem.setName(productVo.getData().getName());
+                orderItem.setCommented((byte) 0);
+                setPoCreatedFields(orderItem, userId, userName);
+                setPoModifiedFields(orderItem, userId, userName);
+                orderItemsBo.add(orderItem);
+                shopIds.add(orderItem.getShopId());
             }
-            // 判断回传的Product中的OnsaleId（某一时刻唯一）是否和传入的OnsaleId对应
-            if (!onSaleVo.getData().getId().equals(productVo.getData().getOnSaleId())) {
-                return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+            //验证除了orderItem的字段
+            if (simpleOrderVo.getGrouponId() != null) {
+                // 团购订单
+                //团购的list只能为1
+                if (orderItems.size() != 1) {
+                    return new ReturnObject(ReturnNo.FIELD_NOTVALID);
+                }
+                InternalReturnObject<GrouponActivityVo> grouponsById = activityService.getOnlineGroupOnActivity(simpleOrderVo.getGrouponId());
+                if (grouponsById.getErrno() != 0) {
+                    return new ReturnObject(ReturnNo.getByCode(grouponsById.getErrno()));
+                }
+                SimpleOrderItemVo simpleOrderItemVo = orderItems.get(0);
+                InternalReturnObject<OnSaleVo> onsaleById = goodsService.selectFullOnsale(simpleOrderItemVo.getOnsaleId());
+                if (onsaleById.getErrno() != 0) {
+                    return new ReturnObject(ReturnNo.getByCode(onsaleById.getErrno()));
+                }
+                OnSaleVo onSaleVo = onsaleById.getData();
+                //判断onsaleid里的activity是不是couponid
+                if (!(onSaleVo.getType() == (byte) 2 && onSaleVo.getActivityId().equals(simpleOrderVo.getGrouponId()))) {
+                    return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+                }
+            } else if (simpleOrderVo.getAdvancesaleId() != null) {
+                // 预售订单
+                InternalReturnObject<AdvanceVo> advanceSaleById = activityService.queryOnlineAdvanceSaleInfo(simpleOrderVo.getAdvancesaleId());
+                if (simpleOrderVo.getOrderItems().size() != 1) {
+                    return new ReturnObject(ReturnNo.FIELD_NOTVALID);
+                }
+                if (advanceSaleById.getErrno() != 0) {
+                    return new ReturnObject(ReturnNo.getByCode(advanceSaleById.getErrno()));
+                }
+                SimpleOrderItemVo simpleOrderItemVo = orderItems.get(0);
+                InternalReturnObject<OnSaleVo> onsaleById = goodsService.selectFullOnsale(simpleOrderItemVo.getOnsaleId());
+                if (onsaleById.getErrno() != 0) {
+                    return new ReturnObject(ReturnNo.getByCode(onsaleById.getErrno()));
+                }
+                OnSaleVo onSaleVo = onsaleById.getData();
+                //判断onsaleid里的activity是不是couponid
+                if (!(onSaleVo.getType() == (byte) 3 && onSaleVo.getActivityId().equals(simpleOrderVo.getAdvancesaleId()))) {
+                    return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+                }
+            } else {
+                //普通或者优惠订单
+                List<ProductPostVo> disList = new ArrayList<>();
+                List<Integer> indexs = new ArrayList<>();
+                for (int i = 0; i < orderItemsBo.size(); i++) {
+                    OrderItem orderItem = orderItemsBo.get(i);
+                    if (orderItem.getCouponActivityId() != null) {
+                        //参加优惠活动的
+                        ProductPostVo productPostVo = cloneVo(orderItem, ProductPostVo.class);
+                        productPostVo.setActivityId(orderItem.getCouponActivityId());
+                        productPostVo.setOriginalPrice(orderItem.getPrice());
+                        disList.add(productPostVo);
+                        indexs.add(i);
+                    }
+                }
+                if (disList.size() != 0) {
+                    InternalReturnObject internalReturnObject = couponService.calculateDiscount(disList);
+                    if (internalReturnObject.getErrno() != 0) {
+                        return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
+                    }
+                    //得到优惠钱封装进去
+                    List<ProductRetVo> calList = (List<ProductRetVo>) internalReturnObject.getData();
+                    for (int i = 0; i < calList.size(); i++) {
+                        orderItemsBo.get(indexs.get(i)).setDiscountPrice(calList.get(i).getDiscountPrice() * 10);//1/10分
+                    }
+                }
             }
 
-            //判断couponActId;
-            if (simpleOrderItemVo.getCouponActId() != null) {
-                //因为可能不同item用一个活动，下同理
-                if (!couponActivityIds.contains(simpleOrderItemVo.getCouponActId())) {
-                    couponActivityIds.add(simpleOrderItemVo.getCouponActId());
-                    InternalReturnObject couponActivityById = couponService.showOwnCouponActivityInfo(onSaleVo.getData().getShop().getId(), simpleOrderItemVo.getCouponId());
-                    if (couponActivityById.getErrno() != 0) {
-                        return new ReturnObject(ReturnNo.getByCode(couponActivityById.getErrno()));
-                    }
-                }
+            Order order = cloneVo(simpleOrderVo, Order.class);
+            //减少积点,减少优惠卷
+            InternalReturnObject<CustomerModifyPointsVo> internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(-order.getPoint()));
+            if (internalReturnObject1.getErrno() != 0) {
+                return new ReturnObject(ReturnNo.getByCode(internalReturnObject1.getErrno()));
             }
-            //
-            if (simpleOrderItemVo.getCouponId() != null) {
-                if (!couponIds.contains(simpleOrderItemVo.getCouponId())) {
-                    couponIds.add(simpleOrderItemVo.getCouponId());
-                    InternalReturnObject couponById = customService.isCouponExists(simpleOrderItemVo.getCouponId());
-                    if (couponById.getErrno() != 0) {
-                        return new ReturnObject(ReturnNo.getByCode(couponById.getErrno()));
-                    }
-                }
-            }
-            orderItem.setShopId(productVo.getData().getShop().getId());
-            orderItem.setPrice(onSaleVo.getData().getPrice() * simpleOrderItemVo.getQuantity());
-            //如果是优惠 就重新set
-            orderItem.setDiscountPrice(0L);
-            orderItem.setName(productVo.getData().getName());
-            orderItem.setCommented((byte) 0);
-            setPoCreatedFields(orderItem, userId, userName);
-            setPoModifiedFields(orderItem, userId, userName);
-            orderItemsBo.add(orderItem);
-            shopIds.add(orderItem.getShopId());
-        }
-        //验证除了orderItem的字段
-        if (simpleOrderVo.getGrouponId() != null) {
-            // 团购订单
-            //团购的list只能为1
-            if (orderItems.size() != 1) {
-                return new ReturnObject(ReturnNo.FIELD_NOTVALID);
-            }
-            InternalReturnObject<GrouponActivityVo> grouponsById = activityService.getOnlineGroupOnActivity(simpleOrderVo.getGrouponId());
-            if (grouponsById.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(grouponsById.getErrno()));
-            }
-            SimpleOrderItemVo simpleOrderItemVo = orderItems.get(0);
-            InternalReturnObject<OnSaleVo> onsaleById = goodsService.selectFullOnsale(simpleOrderItemVo.getOnsaleId());
-            if (onsaleById.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(onsaleById.getErrno()));
-            }
-            OnSaleVo onSaleVo = onsaleById.getData();
-            //判断onsaleid里的activity是不是couponid
-            if (!(onSaleVo.getType() == (byte) 2 && onSaleVo.getActivityId().equals(simpleOrderVo.getGrouponId()))) {
-                return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
-            }
-        } else if (simpleOrderVo.getAdvancesaleId() != null) {
-            // 预售订单
-            InternalReturnObject<AdvanceVo> advanceSaleById = activityService.queryOnlineAdvanceSaleInfo(simpleOrderVo.getAdvancesaleId());
-            if (simpleOrderVo.getOrderItems().size() != 1) {
-                return new ReturnObject(ReturnNo.FIELD_NOTVALID);
-            }
-            if (advanceSaleById.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(advanceSaleById.getErrno()));
-            }
-            SimpleOrderItemVo simpleOrderItemVo = orderItems.get(0);
-            InternalReturnObject<OnSaleVo> onsaleById = goodsService.selectFullOnsale(simpleOrderItemVo.getOnsaleId());
-            if (onsaleById.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(onsaleById.getErrno()));
-            }
-            OnSaleVo onSaleVo = onsaleById.getData();
-            //判断onsaleid里的activity是不是couponid
-            if (!(onSaleVo.getType() == (byte) 3 && onSaleVo.getActivityId().equals(simpleOrderVo.getAdvancesaleId()))) {
-                return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
-            }
-        } else {
-            //普通或者优惠订单
-            List<ProductPostVo> disList = new ArrayList<>();
-            List<Integer> indexs = new ArrayList<>();
-            for (int i = 0; i < orderItemsBo.size(); i++) {
-                OrderItem orderItem = orderItemsBo.get(i);
-                if (orderItem.getCouponActivityId() != null) {
-                    //参加优惠活动的
-                    ProductPostVo productPostVo = cloneVo(orderItem, ProductPostVo.class);
-                    productPostVo.setActivityId(orderItem.getCouponActivityId());
-                    productPostVo.setOriginalPrice(orderItem.getPrice());
-                    disList.add(productPostVo);
-                    indexs.add(i);
-                }
-            }
-            if (disList.size() != 0) {
-                InternalReturnObject internalReturnObject = couponService.calculateDiscount(disList);
+            //积点不够用就能用多少用多少
+            order.setPoint(-internalReturnObject1.getData().getPoints());
+            for (Long id : couponIds) {
+                InternalReturnObject internalReturnObject = customService.useCoupon(id);
                 if (internalReturnObject.getErrno() != 0) {
                     return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
                 }
-                //得到优惠钱封装进去
-                List<ProductRetVo> calList = (List<ProductRetVo>) internalReturnObject.getData();
-                for (int i = 0; i < calList.size(); i++) {
-                    orderItemsBo.get(indexs.get(i)).setDiscountPrice(calList.get(i).getDiscountPrice() * 10);//1/10分
-                }
             }
-        }
-
-        Order order = cloneVo(simpleOrderVo, Order.class);
-
-        //减少积点,减少优惠卷
-        InternalReturnObject<Long> internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(-order.getPoint()));
-        if (internalReturnObject1.getErrno() != 0) {
-            return new ReturnObject(ReturnNo.getByCode(internalReturnObject1.getErrno()));
-        }
-        //积点不够用就能用多少用多少
-        order.setPoint(internalReturnObject1.getData());
-        for (Long id : couponIds) {
-            InternalReturnObject internalReturnObject = customService.useCoupon(id);
-            if (internalReturnObject.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
+            if (shopIds.size() == 1) {
+                Iterator it = shopIds.iterator();
+                order.setShopId((Long) it.next());
             }
-        }
-        if (shopIds.size() == 1) {
-            Iterator it = shopIds.iterator();
-            order.setShopId((Long) it.next());
-        }
-        order.setCustomerId(userId);
-        order.setPid(0L);
-        order.setOrderSn(genSeqNum(1));
-        order.setState(OrderState.NEW_ORDER.getCode());
-        order.setBeDeleted((byte) 0);
-        setPoCreatedFields(order, userId, userName);
-        setPoModifiedFields(order, userId, userName);
-        Long sumOrigin = 0L;
-        Long sumDiscount = 0L;
-        Long sumNow = 0L;
-        //分积点总积点*10分到某个里面在除以数量
-        Long totalPoint = order.getPoint() * 10;
-        for (int i = 0; i < orderItemsBo.size(); i++) {
-            OrderItem orderItem = orderItemsBo.get(i);
-            sumOrigin += orderItem.getPrice() * orderItem.getQuantity();
-            sumDiscount += orderItem.getDiscountPrice() * orderItem.getQuantity();
-            sumNow += sumOrigin;
-            sumNow -= sumDiscount;
-            //运费
-            FreightCalculatingPostVo freightCalculatingPostVo = cloneVo(orderItem, FreightCalculatingPostVo.class);
-            freightCalculatingPostVo.setWeight(weights.get(i));
-            freightCalculatingPostVo.setFreightId(freights.get(i));
-            freightCalculatingPostVos.add(freightCalculatingPostVo);
-            //减少库存量 redis
-            InternalReturnObject internalReturnObject = goodsService.decreaseOnSale(orderItem.getShopId(), orderItem.getOnsaleId(), new QuantityVo(orderItem.getQuantity()));
-            if (internalReturnObject.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
-            }
-        }
-        //转换为1/10的单位
-        sumNow *= 10;
-        for (int i = 0; i < orderItemsBo.size(); i++) {
-            OrderItem orderItem = orderItemsBo.get(i);
-            double sum = orderItem.getQuantity() * (orderItem.getPrice() * 10 - orderItem.getDiscountPrice());
-            double proportion = sum / sumNow;
-            orderItem.setPoint((long) (proportion * totalPoint / orderItem.getQuantity()));
-        }
-        order.setOriginPrice(sumOrigin);
-        order.setDiscountPrice(sumDiscount);
-        //计算运费
-        InternalReturnObject<FreightCalculatingRetVo> freightCalculatingRetVoInternalReturnObject = freightService.calculateFreight(order.getRegionId(), freightCalculatingPostVos);
-        if (freightCalculatingRetVoInternalReturnObject.getErrno() != 0) {
-            return new ReturnObject(ReturnNo.getByCode(freightCalculatingRetVoInternalReturnObject.getErrno()));
-        }
-        order.setExpressFee(freightCalculatingRetVoInternalReturnObject.getData().getFreightPrice());
-        orderAndOrderItemsVo.setOrder(order);
-
-        //减少积点,减少优惠卷
-        internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(-orderAndOrderItemsVo.getOrder().getPoint()));
-        if (internalReturnObject1.getErrno() != 0) {
-            return new ReturnObject(ReturnNo.getByCode(internalReturnObject1.getErrno()));
-        }
-        for (Long id : couponIds) {
-            InternalReturnObject internalReturnObject = customService.useCoupon(id);
-            if (internalReturnObject.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
-            }
-        }
-        //todo: redis暂存 以防没插进去就支付
-        //发消息
-        String json = JacksonUtil.toJson(orderAndOrderItemsVo);
-        Message message = MessageBuilder.withPayload(json).build();
-        SendResult sendResult = rocketMQTemplate.syncSend("insert-order", message);
-        if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
-            //回滚积点,优惠卷
-            internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(orderAndOrderItemsVo.getOrder().getPoint()));
-            if (internalReturnObject1.getErrno() != 0) {
-                return new ReturnObject(internalReturnObject1);
-            }
-            for (Long id : couponIds) {
-                InternalReturnObject internalReturnObject = customService.refundCoupon(id);
+            order.setCustomerId(userId);
+            order.setPid(0L);
+            order.setOrderSn(genSeqNum(1));
+            order.setState(OrderState.NEW_ORDER.getCode());
+            order.setBeDeleted((byte) 0);
+            setPoCreatedFields(order, userId, userName);
+            setPoModifiedFields(order, userId, userName);
+            Long sumOrigin = 0L;
+            Long sumDiscount = 0L;
+            Long sumNow = 0L;
+            //分积点总积点*10分到某个里面在除以数量
+            Long totalPoint = order.getPoint() * 10;
+            for (int i = 0; i < orderItemsBo.size(); i++) {
+                OrderItem orderItem = orderItemsBo.get(i);
+                sumOrigin += orderItem.getPrice() * orderItem.getQuantity();
+                sumDiscount += orderItem.getDiscountPrice() * orderItem.getQuantity();
+                //运费
+                FreightCalculatingPostVo freightCalculatingPostVo = new FreightCalculatingPostVo();
+                freightCalculatingPostVo.setQuantity(Math.toIntExact(orderItem.getQuantity()));
+                freightCalculatingPostVo.setProductId(orderItem.getProductId());
+                freightCalculatingPostVo.setWeight(weights.get(i));
+                freightCalculatingPostVo.setFreightId(freights.get(i));
+                freightCalculatingPostVos.add(freightCalculatingPostVo);
+                //减少库存量 redis
+                InternalReturnObject internalReturnObject = goodsService.decreaseOnSale(orderItem.getShopId(), orderItem.getOnsaleId(), new QuantityVo(orderItem.getQuantity()));
                 if (internalReturnObject.getErrno() != 0) {
                     return new ReturnObject(internalReturnObject);
                 }
             }
-            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, "发送消息失败");
+            //转换为1/10的单位
+            sumNow = sumOrigin * 10 - sumDiscount;
+            for (int i = 0; i < orderItemsBo.size(); i++) {
+                OrderItem orderItem = orderItemsBo.get(i);
+                double sum = orderItem.getQuantity() * (orderItem.getPrice() * 10 - orderItem.getDiscountPrice());
+                double proportion = sum / sumNow;
+                orderItem.setPoint((long) (proportion * totalPoint / orderItem.getQuantity()));
+            }
+            order.setOriginPrice(sumOrigin);
+            order.setDiscountPrice(sumDiscount);
+            InternalReturnObject<FreightCalculatingRetVo> freightCalculatingRetVoInternalReturnObject = null;
+            //计算运费
+            freightCalculatingRetVoInternalReturnObject = freightService.calculateFreight(order.getRegionId(), freightCalculatingPostVos);
+            if (freightCalculatingRetVoInternalReturnObject.getErrno() != 0) {
+                return new ReturnObject(ReturnNo.getByCode(freightCalculatingRetVoInternalReturnObject.getErrno()));
+            }
+            order.setExpressFee(freightCalculatingRetVoInternalReturnObject.getData().getFreightPrice());
+            orderAndOrderItemsVo.setOrder(order);
+            orderAndOrderItemsVo.setOrderItems(orderItemsBo);
+            //todo: redis暂存 以防没插进去就支付
+            //发消息
+            String json = JacksonUtil.toJson(orderAndOrderItemsVo);
+            Message message = MessageBuilder.withPayload(json).build();
+            SendResult sendResult = rocketMQTemplate.syncSend(INSERT_ORDER_TOPIC, message);
+            if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
+                //回滚积点,优惠卷
+                internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(orderAndOrderItemsVo.getOrder().getPoint()));
+                if (internalReturnObject1.getErrno() != 0) {
+                    return new ReturnObject(internalReturnObject1);
+                }
+                for (Long id : couponIds) {
+                    InternalReturnObject internalReturnObject = customService.refundCoupon(id);
+                    if (internalReturnObject.getErrno() != 0) {
+                        return new ReturnObject(internalReturnObject);
+                    }
+                }
+                return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, "发送消息失败");
+            }
+            return new ReturnObject();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
-        return new ReturnObject();
+
     }
 
     /**
@@ -398,16 +401,16 @@ public class OrderService {
         //保证快递费不变的查询
         //get all items
         ReturnObject itemsRet = orderDao.listOrderItemsByOrderId(orderId);
-        if (!itemsRet.getCode().equals(ReturnNo.OK)){
+        if (!itemsRet.getCode().equals(ReturnNo.OK)) {
             return itemsRet;
         }
         List<OrderItem> itemList = (List<OrderItem>) itemsRet.getData();
         //generate freight query Vos
         List<FreightCalculatingPostVo> freightVoList = new ArrayList<>();
-        for (OrderItem oneItem: itemList){
+        for (OrderItem oneItem : itemList) {
             FreightCalculatingPostVo oneFreightVo = cloneVo(oneItem, FreightCalculatingPostVo.class);
             InternalReturnObject<ProductVo> productInterRet = goodsService.getProductDetails(oneItem.getProductId());
-            if (!productInterRet.getErrno().equals(ReturnNo.OK)){
+            if (!productInterRet.getErrno().equals(ReturnNo.OK)) {
                 return new ReturnObject(productInterRet);
             }
             oneFreightVo.setWeight(productInterRet.getData().getWeight());
@@ -416,21 +419,21 @@ public class OrderService {
         }
         //query freight fee via internal api
         InternalReturnObject<FreightCalculatingRetVo> freightQueryRet = freightService.calculateFreight(updateOrderVo.getRegionId(), freightVoList);
-        if (!freightQueryRet.getErrno().equals(ReturnNo.OK)){
+        if (!freightQueryRet.getErrno().equals(ReturnNo.OK)) {
             return new ReturnObject(freightQueryRet);
         }
         //check if the freight fee is identical
-        if (oldOrder.getExpressFee() == null){
+        if (oldOrder.getExpressFee() == null) {
             //是子订单
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
-        if (!oldOrder.getExpressFee().equals(freightQueryRet.getData().getFreightPrice())){
+        if (!oldOrder.getExpressFee().equals(freightQueryRet.getData().getFreightPrice())) {
             //造成运费差异则禁止修改
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
         Order newOrder = Common.cloneVo(updateOrderVo, Order.class);
         newOrder.setId(orderId);
-        setPoModifiedFields(newOrder,userId,userName);
+        setPoModifiedFields(newOrder, userId, userName);
         return orderDao.updateOrder(newOrder);
     }
 
@@ -488,16 +491,16 @@ public class OrderService {
         String documentId;
         Order pOrder = null;
         List<OrderItemPo> orderItemPos = null;
-        Long totalPoint=0L;
+        Long totalPoint = 0L;
         if (order.getPid() == 0) {
             documentId = order.getOrderSn();
             ReturnObject returnObject = orderDao.listOrderItemsByPOrderId(order.getId());
-            if (returnObject.getCode()!=ReturnNo.OK){
+            if (returnObject.getCode() != ReturnNo.OK) {
                 return returnObject;
             }
             //要退优惠券的item
-            orderItemPos= (List<OrderItemPo>) returnObject.getData();
-            totalPoint=order.getPoint();
+            orderItemPos = (List<OrderItemPo>) returnObject.getData();
+            totalPoint = order.getPoint();
         } else {
             ReturnObject ret1 = orderDao.getOrderById(order.getPid());
             if (!ret1.getCode().equals(ReturnNo.OK)) {
@@ -506,12 +509,12 @@ public class OrderService {
             pOrder = (Order) ret1.getData();
             documentId = pOrder.getOrderSn();
             ReturnObject returnObject = orderDao.listOrderItemsByOrderId(pOrder.getId());
-            if(returnObject.getCode()!=ReturnNo.OK){
+            if (returnObject.getCode() != ReturnNo.OK) {
                 return returnObject;
             }
             //要退优惠券的item
-            orderItemPos = (List<OrderItemPo>)returnObject.getData();
-            totalPoint=pOrder.getPoint();
+            orderItemPos = (List<OrderItemPo>) returnObject.getData();
+            totalPoint = pOrder.getPoint();
         }
 
         InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
@@ -533,13 +536,13 @@ public class OrderService {
         if (internalReturnObject.getErrno() != 0) {
             return new ReturnObject(internalReturnObject);
         }
-        Set<Long> couponIds=new HashSet<>();
-        for (OrderItemPo orderItemPo:orderItemPos){
-            if (orderItemPo.getCouponId()!=null&&orderItemPo.getCouponId()!=0){
+        Set<Long> couponIds = new HashSet<>();
+        for (OrderItemPo orderItemPo : orderItemPos) {
+            if (orderItemPo.getCouponId() != null && orderItemPo.getCouponId() != 0) {
                 couponIds.add(orderItemPo.getCouponId());
                 //增加库存
                 internalReturnObject = goodsService.decreaseOnSale(orderItemPo.getShopId(), orderItemPo.getOnsaleId(), new QuantityVo(orderItemPo.getQuantity()));
-                if (internalReturnObject.getErrno()!=0){
+                if (internalReturnObject.getErrno() != 0) {
                     return new ReturnObject(internalReturnObject);
                 }
             }
@@ -689,16 +692,16 @@ public class OrderService {
         String documentId;
         Order pOrder = null;
         List<OrderItemPo> orderItemPos = null;
-        Long totalPoion=0L;
+        Long totalPoion = 0L;
         if (order.getPid() == 0) {
             documentId = order.getOrderSn();
             ReturnObject returnObject = orderDao.listOrderItemsByPOrderId(order.getId());
-            if (returnObject.getCode()!=ReturnNo.OK){
+            if (returnObject.getCode() != ReturnNo.OK) {
                 return returnObject;
             }
             //要退优惠券的item
-            orderItemPos= (List<OrderItemPo>) returnObject.getData();
-            totalPoion=order.getPoint();
+            orderItemPos = (List<OrderItemPo>) returnObject.getData();
+            totalPoion = order.getPoint();
         } else {
             ReturnObject ret1 = orderDao.getOrderById(order.getPid());
             if (!ret1.getCode().equals(ReturnNo.OK)) {
@@ -707,12 +710,12 @@ public class OrderService {
             pOrder = (Order) ret1.getData();
             documentId = pOrder.getOrderSn();
             ReturnObject returnObject = orderDao.listOrderItemsByOrderId(pOrder.getId());
-            if(returnObject.getCode()!=ReturnNo.OK){
+            if (returnObject.getCode() != ReturnNo.OK) {
                 return returnObject;
             }
             //要退优惠券的item
-            orderItemPos = (List<OrderItemPo>)returnObject.getData();
-            totalPoion=pOrder.getPoint();
+            orderItemPos = (List<OrderItemPo>) returnObject.getData();
+            totalPoion = pOrder.getPoint();
         }
         InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, documentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
         List<PaymentRetVo> list = returnObject.getData().getList();
@@ -730,13 +733,13 @@ public class OrderService {
         if (internalReturnObject.getErrno() != 0) {
             return new ReturnObject(internalReturnObject);
         }
-        Set<Long> couponIds=new HashSet<>();
-        for (OrderItemPo orderItemPo:orderItemPos){
-            if (orderItemPo.getCouponId()!=null&&orderItemPo.getCouponId()!=0){
+        Set<Long> couponIds = new HashSet<>();
+        for (OrderItemPo orderItemPo : orderItemPos) {
+            if (orderItemPo.getCouponId() != null && orderItemPo.getCouponId() != 0) {
                 couponIds.add(orderItemPo.getCouponId());
                 //增加库存
                 internalReturnObject = goodsService.decreaseOnSale(orderItemPo.getShopId(), orderItemPo.getOnsaleId(), new QuantityVo(orderItemPo.getQuantity()));
-                if (internalReturnObject.getErrno()!=0){
+                if (internalReturnObject.getErrno() != 0) {
                     return new ReturnObject(internalReturnObject);
                 }
             }
@@ -813,8 +816,7 @@ public class OrderService {
         Order order = (Order) returnObject1.getData();
         String ducumentId = order.getOrderSn();
         InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPayment(0L, ducumentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
-        if(!returnObject.getErrno().equals(ReturnNo.OK.getCode()))
-        {
+        if (!returnObject.getErrno().equals(ReturnNo.OK.getCode())) {
             return new ReturnObject(returnObject);
         }
         List<PaymentRetVo> list = returnObject.getData().getList();
@@ -851,7 +853,7 @@ public class OrderService {
         newOrder.setState(OrderState.FINISH_PAY.getCode());
         Common.setPoModifiedFields(newOrder, loginUserId, loginUserName);
         ReturnObject returnObject = orderDao.updateOrder(newOrder);
-        if(!returnObject.getCode().equals(ReturnNo.OK)){
+        if (!returnObject.getCode().equals(ReturnNo.OK)) {
             return returnObject;
         }
         //3.计算团购数量
@@ -861,32 +863,31 @@ public class OrderService {
         InternalReturnObject<GrouponActivityVo> grouponActivityVoInternalReturnObject = activityService.getOnlineGroupOnActivity(newOrder.getGrouponId());
         GrouponActivityVo grouponActivityVo = grouponActivityVoInternalReturnObject.getData();
         List<GroupOnStrategyVo> strategy = grouponActivityVo.getStrategy();
-        if(strategy==null)
-        {
+        if (strategy == null) {
             return new ReturnObject(ReturnNo.OK);
         }
         //判断团购的数量符合哪个级别，进而算退的钱
-        GroupOnStrategyVo strategyLevel=new GroupOnStrategyVo();
-        for(GroupOnStrategyVo groupOnStrategyVo:strategy){
-            if(quantity<=groupOnStrategyVo.getQuantity()){
-                strategyLevel=groupOnStrategyVo;
+        GroupOnStrategyVo strategyLevel = new GroupOnStrategyVo();
+        for (GroupOnStrategyVo groupOnStrategyVo : strategy) {
+            if (quantity <= groupOnStrategyVo.getQuantity()) {
+                strategyLevel = groupOnStrategyVo;
             }
         }
-        Long refundAmount=newOrder.getOriginPrice()*(1-strategyLevel.getPercentage());
+        Long refundAmount = newOrder.getOriginPrice() * (1 - strategyLevel.getPercentage());
         //5.退款 TODO：按比例退款
-        RefundRecVo refundRecVo=new RefundRecVo();
+        RefundRecVo refundRecVo = new RefundRecVo();
         refundRecVo.setAmount(refundAmount);
         refundRecVo.setDocumentId(newOrder.getOrderSn());
         refundRecVo.setDocumentType(RefundType.ORDER.getCode());
         //查订单对应的payment
         InternalReturnObject<PageVo<RefundRetVo>> returnObject1 = transactionService.listRefund(0L, newOrder.getOrderSn(), null, null, null, 1, 10);
-        if(returnObject1.getErrno().equals(ReturnNo.OK.getCode())){
+        if (returnObject1.getErrno().equals(ReturnNo.OK.getCode())) {
             return new ReturnObject(returnObject1);
         }
         List<RefundRetVo> list = (List<RefundRetVo>) returnObject1.getData().getList();
         refundRecVo.setPaymentId(list.get(0).getId());
         refundRecVo.setPatternId(list.get(0).getPatternId());
-        InternalReturnObject ret=transactionService.requestRefund(refundRecVo);
+        InternalReturnObject ret = transactionService.requestRefund(refundRecVo);
 //        if(!ret.getErrno().equals(ReturnNo.OK.getCode()))
 //        {
 //            return new ReturnObject(ret);
@@ -946,13 +947,13 @@ public class OrderService {
             return new ReturnObject(internalReturnObject);
         }
         ReturnObject returnObject1 = orderDao.listOrderItemsByPOrderId(order.getId());
-        if (returnObject1.getCode()!=ReturnNo.OK){
+        if (returnObject1.getCode() != ReturnNo.OK) {
             return returnObject1;
         }
         List<OrderItemPo> list1 = (List<OrderItemPo>) returnObject1.getData();
-        for(OrderItemPo orderItemPo:list1){
+        for (OrderItemPo orderItemPo : list1) {
             InternalReturnObject internalReturnObject1 = goodsService.decreaseOnSale(orderItemPo.getShopId(), orderItemPo.getOnsaleId(), new QuantityVo(orderItemPo.getQuantity()));
-            if(internalReturnObject1.getErrno()!=0){
+            if (internalReturnObject1.getErrno() != 0) {
                 return new ReturnObject(internalReturnObject1);
             }
         }
@@ -1035,19 +1036,16 @@ public class OrderService {
             return ret;
         }
         Order order = (Order) ret.getData();
-        if(order.getPid()!=0)
-        {
-            ReturnObject returnObject=orderDao.getOrderById(order.getId());
-            if(!returnObject.getCode().equals(ReturnNo.OK))
-            {
+        if (order.getPid() != 0) {
+            ReturnObject returnObject = orderDao.getOrderById(order.getId());
+            if (!returnObject.getCode().equals(ReturnNo.OK)) {
                 return returnObject;
             }
-            order=(Order)returnObject.getData();
+            order = (Order) returnObject.getData();
         }
         String documentId = order.getOrderSn();
         InternalReturnObject<PageVo<RefundRetVo>> returnObject = transactionService.listRefund(0L, documentId, RefundState.FINISH_REFUND.getCode(), null, null, 1, 10);
-        if(!returnObject.getErrno().equals(ReturnNo.OK.getCode()))
-        {
+        if (!returnObject.getErrno().equals(ReturnNo.OK.getCode())) {
             return new ReturnObject(returnObject);
         }
         List<RefundRetVo> list = returnObject.getData().getList();
@@ -1129,12 +1127,12 @@ public class OrderService {
     /**
      * 7. orderSn查orderId
      * hty
+     *
      * @param orderSn
      * @return
      */
-    @Transactional(readOnly = true,rollbackFor = Exception.class)
-    public ReturnObject getOrderId(String orderSn)
-    {
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public ReturnObject getOrderId(String orderSn) {
         ReturnObject ret = orderDao.getOrderByOrderSn(orderSn);
         if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;

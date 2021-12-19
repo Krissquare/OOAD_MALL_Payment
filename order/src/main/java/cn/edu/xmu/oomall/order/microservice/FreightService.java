@@ -22,12 +22,11 @@ public interface FreightService {
     /**
      * regions/{rid}/price（2021-2-2）
      * 内部API-计算一批商品的运费
-     *
+     * solved:LXC
      * @param rid   地区id
      * @param items
      * @return cn.edu.xmu.oomall.ooad201.order.microService.vo.FreightCalculatingRetVo
      */
-    //TODO:LXC
     @PostMapping("/regions/{rid}/price")
     InternalReturnObject<FreightCalculatingRetVo> calculateFreight(@PathVariable Long rid, @Validated @RequestBody List<FreightCalculatingPostVo> items);
 }

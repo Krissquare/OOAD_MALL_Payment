@@ -17,22 +17,20 @@ public interface ActivityService {
     /**
      * advancesales/{id}
      * 查询上线预售活动的详细信息（2021-1-10）
-     *
+     * solved:LXC
      * @param id 预售活动id
      * @return 返回体cn.edu.xmu.oomall.ooad201.order.microService.vo.AdvanceVo
      */
-    //TODO:LXC
     @GetMapping("/advancesales/{id}")
     InternalReturnObject<AdvanceVo> queryOnlineAdvanceSaleInfo(@PathVariable(name = "id") Long id);
 
     /**
      * /groupons/{id}
      * 查上线态团购活动详情(2021-1-12)
-     *
+     * solved:lxc
      * @param id 团购活动id
      * @return cn.edu.xmu.oomall.ooad201.order.microService.vo.GrouponActivityVo
      */
-    //TODO:GYT
     @GetMapping("/groupons/{id}")
     InternalReturnObject<GrouponActivityVo> getOnlineGroupOnActivity(@PathVariable Long id);
 }
