@@ -251,11 +251,16 @@ public class AlipayTransaction extends TransactionPattern {
                     errorAccount.setExpenditure(aliPayFormat.getOutlay());
                     errorAccount.setState((byte)0);
                     errorAccount.setTime(aliPayFormat.getTradeCreateTime());
+                    errorAccount.setDocumentId(aliPayFormat.getOutTradeNo());
                     transactionDao.insertErrorAccount(errorAccount);
                     extra++;
                 }
                 else{
                     Payment payment=(Payment)returnObject.getData();
+                    //相当于短账，不做处理
+                    if(!(payment.getPayTime().isAfter(beginTime)&&payment.getPayTime().isBefore(endTime))){
+                        break;
+                    }
                     //错账，插入错误账
                     if(!payment.getActualAmount().equals(aliPayFormat.getIncome())){
                         ErrorAccount errorAccount=new ErrorAccount();
@@ -265,6 +270,7 @@ public class AlipayTransaction extends TransactionPattern {
                         errorAccount.setExpenditure(aliPayFormat.getOutlay());
                         errorAccount.setState((byte)0);
                         errorAccount.setTime(aliPayFormat.getTradeCreateTime());
+                        errorAccount.setDocumentId(aliPayFormat.getOutTradeNo());
                         ReturnObject returnObject1=transactionDao.insertErrorAccount(errorAccount);
                         if(!returnObject1.getCode().equals(ReturnNo.OK.getCode()))
                         {
@@ -300,11 +306,16 @@ public class AlipayTransaction extends TransactionPattern {
                     errorAccount.setExpenditure(aliPayFormat.getOutlay());
                     errorAccount.setState((byte)0);
                     errorAccount.setTime(aliPayFormat.getTradeCreateTime());
+                    errorAccount.setDocumentId(aliPayFormat.getOutTradeNo());
                     transactionDao.insertErrorAccount(errorAccount);
                     extra++;
                 }
                 else{
                     Refund refund=(Refund)returnObject.getData();
+                    //相当于短账，不做处理
+                    if(!(refund.getRefundTime().isAfter(beginTime)&&refund.getRefundTime().isBefore(endTime))){
+                        break;
+                    }
                     //错账，插入错误账
                     if(!refund.getAmount().equals(aliPayFormat.getOutlay())){
                         ErrorAccount errorAccount=new ErrorAccount();
@@ -314,6 +325,7 @@ public class AlipayTransaction extends TransactionPattern {
                         errorAccount.setExpenditure(aliPayFormat.getOutlay());
                         errorAccount.setState((byte)0);
                         errorAccount.setTime(aliPayFormat.getTradeCreateTime());
+                        errorAccount.setDocumentId(aliPayFormat.getOutTradeNo());
                         ReturnObject returnObject1=transactionDao.insertErrorAccount(errorAccount);
                         if(!returnObject1.getCode().equals(ReturnNo.OK.getCode()))
                         {

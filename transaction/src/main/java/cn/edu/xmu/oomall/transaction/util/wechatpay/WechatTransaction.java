@@ -208,11 +208,16 @@ public class WechatTransaction extends TransactionPattern {
                     errorAccount.setExpenditure(0L);
                     errorAccount.setState((byte)0);
                     errorAccount.setTime(wechatFormat.getTradeCreateTime());
+                    errorAccount.setDocumentId(wechatFormat.getOutTradeNo());
                     transactionDao.insertErrorAccount(errorAccount);
                     extra++;
                 }
                 else{
                     Payment payment=(Payment)returnObject.getData();
+                    //相当于短账，不做处理
+                    if(!(payment.getPayTime().isAfter(beginTime)&&payment.getPayTime().isBefore(endTime))){
+                        break;
+                    }
                     //错账，插入错误账
                     if(!payment.getActualAmount().equals(wechatFormat.getAmount())){
                         ErrorAccount errorAccount=new ErrorAccount();
@@ -222,6 +227,7 @@ public class WechatTransaction extends TransactionPattern {
                         errorAccount.setExpenditure(0L);
                         errorAccount.setState((byte)0);
                         errorAccount.setTime(wechatFormat.getTradeCreateTime());
+                        errorAccount.setDocumentId(wechatFormat.getOutTradeNo());
                         ReturnObject returnObject1=transactionDao.insertErrorAccount(errorAccount);
                         if(!returnObject1.getCode().equals(ReturnNo.OK.getCode()))
                         {
@@ -257,11 +263,16 @@ public class WechatTransaction extends TransactionPattern {
                     errorAccount.setExpenditure(wechatFormat.getAmount());
                     errorAccount.setState((byte)0);
                     errorAccount.setTime(wechatFormat.getTradeCreateTime());
+                    errorAccount.setDocumentId(wechatFormat.getOutTradeNo());
                     transactionDao.insertErrorAccount(errorAccount);
                     extra++;
                 }
                 else{
                     Refund refund=(Refund)returnObject.getData();
+                    //相当于短账，不做处理
+                    if(!(refund.getRefundTime().isAfter(beginTime)&&refund.getRefundTime().isBefore(endTime))){
+                        break;
+                    }
                     //错账，插入错误账
                     if(!refund.getAmount().equals(wechatFormat.getAmount())){
                         ErrorAccount errorAccount=new ErrorAccount();
@@ -271,6 +282,7 @@ public class WechatTransaction extends TransactionPattern {
                         errorAccount.setExpenditure(wechatFormat.getAmount());
                         errorAccount.setState((byte)0);
                         errorAccount.setTime(wechatFormat.getTradeCreateTime());
+                        errorAccount.setDocumentId(wechatFormat.getOutTradeNo());
                         ReturnObject returnObject1=transactionDao.insertErrorAccount(errorAccount);
                         if(!returnObject1.getCode().equals(ReturnNo.OK.getCode()))
                         {
