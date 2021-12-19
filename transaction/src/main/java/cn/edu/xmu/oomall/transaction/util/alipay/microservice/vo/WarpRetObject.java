@@ -30,10 +30,10 @@ public class WarpRetObject {
     private AlipayRefundRetVo alipayRefundRetVo;
 
     @JsonProperty("alipay_trade_fastpay_refund_query_response")
-    private AlipayRefundQueryRetVo refundQueryRetVo;
+    private AlipayRefundQueryRetVo alipayRefundQueryRetVo;
 
-//    @JsonProperty("alipay_data_dataservice_bill_downloadurl_query_response")
-//    private DownloadUrlQueryRetVo downloadUrlQueryRetVo;
+    @JsonProperty("alipay_data_dataservice_bill_downloadurl_query_response")
+    private DownloadUrlQueryRetVo downloadUrlQueryRetVo;
 
 
     private String sign;

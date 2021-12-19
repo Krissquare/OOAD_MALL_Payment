@@ -125,10 +125,10 @@ public class TransactionService {
 
         // 获取paymentList
         Map<String, Object> retMap = (Map<String, Object>) retPaymentPageInfo.getData();
-        List<Payment> paymentList = (List<Payment>) retMap.get("list");
+        List<PaymentRetVo> paymentList = (List<PaymentRetVo>) retMap.get("list");
 
-        Payment validExistedPayment = null;
-        for (Payment payment : paymentList) {
+        PaymentRetVo validExistedPayment = null;
+        for (PaymentRetVo payment : paymentList) {
             // 判断是否存在已支付、已对账、已清算的支付流水
             if (payment.getState().equals(PaymentState.ALREADY_PAY.getCode()) ||
                     payment.getState().equals(PaymentState.ALREADY_RECONCILIATION.getCode()) ||
@@ -152,20 +152,19 @@ public class TransactionService {
         if (validExistedPayment == null) {
             Payment payment = cloneVo(paymentBill, Payment.class);
             // TODO: userId和userName
-            setPoCreatedFields(payment, 1L, "hqg");
-            setPoModifiedFields(payment, 1L, "hqg");
+            payment.setState(PaymentState.WAIT_PAY.getCode());
+            setPoCreatedFields(payment, loginUserId, loginUserName);
+            setPoModifiedFields(payment, loginUserId, loginUserName);
             ReturnObject<Payment> retPayment = transactionDao.insertPayment(payment);
             if (!retPayment.getCode().equals(ReturnNo.OK)) {
                 return retPayment;
             }
-            validExistedPayment = retPayment.getData();
+            validExistedPayment = cloneVo(retPayment.getData(), PaymentRetVo.class);
         }
 
         // 然后请求支付
-        // 创建请求号
-        String requestNo = transactionPatternFactory.encodeRequestNo(validExistedPayment.getId(),
-                validExistedPayment.getDocumentId(), validExistedPayment.getDocumentType());
-        pattern.requestPayment(requestNo, paymentBill);
+        paymentBill.setRelatedPayment(cloneVo(validExistedPayment, Payment.class));
+        pattern.requestPayment(paymentBill);
 
         return new ReturnObject<>(ReturnNo.OK);
     }
@@ -368,26 +367,26 @@ public class TransactionService {
         if (retPayment.getData() == null) {
             return retPayment;
         }
+        refundBill.setRelatedPayment(retPayment.getData());
 
         // 判断amount是否超出payment的支付金额
-        if (refundBill.getAmount() > retPayment.getData().getActualAmount()) {
+        if (refundBill.getAmount() > refundBill.getRelatedPayment().getActualAmount()) {
             return new ReturnObject<>(ReturnNo.REFUND_MORE);
         }
-        refundBill.setTotal(retPayment.getData().getActualAmount());
 
         // 根据documentId和paymentId去查refund
-        ReturnObject<PageInfo<Payment>> retRefundPageInfo =
-                transactionDao.listRefund(refundBill.getPaymentId(), refundBill.getDocumentId(), null, null, null, null, null, 1, 100);
+        ReturnObject retRefundPageInfo =
+                transactionDao.listRefund(refundBill.getRelatedPayment().getId(), refundBill.getDocumentId(), null, null, null, null, null, 1, 100);
         if (!retRefundPageInfo.getCode().equals(ReturnNo.OK)) {
             return retRefundPageInfo;
         }
 
         // 获取refundList
         Map<String, Object> retMap = (Map<String, Object>) retRefundPageInfo.getData();
-        List<Refund> refundList = (List<Refund>) retMap.get("list");
+        List<RefundRetVo> refundList = (List<RefundRetVo>) retMap.get("list");
 
         // 同一时刻同一个documentId和paymentId（一个单子）至多只允许存在一笔待退款的流水
-        for (Refund refund : refundList) {
+        for (RefundRetVo refund : refundList) {
             // 需要判断，避免重复退款
             // 判断是否待退款、已退款、已对账、已清算
             if (refund.getState().equals(RefundState.WAIT_REFUND.getCode()) ||
@@ -398,24 +397,46 @@ public class TransactionService {
             }
         }
 
-        TransactionPattern pattern = transactionPatternFactory.getPatternInstance(refundBill.getPatternId());
+        TransactionPattern pattern = transactionPatternFactory.getPatternInstance(refundBill.getRelatedPayment().getPatternId());
 
         //写进数据库
         Refund refund = cloneVo(refundBill, Refund.class);
         //TODO:要setcreator和modify吗？
+        refund.setPatternId(refundBill.getRelatedPayment().getPatternId());
+        refund.setState(RefundState.WAIT_REFUND.getCode());
         ReturnObject<Refund> retRefund = transactionDao.insertRefund(refund);
         if (!retRefund.getCode().equals(ReturnNo.OK)) {
             return retRefund;
         }
         refund = retRefund.getData();
         //  然后请求退款
-        //  创建请求号
-        String requestNo = transactionPatternFactory.encodeRequestNo(refund.getId(),
-                refund.getDocumentId(), refund.getDocumentType());
-        pattern.requestRefund(requestNo, refundBill);
+        refundBill.setRelatedRefund(refund);
+        pattern.requestRefund(refundBill);
 
         return new ReturnObject<>(ReturnNo.OK);
     }
+    public ReturnObject reconciliation(LocalDateTime beginTime,LocalDateTime endTime){
+        //支付宝对账
+        TransactionPattern pattern = transactionPatternFactory.getPatternInstance(1L);
+        ReturnObject returnObject=pattern.reconciliation(beginTime,endTime);
+        if(!returnObject.getCode().equals(ReturnNo.OK)){
+            return returnObject;
+        }
+        ReconciliationRetVo aliPay=(ReconciliationRetVo) returnObject.getData();
+        //微信支付对账
+        TransactionPattern pattern1 = transactionPatternFactory.getPatternInstance(2L);
+        ReturnObject returnObject1=pattern1.reconciliation(beginTime,endTime);
+        if(!returnObject1.getCode().equals(ReturnNo.OK)){
+            return returnObject1;
+        }
+        ReconciliationRetVo wechatPay=(ReconciliationRetVo) returnObject1.getData();
+        ReconciliationRetVo reconciliationRetVo=new ReconciliationRetVo();
+        reconciliationRetVo.setSuccess(aliPay.getSuccess()+wechatPay.getSuccess());
+        reconciliationRetVo.setError(aliPay.getError()+wechatPay.getError());
+        reconciliationRetVo.setExtra(aliPay.getExtra()+wechatPay.getExtra());
+        return new ReturnObject(reconciliationRetVo);
+    }
+
 
 
 }

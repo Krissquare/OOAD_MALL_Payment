@@ -342,7 +342,7 @@ public class OrderService {
      */
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject listCustomerWholeOrder(Long userId, Long orderId) {
-        ReturnObject ret = orderDao.getOrderById(orderId);
+        ReturnObject ret = orderDao.getNotDeleteOrderById(orderId);
         if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;
         }
@@ -383,7 +383,7 @@ public class OrderService {
                                             String userName,
                                             Long orderId,
                                             UpdateOrderVo updateOrderVo) {
-        ReturnObject ret = orderDao.getOrderById(orderId);
+        ReturnObject ret = orderDao.getNotDeleteOrderById(orderId);
         if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;
         }
@@ -445,7 +445,7 @@ public class OrderService {
      */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject deleteOrderByCustomer(Long id, Long userId, String userName) {
-        ReturnObject returnObject = orderDao.getOrderById(id);
+        ReturnObject returnObject = orderDao.getNotDeleteOrderById(id);
         if (returnObject.getCode() != ReturnNo.OK) {
             return returnObject;
         }
@@ -474,7 +474,7 @@ public class OrderService {
      */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject cancelOrderByCustomer(Long orderId, Long loginUserId, String loginUserName) {
-        ReturnObject ret = orderDao.getOrderById(orderId);
+        ReturnObject ret = orderDao.getNotDeleteOrderById(orderId);
         if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;
         }
@@ -499,7 +499,7 @@ public class OrderService {
             orderItemPos= (List<OrderItemPo>) returnObject.getData();
             totalPoint=order.getPoint();
         } else {
-            ReturnObject ret1 = orderDao.getOrderById(order.getPid());
+            ReturnObject ret1 = orderDao.getNotDeleteOrderById(order.getPid());
             if (!ret1.getCode().equals(ReturnNo.OK)) {
                 return ret1;
             }
@@ -572,7 +572,7 @@ public class OrderService {
      */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject confirmOrder(Long orderId, Long loginUserId, String loginUserName) {
-        ReturnObject ret = orderDao.getOrderById(orderId);
+        ReturnObject ret = orderDao.getNotDeleteOrderById(orderId);
         if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;
         }
@@ -806,7 +806,7 @@ public class OrderService {
      */
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject getPaymentByOrderId(Long id, Long loginUserId, String loginUserName) {
-        ReturnObject returnObject1 = orderDao.getOrderById(id);
+        ReturnObject returnObject1 = orderDao.getNotDeleteOrderById(id);
         if (returnObject1.getCode() != ReturnNo.OK) {
             return returnObject1;
         }
@@ -834,7 +834,7 @@ public class OrderService {
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject confirmGrouponOrder(Long shopId, Long id, Long loginUserId, String loginUserName) {
         //1.合法性检查
-        ReturnObject<Order> retOrder = orderDao.getOrderById(id);
+        ReturnObject<Order> retOrder = orderDao.getNotDeleteOrderById(id);
         // 判断订单存在与否
         if (!retOrder.getCode().equals(ReturnNo.OK)) {
             return retOrder;
@@ -1030,14 +1030,14 @@ public class OrderService {
      */
     @Transactional(readOnly = true, rollbackFor = Exception.class)
     public ReturnObject listOrderRefunds(Long id) {
-        ReturnObject ret = orderDao.getOrderById(id);
+        ReturnObject ret = orderDao.getNotDeleteOrderById(id);
         if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;
         }
         Order order = (Order) ret.getData();
         if(order.getPid()!=0)
         {
-            ReturnObject returnObject=orderDao.getOrderById(order.getId());
+            ReturnObject returnObject=orderDao.getNotDeleteOrderById(order.getId());
             if(!returnObject.getCode().equals(ReturnNo.OK))
             {
                 return returnObject;

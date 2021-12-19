@@ -7,6 +7,7 @@ import cn.edu.xmu.oomall.transaction.mapper.PaymentPatternPoMapper;
 import cn.edu.xmu.oomall.transaction.mapper.ErrorAccountPoMapper;
 import cn.edu.xmu.oomall.transaction.mapper.PaymentPatternPoMapper;
 import cn.edu.xmu.oomall.transaction.mapper.PaymentPoMapper;
+import cn.edu.xmu.oomall.transaction.model.bo.ErrorAccount;
 import cn.edu.xmu.oomall.transaction.model.bo.Payment;
 import cn.edu.xmu.oomall.transaction.model.bo.PaymentPattern;
 import cn.edu.xmu.oomall.transaction.model.po.*;
@@ -174,9 +175,6 @@ public class TransactionDao {
                 cr.andRefundTimeLessThan(endTime);
             }
             List<RefundPo> refundPoList = refundPoMapper.selectByExample(refundPoExample);
-            if (refundPoList.size() == 0) {
-                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
-            }
             ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo(refundPoList));
             return Common.getPageRetVo(ret, RefundRetVo.class);
         } catch (Exception e) {
@@ -323,5 +321,51 @@ public class TransactionDao {
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
+    public ReturnObject getPaymentByTradeSn(String tradeSn){
+        try {
+            PaymentPoExample example = new PaymentPoExample();
+            PaymentPoExample.Criteria criteria = example.createCriteria();
+            criteria.andTradeSnEqualTo(tradeSn);
+            List<PaymentPo> paymentPos=paymentPoMapper.selectByExample(example);
+            if (paymentPos.size()==0) {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            PaymentPo paymentPo=paymentPos.get(0);
+            Payment payment= cloneVo(paymentPo, Payment.class);
+            return new ReturnObject(payment);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+    public ReturnObject getRefundByTradeSn(String tradeSn){
+        try {
+            RefundPoExample example = new RefundPoExample();
+            RefundPoExample.Criteria criteria = example.createCriteria();
+            criteria.andTradeSnEqualTo(tradeSn);
+            List<RefundPo> refundPos=refundPoMapper.selectByExample(example);
+            if (refundPos.size()==0) {
+                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
+            }
+            RefundPo refundPo=refundPos.get(0);
+            Refund refund=cloneVo(refundPo,Refund.class);
+            return new ReturnObject(refund);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+    public ReturnObject insertErrorAccount(ErrorAccount errorAccount){
+        try {
+            ErrorAccountPo errorAccountPo=cloneVo(errorAccount,ErrorAccountPo.class);
+            errorAccountPoMapper.insert(errorAccountPo);
+            return new ReturnObject<>(cloneVo(errorAccountPo, ErrorAccount.class));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
+        }
+    }
+
+
 
 }
