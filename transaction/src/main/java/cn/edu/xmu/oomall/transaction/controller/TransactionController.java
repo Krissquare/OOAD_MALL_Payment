@@ -114,8 +114,8 @@ public class TransactionController {
     public Object listPayment(@PathVariable(value = "shopId") Long shopId,
                               @RequestParam(value = "documentId",required = false)String documentId,
                               @RequestParam(value = "state",required = false)Byte state,
-                              @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
-                              @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
+                              @RequestParam(value = "beginTime",required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime beginTime,
+                              @RequestParam(value = "endTime",required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endTime,
                               @RequestParam(value = "page",required = false)Integer page,
                               @RequestParam(value = "pageSize",required = false)Integer pageSize) {
         if (shopId != 0) {
@@ -127,7 +127,7 @@ public class TransactionController {
                 return new ReturnObject(ReturnNo.LATE_BEGINTIME);
             }
         }
-        return transactionService.listPayment(documentId, state, beginTime, endTime, page, pageSize);
+        return transactionService.listPayment(documentId, state, beginTime.toLocalDateTime(), endTime.toLocalDateTime(), page, pageSize);
     }
 
     /**
@@ -143,8 +143,8 @@ public class TransactionController {
     @GetMapping("/internal/payment")
     public Object listPaymentInternal(@RequestParam(value = "documentId",required = false)String documentId,
                               @RequestParam(value = "state",required = false)Byte state,
-                              @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
-                              @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
+                              @RequestParam(value = "beginTime",required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime beginTime,
+                              @RequestParam(value = "endTime",required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endTime,
                               @RequestParam(value = "page",required = false)Integer page,
                               @RequestParam(value = "pageSize",required = false)Integer pageSize) {
         if (beginTime != null && endTime != null) {
@@ -153,7 +153,7 @@ public class TransactionController {
                 return new ReturnObject(ReturnNo.LATE_BEGINTIME);
             }
         }
-        return transactionService.listPayment(documentId, state, beginTime, endTime, page, pageSize);
+        return transactionService.listPayment(documentId, state, beginTime.toLocalDateTime(), endTime.toLocalDateTime(), page, pageSize);
     }
 
     /**
@@ -220,8 +220,8 @@ public class TransactionController {
     @GetMapping("/shops/{shopId}/refund")
     public Object getRefund(@PathVariable("shopId") Long shopId, @RequestParam(value="documentId",required = false)String documentId,
                             @RequestParam(value="state",required = false)Byte state,
-                            @RequestParam(value = "beginTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
-                            @RequestParam(value = "endTime",required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT)LocalDateTime endTime,
+                            @RequestParam(value = "beginTime",required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime beginTime,
+                            @RequestParam(value = "endTime",required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endTime,
                             @RequestParam(value = "page", required = false) Integer page,
                             @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         if (beginTime != null && endTime != null && beginTime.isAfter(endTime)) {
@@ -230,7 +230,7 @@ public class TransactionController {
         if (shopId != 0) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
-        final ReturnObject refund = transactionService.getRefund(documentId, state, beginTime, endTime, page, pageSize);
+        final ReturnObject refund = transactionService.getRefund(documentId, state, beginTime.toLocalDateTime(), endTime.toLocalDateTime(), page, pageSize);
         System.out.println(refund);
         return Common.decorateReturnObject(refund);
     }

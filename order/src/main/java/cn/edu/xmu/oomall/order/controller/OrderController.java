@@ -172,14 +172,14 @@ public class OrderController {
     public Object listBriefOrdersByShopId(@PathVariable("shopId") Long shopId,
                                           @RequestParam(value = "customerId", required = false) Long customerId,
                                           @RequestParam(value = "orderSn", required = false) String orderSn,
-                                          @RequestParam(value = "beginTime", required = false) @DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
-                                          @RequestParam(value = "endTime", required = false) @DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime endTime,
+                                          @RequestParam(value = "beginTime", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime beginTime,
+                                          @RequestParam(value = "endTime", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endTime,
                                           @RequestParam(value = "page", required = false) Integer page,
                                           @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         if (beginTime != null && endTime != null && beginTime.isAfter(endTime)) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
         }
-        return Common.decorateReturnObject(orderService.listBriefOrdersByShopId(shopId, customerId, orderSn, beginTime, endTime, page, pageSize));
+        return Common.decorateReturnObject(orderService.listBriefOrdersByShopId(shopId, customerId, orderSn, beginTime.toLocalDateTime(), endTime.toLocalDateTime(), page, pageSize));
     }
 
     /**
