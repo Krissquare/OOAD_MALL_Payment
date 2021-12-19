@@ -1,9 +1,8 @@
 package cn.edu.xmu.oomall.transaction.util.alipay.microservice;
 
 import cn.edu.xmu.oomall.transaction.util.alipay.microservice.vo.WarpRetObject;
-import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -11,12 +10,12 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @author 高艺桐 22920192204199
  * @date 2021/12/11 22:10
  */
-@Component
+@Service
 @FeignClient(name = "alipay-service")
 public interface AlipayMicroService {
 
     @PostMapping("internal/alipay/gateway.do")
-    Object gatewayDo(@RequestParam(required = false) String app_id ,
+    WarpRetObject gatewayDo(@RequestParam(required = false) String app_id ,
                             @RequestParam(required = true) String method ,
                             @RequestParam(required = false) String format ,
                             @RequestParam(required = false) String charset  ,

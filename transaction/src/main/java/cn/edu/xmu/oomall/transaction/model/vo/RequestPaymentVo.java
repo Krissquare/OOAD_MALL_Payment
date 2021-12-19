@@ -38,6 +38,6 @@ public class RequestPaymentVo implements PaymentBillObject {
 
     @Override
     public PaymentBill createPaymentBill() {
-        return new PaymentBill(patternId, documentId, documentType, descr, amount, beginTime, endTime);
+        return new PaymentBill(patternId, documentId, documentType, descr, amount, beginTime, endTime, null);
     }
 }

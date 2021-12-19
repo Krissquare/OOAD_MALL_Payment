@@ -341,8 +341,6 @@ public class TransactionController {
     @PostMapping("/internal/refunds")
     public Object requestRefund(@RequestBody RefundVo refundVo){
         RefundBill refundBill = refundVo.createRefundBill();
-        return transactionService.requestRefund(refundBill);
+        return Common.decorateReturnObject(transactionService.requestRefund(refundBill));
     }
-
-
 }
