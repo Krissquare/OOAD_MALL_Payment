@@ -1,6 +1,8 @@
 package cn.edu.xmu.oomall.transaction.model.bo;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -10,6 +12,8 @@ import java.time.LocalDateTime;
  * @date 2021/12/06 22:09
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Payment implements Serializable {
     private Long id;
     private String tradeSn;

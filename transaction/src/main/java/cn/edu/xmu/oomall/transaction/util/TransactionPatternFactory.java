@@ -27,8 +27,8 @@ public class TransactionPatternFactory {
 
     final private static String REQUEST_NO_PATTERN = "^[0-9]+-[0-9a-zA-z]+-[0-9]$";
 
-    public String encodeRequestNo(Long id, String documentId, Byte docymentType) {
-        // 流水Id + documentId + documentType
+    public static String encodeRequestNo(Long id, String documentId, Byte docymentType) {
+        // 请求号 = 流水Id + documentId + documentType
         String requestNo = String.format("%s-%s-%s", id.toString(), documentId, docymentType.toString());
         boolean isMatch = Pattern.matches(REQUEST_NO_PATTERN, requestNo);
         if (isMatch) {
@@ -38,12 +38,12 @@ public class TransactionPatternFactory {
         }
     }
 
-    public Map<String, Object> decodeRequestNo(String requestNo) {
+    public static Map<String, Object> decodeRequestNo(String requestNo) {
         boolean isMatch = Pattern.matches(REQUEST_NO_PATTERN, requestNo);
         if (isMatch) {
             String[] strings = requestNo.split("-");
             Map<String, Object> map = new HashMap<>();
-            map.put("id", Integer.parseInt(strings[0]));
+            map.put("id", strings[0]);
             map.put("documentId", strings[1]);
             map.put("documentType", strings[2]);
             return map;
@@ -67,7 +67,5 @@ public class TransactionPatternFactory {
         } else {
             return alipayTransaction;
         }
-
     }
-
 }

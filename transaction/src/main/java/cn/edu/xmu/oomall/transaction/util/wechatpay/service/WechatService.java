@@ -3,8 +3,9 @@ package cn.edu.xmu.oomall.transaction.util.wechatpay.service;
 import cn.edu.xmu.oomall.transaction.dao.TransactionDao;
 import cn.edu.xmu.oomall.transaction.model.bo.*;
 import cn.edu.xmu.oomall.transaction.util.mq.MessageProducer;
-import cn.edu.xmu.oomall.transaction.util.mq.NotifyMessage;
 import cn.edu.xmu.oomall.transaction.util.TransactionPatternFactory;
+import cn.edu.xmu.oomall.transaction.util.mq.PaymentNotifyMessage;
+import cn.edu.xmu.oomall.transaction.util.mq.RefundNotifyMessage;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatNotifyRetVo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatPaymentNotifyVo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatRefundNotifyVo;
@@ -48,9 +49,9 @@ public class WechatService {
             payment.setState(PaymentState.ALREADY_PAY.getCode());
         }
 
-        // 创建paymentMessage，通过rocketMQ生产者发送
-        NotifyMessage paymentMessage = createPaymentNotifyMessage(wechatPaymentNotifyVo);
-        messageProducer.sendNotifyMessage(paymentMessage);
+        // 创建paymentNotifyMessage，通过rocketMQ生产者发送
+        PaymentNotifyMessage paymentNotifyMessage = createPaymentNotifyMessage(wechatPaymentNotifyVo);
+        messageProducer.sendPaymentNotifyMessage(paymentNotifyMessage);
 
         String paymentId = (String) transactionPatternFactory
                 .decodeRequestNo(wechatPaymentNotifyVo.getResource().getCiphertext().getOutTradeNo())
@@ -81,8 +82,8 @@ public class WechatService {
         }
 
         // 创建refundMessage，通过rocketMQ生产者发送
-        NotifyMessage refundMessage = createRefundNotifyMessage(wechatRefundNotifyVo);
-        messageProducer.sendNotifyMessage(refundMessage);
+        RefundNotifyMessage refundNotifyMessage = createRefundNotifyMessage(wechatRefundNotifyVo);
+        messageProducer.sendRefundNotifyMessage(refundNotifyMessage);
 
         String refundId =(String) transactionPatternFactory
                 .decodeRequestNo(wechatRefundNotifyVo.getResource().getCiphertext().getOutRefundNo())
@@ -96,38 +97,36 @@ public class WechatService {
     }
 
 
-    private NotifyMessage createPaymentNotifyMessage(WechatPaymentNotifyVo wechatPaymentNotifyVo) {
-        NotifyMessage message = new NotifyMessage();
+    private PaymentNotifyMessage createPaymentNotifyMessage(WechatPaymentNotifyVo wechatPaymentNotifyVo) {
+        PaymentNotifyMessage message = new PaymentNotifyMessage();
         String notifyState = wechatPaymentNotifyVo.getResource().getCiphertext().getTradeState();
         if (notifyState.equals(WechatTradeState.CLOSED.getState())) {
-            message.setState(PaymentState.CANCEL.getCode());
+            message.setPaymentState(PaymentState.CANCEL);
         } else if (notifyState.equals(WechatTradeState.SUCCESS.getState())) {
-            message.setState(PaymentState.ALREADY_PAY.getCode());
+            message.setPaymentState(PaymentState.ALREADY_PAY);
         }
 
         Map<String, Object> map = transactionPatternFactory
                 .decodeRequestNo(wechatPaymentNotifyVo.getResource().getCiphertext().getOutTradeNo());
         message.setDocumentId((String) map.get("documentId"));
         message.setDocumentType((Byte) map.get("documentType"));
-        message.setMessageType(NotifyMessage.NotifyMessageType.PAYMENT);
         return message;
     }
 
 
-    private NotifyMessage createRefundNotifyMessage(WechatRefundNotifyVo wechatRefundNotifyVo) {
-        NotifyMessage message = new NotifyMessage();
+    private RefundNotifyMessage createRefundNotifyMessage(WechatRefundNotifyVo wechatRefundNotifyVo) {
+        RefundNotifyMessage message = new RefundNotifyMessage();
         String notifyState = wechatRefundNotifyVo.getResource().getCiphertext().getRefundStatus();
         if (notifyState.equals(WechatRefundState.ABNORMAL.getState())) {
-            message.setState(RefundState.CANCEL_REFUND.getCode());
+            message.setRefundState(RefundState.CANCEL_REFUND);
         } else if (notifyState.equals(WechatTradeState.SUCCESS.getState())) {
-            message.setState(RefundState.FINISH_REFUND.getCode());
+            message.setRefundState(RefundState.FINISH_REFUND);
         }
 
         Map<String, Object> map = transactionPatternFactory
                 .decodeRequestNo(wechatRefundNotifyVo.getResource().getCiphertext().getOutRefundNo());
         message.setDocumentId((String) map.get("documentId"));
         message.setDocumentType((Byte) map.get("documentType"));
-        message.setMessageType(NotifyMessage.NotifyMessageType.REFUND);
         return message;
     }
 }

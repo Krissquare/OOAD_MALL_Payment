@@ -1,8 +1,9 @@
 package cn.edu.xmu.oomall.transaction.util.mq;
 
 import cn.edu.xmu.oomall.core.util.JacksonUtil;
-import org.apache.rocketmq.common.message.Message;
+
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
@@ -14,23 +15,34 @@ public class MessageProducer {
     @Resource
     private RocketMQTemplate rocketMQTemplate;
 
-
-    // TODO: 消息写法有问题
-    public void sendNotifyMessage(NotifyMessage notifyMessage) {
+    public void sendPaymentNotifyMessage(PaymentNotifyMessage notifyMessage) {
         String json = JacksonUtil.toJson(notifyMessage);
-        Message message = (Message) MessageBuilder.withPayload(json).build();
-        String topic = String.format("%s-%s", notifyMessage.getMessageType().getDescription(),
-                notifyMessage.getDocumentType());
+        Message message = MessageBuilder.withPayload(json).build();
+        String topic = String.format("payment-notify-topic-%s", notifyMessage.getDocumentType());
         rocketMQTemplate.sendOneWay(topic, message);
     }
 
-    public void sendActiveQueryDelayedMessage(ActiveQueryMessage activeQueryMessage) {
-        String json = JacksonUtil.toJson(activeQueryMessage);
-        Message message = (Message) MessageBuilder.withPayload(json).build();
+    public void sendRefundNotifyMessage(RefundNotifyMessage notifyMessage) {
+        String json = JacksonUtil.toJson(notifyMessage);
+        Message message = MessageBuilder.withPayload(json).build();
+        String topic = String.format("refund-notify-topic-%s", notifyMessage.getDocumentType());
+        rocketMQTemplate.sendOneWay(topic, message);
+    }
+
+    public void sendPaymentQueryDelayedMessage(PaymentQueryMessage paymentQueryMessage) {
+        String json = JacksonUtil.toJson(paymentQueryMessage);
+        Message message =  MessageBuilder.withPayload(json).build();
         // 30s
         // 主题名字考虑采用PV注入
-        message.setDelayTimeLevel(4);
-        rocketMQTemplate.sendOneWay("active-query", message);
+        rocketMQTemplate.sendOneWay("payment-query-topic", message);
+    }
+
+    public void sendRefundQueryDelayedMessage(RefundQueryMessage refundQueryMessage) {
+        String json = JacksonUtil.toJson(refundQueryMessage);
+        Message message =  MessageBuilder.withPayload(json).build();
+        // 30s
+        // 主题名字考虑采用PV注入
+        rocketMQTemplate.sendOneWay("refund-query-topic", message);
     }
 
 }
