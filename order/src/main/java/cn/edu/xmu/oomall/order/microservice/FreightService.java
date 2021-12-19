@@ -5,6 +5,8 @@ import cn.edu.xmu.oomall.order.microservice.vo.FreightCalculatingPostVo;
 import cn.edu.xmu.oomall.order.microservice.vo.FreightCalculatingRetVo;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,5 +29,5 @@ public interface FreightService {
      */
     //TODO:LXC
     @PostMapping("/regions/{rid}/price")
-    InternalReturnObject<FreightCalculatingRetVo> calculateFreight(@PathVariable Long rid, @RequestBody List<FreightCalculatingPostVo> items);
+    InternalReturnObject<FreightCalculatingRetVo> calculateFreight(@PathVariable Long rid, @Validated @RequestBody List<FreightCalculatingPostVo> items);
 }
