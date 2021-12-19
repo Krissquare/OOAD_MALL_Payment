@@ -60,7 +60,9 @@ public class OrderController {
                 return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
             }
         }
-        return Common.decorateReturnObject(orderService.listCustomerBriefOrder(userId, orderSn, state, beginTime.toLocalDateTime(), endTime.toLocalDateTime(), pageNumber, pageSize));
+        LocalDateTime localBeginTime=beginTime==null?null:beginTime.toLocalDateTime();
+        LocalDateTime localEndTime=endTime==null?null:endTime.toLocalDateTime();
+        return Common.decorateReturnObject(orderService.listCustomerBriefOrder(userId, orderSn, state, localBeginTime, localEndTime, pageNumber, pageSize));
     }
 
     /**
@@ -179,7 +181,9 @@ public class OrderController {
         if (beginTime != null && endTime != null && beginTime.isAfter(endTime)) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
         }
-        return Common.decorateReturnObject(orderService.listBriefOrdersByShopId(shopId, customerId, orderSn, beginTime.toLocalDateTime(), endTime.toLocalDateTime(), page, pageSize));
+        LocalDateTime localBeginTime=beginTime==null?null:beginTime.toLocalDateTime();
+        LocalDateTime localEndTime=endTime==null?null:endTime.toLocalDateTime();
+        return Common.decorateReturnObject(orderService.listBriefOrdersByShopId(shopId, customerId, orderSn,localBeginTime, localEndTime, page, pageSize));
     }
 
     /**

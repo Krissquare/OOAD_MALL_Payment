@@ -127,7 +127,9 @@ public class TransactionController {
                 return new ReturnObject(ReturnNo.LATE_BEGINTIME);
             }
         }
-        return transactionService.listPayment(documentId, state, beginTime.toLocalDateTime(), endTime.toLocalDateTime(), page, pageSize);
+        LocalDateTime localBeginTime=beginTime==null?null:beginTime.toLocalDateTime();
+        LocalDateTime localEndTime=endTime==null?null:endTime.toLocalDateTime();
+        return transactionService.listPayment(documentId, state,localBeginTime,localEndTime, page, pageSize);
     }
 
     /**
@@ -153,7 +155,9 @@ public class TransactionController {
                 return new ReturnObject(ReturnNo.LATE_BEGINTIME);
             }
         }
-        return transactionService.listPayment(documentId, state, beginTime.toLocalDateTime(), endTime.toLocalDateTime(), page, pageSize);
+        LocalDateTime localBeginTime=beginTime==null?null:beginTime.toLocalDateTime();
+        LocalDateTime localEndTime=endTime==null?null:endTime.toLocalDateTime();
+        return transactionService.listPayment(documentId, state, localBeginTime, localEndTime, page, pageSize);
     }
 
     /**
@@ -230,7 +234,9 @@ public class TransactionController {
         if (shopId != 0) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
-        final ReturnObject refund = transactionService.getRefund(documentId, state, beginTime.toLocalDateTime(), endTime.toLocalDateTime(), page, pageSize);
+        LocalDateTime localBeginTime=beginTime==null?null:beginTime.toLocalDateTime();
+        LocalDateTime localEndTime=endTime==null?null:endTime.toLocalDateTime();
+        final ReturnObject refund = transactionService.getRefund(documentId, state, localBeginTime, localEndTime, page, pageSize);
         System.out.println(refund);
         return Common.decorateReturnObject(refund);
     }
@@ -293,10 +299,12 @@ public class TransactionController {
         if (shopId != 0){
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
-        if (beginTime.isAfter(endTime)){
+        if (beginTime != null && endTime != null && beginTime.isAfter(endTime)) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
         }
-        return Common.decorateReturnObject(transactionService.listErrorAccountsByConditions(documentId,state,beginTime.toLocalDateTime(),endTime.toLocalDateTime(),page,pageSize));
+        LocalDateTime localBeginTime=beginTime==null?null:beginTime.toLocalDateTime();
+        LocalDateTime localEndTime=endTime==null?null:endTime.toLocalDateTime();
+        return Common.decorateReturnObject(transactionService.listErrorAccountsByConditions(documentId,state,localBeginTime,localEndTime,page,pageSize));
     }
 
     /**

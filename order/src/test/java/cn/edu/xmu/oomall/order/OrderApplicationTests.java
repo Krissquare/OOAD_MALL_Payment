@@ -178,8 +178,8 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":0,\"data\":{\"total\":18,\"pages\":2,\"pageSize\":10,\"page\":1,\"list\":[{\"id\":2,\"customerId\":1,\"shopId\":1,\"pid\":1,\"state\":null,\"gmtCreate\":\"2021-12-02T16:41:29\",\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":9,\"customerId\":4,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-02T17:18:19\",\"originPrice\":280,\"discountPrice\":15,\"expressFee\":6,\"point\":12,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":\"36527364532\"},{\"id\":33,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T21:22:32\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":34,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T21:45:29\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":35,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T21:52:38\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":36,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:41:57\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":37,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:49:16\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":38,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:51:11\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":39,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:52:53\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":40,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T23:23:18\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null}]},\"errmsg\":\"成功\"}";
-        JSONAssert.assertEquals(expected, responseString, true);
+        String expected = "{\"errno\":0,\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expected, responseString, false);
     }
 
     @Test
@@ -258,7 +258,7 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse = "{\"errno\":0,\"data\":[{\"id\":2,\"tradeSn\":\"7363522132\",\"patternId\":0,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":195,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-02T16:51:38\",\"beginTime\":null,\"endTime\":null}],\"errmsg\":\"成功\"}";
+        String expectedResponse = "{\"errno\":0,\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expectedResponse, responseString, false);
     }
 
