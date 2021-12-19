@@ -141,7 +141,7 @@ public class OrderService {
                 //因为可能不同item用一个活动，下同理
                 if (!couponActivityIds.contains(simpleOrderItemVo.getCouponActId())) {
                     couponActivityIds.add(simpleOrderItemVo.getCouponActId());
-                    InternalReturnObject couponActivityById = couponService.getCouponActivityById(onSaleVo.getData().getShop().getId(), simpleOrderItemVo.getCouponId());
+                    InternalReturnObject couponActivityById = couponService.showOwnCouponActivityInfo(onSaleVo.getData().getShop().getId(), simpleOrderItemVo.getCouponId());
                     if (couponActivityById.getErrno() != 0) {
                         return new ReturnObject(ReturnNo.getByCode(couponActivityById.getErrno()));
                     }
@@ -191,7 +191,7 @@ public class OrderService {
             }
         } else if (simpleOrderVo.getAdvancesaleId() != null) {
             // 预售订单
-            InternalReturnObject<AdvanceVo> advanceSaleById = activityService.getAdvanceSaleById(simpleOrderVo.getAdvancesaleId());
+            InternalReturnObject<AdvanceVo> advanceSaleById = activityService.queryOnlineAdvanceSaleInfo(simpleOrderVo.getAdvancesaleId());
             if (simpleOrderVo.getOrderItems().size() != 1) {
                 return new ReturnObject(ReturnNo.FIELD_NOTVALID);
             }
@@ -224,7 +224,7 @@ public class OrderService {
                 }
             }
             if (disList.size() != 0) {
-                InternalReturnObject internalReturnObject = couponService.calculateDiscoutprices(disList);
+                InternalReturnObject internalReturnObject = couponService.calculateDiscount(disList);
                 if (internalReturnObject.getErrno() != 0) {
                     return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
                 }
@@ -380,6 +380,7 @@ public class OrderService {
      */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject updateCustomerOrder(Long userId,
+                                            String userName,
                                             Long orderId,
                                             UpdateOrderVo updateOrderVo) {
         ReturnObject ret = orderDao.getOrderById(orderId);
@@ -390,11 +391,46 @@ public class OrderService {
         if (!oldOrder.getCustomerId().equals(userId)) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
+        //须是未发货状态的订单
         if (oldOrder.getState() >= OrderState.SEND_GOODS.getCode()) {
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
+        //保证快递费不变的查询
+        //get all items
+        ReturnObject itemsRet = orderDao.listOrderItemsByOrderId(orderId);
+        if (!itemsRet.getCode().equals(ReturnNo.OK)){
+            return itemsRet;
+        }
+        List<OrderItem> itemList = (List<OrderItem>) itemsRet.getData();
+        //generate freight query Vos
+        List<FreightCalculatingPostVo> freightVoList = new ArrayList<>();
+        for (OrderItem oneItem: itemList){
+            FreightCalculatingPostVo oneFreightVo = cloneVo(oneItem, FreightCalculatingPostVo.class);
+            InternalReturnObject<ProductVo> productInterRet = goodsService.getProductDetails(oneItem.getProductId());
+            if (!productInterRet.getErrno().equals(ReturnNo.OK)){
+                return new ReturnObject(productInterRet);
+            }
+            oneFreightVo.setWeight(productInterRet.getData().getWeight());
+            //TODO: freight id
+            freightVoList.add(oneFreightVo);
+        }
+        //query freight fee via internal api
+        InternalReturnObject<FreightCalculatingRetVo> freightQueryRet = freightService.calculateFreight(updateOrderVo.getRegionId(), freightVoList);
+        if (!freightQueryRet.getErrno().equals(ReturnNo.OK)){
+            return new ReturnObject(freightQueryRet);
+        }
+        //check if the freight fee is identical
+        if (oldOrder.getExpressFee() == null){
+            //是子订单
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
+        if (!oldOrder.getExpressFee().equals(freightQueryRet.getData().getFreightPrice())){
+            //造成运费差异则禁止修改
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
         Order newOrder = Common.cloneVo(updateOrderVo, Order.class);
         newOrder.setId(orderId);
+        setPoModifiedFields(newOrder,userId,userName);
         return orderDao.updateOrder(newOrder);
     }
 

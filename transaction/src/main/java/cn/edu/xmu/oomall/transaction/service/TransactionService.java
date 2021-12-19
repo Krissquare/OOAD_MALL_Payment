@@ -63,15 +63,7 @@ public class TransactionService {
         List<PaymentPatternPo> oriList = (List<PaymentPatternPo>) ret.getData();
         List<PaymentPatternVo> tarList = new ArrayList<>();
         for (PaymentPatternPo item: oriList){
-            SimpleVo creator = new SimpleVo();
-            creator.setId(item.getCreatorId());
-            creator.setName(item.getCreatorName());
-            SimpleVo modifier = new SimpleVo();
-            modifier.setId(item.getModifierId());
-            modifier.setName(item.getModifierName());
             PaymentPatternVo tarItem = cloneVo(item, PaymentPatternVo.class);
-            tarItem.setCreator(creator);
-            tarItem.setModifier(modifier);
             tarList.add(tarItem);
         }
         return new ReturnObject(tarList);
@@ -86,6 +78,33 @@ public class TransactionService {
             states.put(item.getCode(),item.getState());
         }
         return new ReturnObject(states);
+    }
+    /**
+     * 5.顾客支付已建立的支付单
+     * */
+    @Transactional(rollbackFor = Exception.class)
+    public ReturnObject paymentPayedByCustomer(Long paymentId, Long customerId, PaymentBePayedVo payedVo){
+        ReturnObject oriPaymentRet = transactionDao.getPaymentById(paymentId);
+        if (!oriPaymentRet.getCode().equals(ReturnNo.OK)){
+            return oriPaymentRet;
+        }
+        Payment oldPayment = (Payment) oriPaymentRet.getData();
+        if (!oldPayment.getCreatorId().equals(customerId)){
+            return new ReturnObject(ReturnNo.STATENOTALLOW);
+        }
+        Payment newPayment = cloneVo(payedVo, Payment.class);
+        newPayment.setId(oldPayment.getId());
+        newPayment.setPatternId(oldPayment.getPatternId());
+        ReturnObject updatePaymentRet = transactionDao.updatePayment(newPayment);
+        if (!updatePaymentRet.getCode().equals(ReturnNo.OK)){
+            return updatePaymentRet;
+        }
+        ReturnObject newPaymentRet = transactionDao.getPaymentById(paymentId);
+        if (!newPaymentRet.getCode().equals(ReturnNo.OK)){
+            return newPaymentRet;
+        }
+        PaymentRetVo paymentRetVo = cloneVo(newPaymentRet.getData(), PaymentRetVo.class);
+        return new ReturnObject(paymentRetVo);
     }
     /**
      * 6.顾客请求支付
@@ -316,7 +335,7 @@ public class TransactionService {
      * fz
      * */
     @Transactional(rollbackFor = Exception.class)
-    public ReturnObject updateErrorAccount(Long id, ErrorAccountUpdateVo updateVo){
+    public ReturnObject updateErrorAccount(Long adminId, String adminName, Long id, ErrorAccountUpdateVo updateVo){
         ReturnObject ret = transactionDao.getErrorAccount(id);
         if (!ret.getCode().equals(ReturnNo.OK)){
             return ret;
@@ -327,6 +346,7 @@ public class TransactionService {
         }
         po.setDescr(updateVo.getDescr());
         po.setState(updateVo.getState());
+        setPoModifiedFields(po,adminId,adminName);
         ReturnObject updRet = transactionDao.updateErrorAccount(po);
         if (!updRet.getCode().equals(ReturnNo.OK)){
             return ret;

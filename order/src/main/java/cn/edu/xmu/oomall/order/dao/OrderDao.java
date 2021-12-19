@@ -200,6 +200,7 @@ public class OrderDao {
             if (endTime != null){
                 cr.andConfirmTimeLessThanOrEqualTo(endTime);
             }
+            orderPoExample.setOrderByClause("gmt_create DESC");
             List<OrderPo> orderPoList = orderPoMapper.selectByExample(orderPoExample);
             ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo(orderPoList));
             return Common.getPageRetVo(ret, BriefOrderVo.class);

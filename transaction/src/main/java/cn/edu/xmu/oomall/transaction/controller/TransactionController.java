@@ -18,6 +18,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 
 import cn.edu.xmu.oomall.core.util.Common;
@@ -66,7 +67,20 @@ public class TransactionController {
     public Object listAllPaymentStates(){
         return Common.decorateReturnObject(transactionService.listAllPaymentStates());
     }
-    //TODO:5.顾客支付已建立的支付单
+
+    /**
+     * @author fz
+     * 顾客支付已建立的支付单
+     * */
+    @PutMapping("/payments/{pid}/pay")
+    public Object paymentPayedByCustomer(@LoginUser Long userId,
+                                         @PathVariable("pid") Long pid,
+                                         @Validated @RequestBody PaymentBePayedVo payedVo, BindingResult bindingResult){
+        if (bindingResult.hasErrors()) {
+            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
+        }
+        return Common.decorateReturnObject(transactionService.paymentPayedByCustomer(pid,userId,payedVo));
+    }
 
     /**
      * 6.顾客请求支付
@@ -269,11 +283,11 @@ public class TransactionController {
                                               @LoginUser Long adminId,
                                               @RequestParam(value = "documentId", required = false) String documentId,
                                               @RequestParam(value = "state", required = false) Byte state,
-                                              @RequestParam(value = "beginTime", required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime beginTime,
-                                              @RequestParam(value = "endTime", required = false)@DateTimeFormat(pattern = MyDateTime.DATE_TIME_FORMAT) LocalDateTime endTime,
+                                              @RequestParam(value = "beginTime", required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime beginTime,
+                                              @RequestParam(value = "endTime", required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endTime,
                                               @RequestParam(value = "page", required = false) Integer page,
                                               @RequestParam(value = "pageSize", required = false) Integer pageSize){
-        if (endTime == null){
+        if (endTime == null || beginTime == null){
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
         }
         if (shopId != 0){
@@ -282,7 +296,7 @@ public class TransactionController {
         if (beginTime.isAfter(endTime)){
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
         }
-        return Common.decorateReturnObject(transactionService.listErrorAccountsByConditions(documentId,state,beginTime,endTime,page,pageSize));
+        return Common.decorateReturnObject(transactionService.listErrorAccountsByConditions(documentId,state,beginTime.toLocalDateTime(),endTime.toLocalDateTime(),page,pageSize));
     }
 
     /**
@@ -292,8 +306,7 @@ public class TransactionController {
     @GetMapping("/shops/{shopId}/erroraccounts/{id}")
     @Audit(departName = "payment")
     public Object getDetailedErrorAccountByAdmin(@PathVariable("shopId") Long shopId,
-                                                 @PathVariable("id") Long id,
-                                                 @LoginUser Long userId){
+                                                 @PathVariable("id") Long id){
         if (shopId!=0){
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
@@ -305,10 +318,13 @@ public class TransactionController {
      * 15.平台管理员修改错账信息
      * */
     @PostMapping("/shops/{shopId}/erroraccounts/{id}")
+    @Audit(departName = "payment")
     public Object updateErrorAccountByAdmin(@PathVariable("shopId") Long shopId,
                                             @PathVariable("id") Long id,
+                                            @LoginUser Long adminId,
+                                            @LoginUser String adminName,
                                             @RequestBody ErrorAccountUpdateVo updateVo){
-        return Common.decorateReturnObject(transactionService.updateErrorAccount(id, updateVo));
+        return Common.decorateReturnObject(transactionService.updateErrorAccount(adminId, adminName, id, updateVo));
     }
     @GetMapping("/shops/{id}/reconciliation")
     public Object reconciliation(@PathVariable("id") Long id,
