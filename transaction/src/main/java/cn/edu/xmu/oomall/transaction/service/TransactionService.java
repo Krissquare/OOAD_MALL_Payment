@@ -415,6 +415,8 @@ public class TransactionService {
 
         return new ReturnObject<>(ReturnNo.OK);
     }
+
+
     public ReturnObject reconciliation(LocalDateTime beginTime,LocalDateTime endTime){
         //支付宝对账
         TransactionPattern pattern = transactionPatternFactory.getPatternInstance(1L);
@@ -436,7 +438,4 @@ public class TransactionService {
         reconciliationRetVo.setExtra(aliPay.getExtra()+wechatPay.getExtra());
         return new ReturnObject(reconciliationRetVo);
     }
-
-
-
 }
