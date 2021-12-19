@@ -175,9 +175,6 @@ public class TransactionDao {
                 cr.andRefundTimeLessThan(endTime);
             }
             List<RefundPo> refundPoList = refundPoMapper.selectByExample(refundPoExample);
-            if (refundPoList.size() == 0) {
-                return new ReturnObject(ReturnNo.RESOURCE_ID_NOTEXIST);
-            }
             ReturnObject<PageInfo<Object>> ret = new ReturnObject(new PageInfo(refundPoList));
             return Common.getPageRetVo(ret, RefundRetVo.class);
         } catch (Exception e) {

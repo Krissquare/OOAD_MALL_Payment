@@ -12,10 +12,10 @@ import cn.edu.xmu.oomall.transaction.util.TransactionPattern;
 import cn.edu.xmu.oomall.transaction.util.TransactionPatternFactory;
 import cn.edu.xmu.oomall.transaction.util.file.FileUtil;
 import cn.edu.xmu.oomall.transaction.util.file.bo.WechatTypeState;
-import cn.edu.xmu.oomall.transaction.util.file.vo.AliPayFormat;
 import cn.edu.xmu.oomall.transaction.util.file.vo.WechatFormat;
-import cn.edu.xmu.oomall.transaction.util.mq.ActiveQueryMessage;
 import cn.edu.xmu.oomall.transaction.util.mq.MessageProducer;
+import cn.edu.xmu.oomall.transaction.util.mq.PaymentQueryMessage;
+import cn.edu.xmu.oomall.transaction.util.mq.RefundQueryMessage;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.WechatMicroService;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.vo.*;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatRefundState;
@@ -41,14 +41,12 @@ public class WechatTransaction extends TransactionPattern {
     @Autowired
     private TransactionDao transactionDao;
 
-    @Autowired
-    private TransactionPatternFactory transactionPatternFactory;
 
 
     @Override
-    public void requestPayment(String requestNo, PaymentBill bill) {
+    public void requestPayment(PaymentBill bill) {
         WechatPaymentVo paymentVo = new WechatPaymentVo();
-        paymentVo.setOutTradeNo(requestNo);
+        paymentVo.setOutTradeNo(bill.getOutTradeNo());
         paymentVo.getAmount().setTotal(bill.getAmount());
 
      //   WechatPaymentRetVo ret = wechatMicroService.requestPayment(paymentVo);
@@ -56,25 +54,20 @@ public class WechatTransaction extends TransactionPattern {
 
         // prepayId暂时没用
         // 发送主动查询支付的延时消息
-        ActiveQueryMessage queryMessage = new ActiveQueryMessage();
-        queryMessage.setMessageType(ActiveQueryMessage.QueryMessageType.QUERY_PAYMENT);
-        queryMessage.setRequestNo(requestNo);
-        queryMessage.setPatternId(bill.getPatternId());
-        queryMessage.setBill(bill);
-        messageProducer.sendActiveQueryDelayedMessage(queryMessage);
+        PaymentQueryMessage paymentQueryMessage = new PaymentQueryMessage();
+        paymentQueryMessage.setPaymentBill(bill);
+        messageProducer.sendPaymentQueryDelayedMessage(paymentQueryMessage);
     }
 
     @Override
-    public void requestRefund(String requestNo, RefundBill bill) {
+    public void requestRefund(RefundBill bill) {
         WechatRefundVo refundVo = new WechatRefundVo();
-        refundVo.setOutRefundNo(requestNo);
-        refundVo.setOutTradeNo(bill.getPaymentId().toString());
+        refundVo.setOutRefundNo(bill.getOutRefundNo());
+        refundVo.setOutTradeNo(bill.getOutTradeNo());
         refundVo.setReason(bill.getReason());
         refundVo.getAmount().setRefund(bill.getAmount());
-        refundVo.getAmount().setTotal(bill.getTotal());
 
        WechatReturnObject<WechatRefundRetVo> ret = wechatMicroService.requestRefund(refundVo);
-
 
        if (ret != null) {
            WechatRefundRetVo wechatRefundRetVo = ret.getData();
@@ -84,46 +77,38 @@ public class WechatTransaction extends TransactionPattern {
            } else {
                refund.setState(RefundState.FAILED.getCode());
            }
-           String refundId = (String) transactionPatternFactory
-                   .decodeRequestNo(requestNo).get("id");
-           refund.setId(Long.parseLong(refundId));
+           Long refundId = bill.getRelatedRefund().getId();
+           refund.setId(refundId);
            refund.setRefundTime(wechatRefundRetVo.getSuccessTime());
            refund.setTradeSn(wechatRefundRetVo.getTransactionId());
            transactionDao.updateRefund(refund);
        } else {
            // 未接受到数据的情况下
            // 发送主动查询退款的延时消息
-           ActiveQueryMessage queryMessage = new ActiveQueryMessage();
-           queryMessage.setMessageType(ActiveQueryMessage.QueryMessageType.QUERT_REFUND);
-           queryMessage.setRequestNo(requestNo);
-           queryMessage.setOutTradeNo(bill.getPaymentId().toString());
-           queryMessage.setPatternId(bill.getPatternId());
-           queryMessage.setBill(bill);
-           messageProducer.sendActiveQueryDelayedMessage(queryMessage);
+           // 发送主动查询退款的延时消息
+           RefundQueryMessage refundQueryMessage = new RefundQueryMessage();
+           refundQueryMessage.setRefundBill(bill);
+           messageProducer.sendRefundQueryDelayedMessage(refundQueryMessage);
        }
     }
 
     @Override
-    public void queryPayment(String requestNo, PaymentBill bill) {
-        String paymentId = (String) transactionPatternFactory
-                .decodeRequestNo(requestNo).get("id");
-
-        ReturnObject<Payment> retPayment = transactionDao.getPaymentById(Long.parseLong(paymentId));
+    public void queryPayment(PaymentBill bill) {
+        Long paymentId = bill.getRelatedPayment().getId();
+        ReturnObject<Payment> retPayment = transactionDao.getPaymentById(paymentId);
         if (retPayment.getCode().equals(ReturnNo.OK)) {
             // 待支付的情况下，才主动查询
             if (retPayment.getData().getState().equals(PaymentState.WAIT_PAY.getCode())) {
                 {
                     WechatReturnObject<WechatPaymentQueryRetVo> wechatReturnObject
-                            = wechatMicroService.queryPayment(requestNo);
+                            = wechatMicroService.queryPayment(bill.getOutTradeNo());
                     WechatPaymentQueryRetVo wechatPaymentQueryRetVo = wechatReturnObject.getData();
                     Payment payment = new Payment();
                     if (wechatPaymentQueryRetVo.getTradeState().equals(WechatTradeState.NOTPAY.getState())) {
                         // 发送主动查询支付的延时消息
-                        ActiveQueryMessage queryMessage = new ActiveQueryMessage();
-                        queryMessage.setMessageType(ActiveQueryMessage.QueryMessageType.QUERY_PAYMENT);
-                        queryMessage.setRequestNo(requestNo);
-                        queryMessage.setPatternId(bill.getPatternId());
-                        messageProducer.sendActiveQueryDelayedMessage(queryMessage);
+                        PaymentQueryMessage paymentQueryMessage = new PaymentQueryMessage();
+                        paymentQueryMessage.setPaymentBill(bill);
+                        messageProducer.sendPaymentQueryDelayedMessage(paymentQueryMessage);
                     }
                     else if (wechatPaymentQueryRetVo.getTradeState().equals(WechatTradeState.CLOSED.getState())) {
                         // 已关闭
@@ -133,7 +118,7 @@ public class WechatTransaction extends TransactionPattern {
                         payment.setState(PaymentState.ALREADY_PAY.getCode());
                     }
 
-                    payment.setId(Long.parseLong(paymentId));
+                    payment.setId(paymentId);
                     payment.setPayTime(wechatPaymentQueryRetVo.getSuccessTime());
                     payment.setTradeSn(wechatPaymentQueryRetVo.getTransactionId());
                     payment.setActualAmount(wechatPaymentQueryRetVo.getAmount().getPayerTotal());
@@ -144,14 +129,14 @@ public class WechatTransaction extends TransactionPattern {
     }
 
     @Override
-    public void queryRefund(String requestNo, RefundBill bill) {
-        String refundId = (String) transactionPatternFactory
-                .decodeRequestNo(requestNo).get("id");
-        ReturnObject<Refund> retRefund = transactionDao.getRefundById(Long.parseLong(refundId));
+    public void queryRefund(RefundBill bill) {
+        Long refundId = bill.getRelatedRefund().getId();
+        ReturnObject<Refund> retRefund = transactionDao.getRefundById(refundId);
 
         if (retRefund.getCode().equals(ReturnNo.OK)) {
             if (retRefund.getData().getState().equals(RefundState.WAIT_REFUND.getCode())) {
-                WechatReturnObject<WechatRefundQueryRetVo> wechatReturnObject = wechatMicroService.queryRefund(requestNo);
+                WechatReturnObject<WechatRefundQueryRetVo> wechatReturnObject =
+                        wechatMicroService.queryRefund(bill.getOutRefundNo());
                 WechatRefundQueryRetVo wechatRefundQueryRetVo = wechatReturnObject.getData();
                 Refund refund = new Refund();
                 if (wechatRefundQueryRetVo.getStatus().equals(WechatRefundState.SUCCESS.getState())) {
@@ -160,23 +145,28 @@ public class WechatTransaction extends TransactionPattern {
                     refund.setState(RefundState.FAILED.getCode());
                 }
 
-                refund.setId(Long.parseLong(refundId));
+                refund.setId(refundId);
                 refund.setRefundTime(wechatRefundQueryRetVo.getSuccessTime());
                 refund.setTradeSn(wechatRefundQueryRetVo.getTransactionId());
                 transactionDao.updateRefund(refund);
             }
         }
     }
+
+
     @Override
     public void closeTransaction(String requestNo){
         wechatMicroService.closeTransaction(requestNo);
     }
+
     @Override
     public String getFundFlowBill(String billDate){
         WechatReturnObject<WeChatPayFundFlowBillRetVo> wechatReturnObject=wechatMicroService.getFundFlowBill(billDate);
         WeChatPayFundFlowBillRetVo weChatPayFundFlowBillRetVo=wechatReturnObject.getData();
         return weChatPayFundFlowBillRetVo.getDownloadUrl();
     }
+
+
     @Override
     public ReturnObject reconciliation(LocalDateTime beginTime,LocalDateTime endTime){
         Integer success=0;

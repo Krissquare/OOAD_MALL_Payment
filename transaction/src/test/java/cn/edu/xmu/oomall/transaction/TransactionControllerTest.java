@@ -290,7 +290,6 @@ public class TransactionControllerTest {
         refundVo.setDescr("售后退款噢");
         refundVo.setDocumentId("订单号噢");
         refundVo.setDocumentType((byte)0);
-        refundVo.setPatternId(0L);
         refundVo.setPaymentId(1L);
         String requestJSON = JacksonUtil.toJson(refundVo);
         String responseString = this.mvc.perform(post("/internal/refunds")

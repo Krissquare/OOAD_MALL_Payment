@@ -9,7 +9,6 @@ import cn.edu.xmu.oomall.transaction.model.vo.ReconciliationRetVo;
 import cn.edu.xmu.oomall.transaction.util.PaymentBill;
 import cn.edu.xmu.oomall.transaction.util.RefundBill;
 import cn.edu.xmu.oomall.transaction.util.TransactionPattern;
-import cn.edu.xmu.oomall.transaction.util.TransactionPatternFactory;
 import cn.edu.xmu.oomall.transaction.util.alipay.microservice.AlipayMicroService;
 import cn.edu.xmu.oomall.transaction.util.alipay.microservice.vo.*;
 import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayMethod;
@@ -17,16 +16,18 @@ import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayRefundState;
 import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayTradeState;
 import cn.edu.xmu.oomall.transaction.util.file.FileUtil;
 import cn.edu.xmu.oomall.transaction.util.file.vo.AliPayFormat;
-import cn.edu.xmu.oomall.transaction.util.mq.ActiveQueryMessage;
+
 import cn.edu.xmu.oomall.transaction.util.mq.MessageProducer;
+import cn.edu.xmu.oomall.transaction.util.mq.PaymentQueryMessage;
+import cn.edu.xmu.oomall.transaction.util.mq.RefundQueryMessage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Component
+@Service
 public class AlipayTransaction extends TransactionPattern {
 
     @Autowired
@@ -38,17 +39,13 @@ public class AlipayTransaction extends TransactionPattern {
     @Autowired
     private TransactionDao transactionDao;
 
-    @Autowired
-    private TransactionPatternFactory transactionPatternFactory;
-
-
     @Override
-    public void requestPayment(String requestNo, PaymentBill bill) {
+    public void requestPayment(PaymentBill bill) {
         AlipayPaymentVo paymentVo = new AlipayPaymentVo();
-        paymentVo.setOutTradeNo(requestNo);
+        paymentVo.setOutTradeNo(bill.getOutTradeNo());
         paymentVo.setTotalAmount(bill.getAmount());
 
-        Object object = alipayMicroService.gatewayDo(null,
+        WarpRetObject warpRetObject = alipayMicroService.gatewayDo(null,
                 AlipayMethod.PAY.getMethod(),
                 null,
                 null,
@@ -57,25 +54,23 @@ public class AlipayTransaction extends TransactionPattern {
                 null,
                 null,
                 JacksonUtil.toJson(paymentVo));
+        AlipayPaymentRetVo alipayPaymentRetVo = warpRetObject.getAlipayPaymentRetVo();
 
-       // AlipayPaymentRetVo alipayPaymentRetVo = warpRetObject.getAlipayPaymentRetVo();
-        ActiveQueryMessage queryMessage = new ActiveQueryMessage();
-        queryMessage.setMessageType(ActiveQueryMessage.QueryMessageType.QUERY_PAYMENT);
-        queryMessage.setRequestNo(requestNo);
-        queryMessage.setPatternId(bill.getPatternId());
-        queryMessage.setBill(bill);
-        messageProducer.sendActiveQueryDelayedMessage(queryMessage);
+        PaymentQueryMessage paymentQueryMessage = new PaymentQueryMessage();
+        paymentQueryMessage.setPaymentBill(bill);
+        messageProducer.sendPaymentQueryDelayedMessage(paymentQueryMessage);
+
     }
 
     @Override
-    public void requestRefund(String requestNo, RefundBill bill) {
+    public void requestRefund(RefundBill bill) {
         AlipayRefundVo refundVo = new AlipayRefundVo();
-        refundVo.setOutTradeNo(bill.getPaymentId().toString());
-        refundVo.setOutRequestNo(requestNo);
+        refundVo.setOutTradeNo(bill.getOutTradeNo());
+        refundVo.setOutRequestNo(bill.getOutRefundNo());
         refundVo.setRefundAmount(bill.getAmount());
 
-        AlipayRefundRetVo alipayRefundRetVo = (AlipayRefundRetVo) alipayMicroService.gatewayDo(null,
-                AlipayMethod.QUERY_REFUND.getMethod(),
+        WarpRetObject warpRetObject = alipayMicroService.gatewayDo(null,
+                AlipayMethod.REFUND.getMethod(),
                 null,
                 null,
                 null,
@@ -83,6 +78,7 @@ public class AlipayTransaction extends TransactionPattern {
                 null,
                 null,
                 JacksonUtil.toJson(refundVo));
+        AlipayRefundRetVo alipayRefundRetVo = warpRetObject.getAlipayRefundRetVo();
 
         // 同步处理，在支持退款的情况下
 //        if (alipayRefundRetVo != null
@@ -92,31 +88,26 @@ public class AlipayTransaction extends TransactionPattern {
 // 同步回传没有成功时间，还是靠主动查询吧
 //        }
 
-
         // 发送主动查询退款的延时消息
-        ActiveQueryMessage queryMessage = new ActiveQueryMessage();
-        queryMessage.setMessageType(ActiveQueryMessage.QueryMessageType.QUERT_REFUND);
-        queryMessage.setRequestNo(requestNo);
-        queryMessage.setOutTradeNo(bill.getPaymentId().toString());
-        queryMessage.setPatternId(bill.getPatternId());
-        queryMessage.setBill(bill);
-        messageProducer.sendActiveQueryDelayedMessage(queryMessage);
+        RefundQueryMessage refundQueryMessage = new RefundQueryMessage();
+        refundQueryMessage.setRefundBill(bill);
+        messageProducer.sendRefundQueryDelayedMessage(refundQueryMessage);
     }
 
 
     @Override
-    public void queryPayment(String requestNo, PaymentBill bill) {
-        String paymentId = (String) transactionPatternFactory
-                .decodeRequestNo(requestNo).get("id");
+    public void queryPayment(PaymentBill bill) {
+        Long paymentId = bill.getRelatedPayment().getId();
+        ReturnObject<Payment> retPayment = transactionDao.getPaymentById(paymentId);
 
-        ReturnObject<Payment> retPayment = transactionDao.getPaymentById(Long.parseLong(paymentId));
         if (retPayment.getCode().equals(ReturnNo.OK)) {
             // 待支付的情况下，才主动查询
             if (retPayment.getData().getState().equals(PaymentState.WAIT_PAY.getCode())) {
                 AlipayPaymentQueryVo queryVo = new AlipayPaymentQueryVo();
-                queryVo.setOutTradeNo(requestNo);
+                queryVo.setOutTradeNo(bill.getOutTradeNo());
 
-                AlipayPaymentQueryRetVo alipayPaymentQueryRetVo = (AlipayPaymentQueryRetVo) alipayMicroService.gatewayDo(null,
+                WarpRetObject warpRetObject = alipayMicroService.gatewayDo(
+                        null,
                         AlipayMethod.QUERY_PAY.getMethod(),
                         null,
                         null,
@@ -125,15 +116,14 @@ public class AlipayTransaction extends TransactionPattern {
                         null,
                         null,
                         JacksonUtil.toJson(queryVo));
+                AlipayPaymentQueryRetVo alipayPaymentQueryRetVo = warpRetObject.getAlipayPaymentQueryRetVo();
 
                 Payment payment = new Payment();
                 if (alipayPaymentQueryRetVo.getTradeStatus().equals(AlipayTradeState.WAIT_BUYER_PAY.getDescription())) {
                     // 发送主动查询支付的延时消息
-                    ActiveQueryMessage queryMessage = new ActiveQueryMessage();
-                    queryMessage.setMessageType(ActiveQueryMessage.QueryMessageType.QUERY_PAYMENT);
-                    queryMessage.setRequestNo(requestNo);
-                    queryMessage.setPatternId(bill.getPatternId());
-                    messageProducer.sendActiveQueryDelayedMessage(queryMessage);
+                    PaymentQueryMessage paymentQueryMessage = new PaymentQueryMessage();
+                    paymentQueryMessage.setPaymentBill(bill);
+                    messageProducer.sendPaymentQueryDelayedMessage(paymentQueryMessage);
                 }
                 else if (alipayPaymentQueryRetVo.getTradeStatus().equals(AlipayTradeState.TRADE_CLOSED.getDescription())) {
                     // 已关闭
@@ -145,7 +135,7 @@ public class AlipayTransaction extends TransactionPattern {
                     payment.setState(PaymentState.ALREADY_PAY.getCode());
                 }
 
-                payment.setId(Long.parseLong(paymentId));
+                payment.setId(paymentId);
                 payment.setPayTime(alipayPaymentQueryRetVo.getSendPayDate());
                 payment.setTradeSn(alipayPaymentQueryRetVo.getTradeNo());
                 payment.setActualAmount(alipayPaymentQueryRetVo.getBuyerPayAmount());
@@ -155,19 +145,17 @@ public class AlipayTransaction extends TransactionPattern {
     }
 
     @Override
-    public void queryRefund(String requestNo , RefundBill bill) {
-
-        String refundId = (String) transactionPatternFactory
-                .decodeRequestNo(requestNo).get("id");
-        ReturnObject<Refund> retRefund = transactionDao.getRefundById(Long.parseLong(refundId));
+    public void queryRefund(RefundBill bill) {
+        Long refundId = bill.getRelatedRefund().getId();
+        ReturnObject<Refund> retRefund = transactionDao.getRefundById(refundId);
 
         if (retRefund.getCode().equals(ReturnNo.OK)) {
             if (retRefund.getData().getState().equals(RefundState.WAIT_REFUND.getCode())) {
                 AlipayRefundQueryVo queryVo = new AlipayRefundQueryVo();
-                queryVo.setOutRequestNo(requestNo);
-                queryVo.setOutTradeNo(bill.getPaymentId().toString());
+                queryVo.setOutRequestNo(bill.getOutRefundNo());
+                queryVo.setOutTradeNo(bill.getOutTradeNo());
 
-                AlipayRefundQueryRetVo alipayRefundQueryRetVo = (AlipayRefundQueryRetVo) alipayMicroService.gatewayDo(null,
+                WarpRetObject warpRetObject = alipayMicroService.gatewayDo(null,
                         AlipayMethod.QUERY_REFUND.getMethod(),
                         null,
                         null,
@@ -176,21 +164,25 @@ public class AlipayTransaction extends TransactionPattern {
                         null,
                         null,
                         JacksonUtil.toJson(queryVo));
+                AlipayRefundQueryRetVo alipayRefundQueryRetVo = warpRetObject.getAlipayRefundQueryRetVo();
 
                 Refund refund = new Refund();
-                if (alipayRefundQueryRetVo.getRefundStatus().equals(AlipayRefundState.REFUND_SUCCESS.getDescription())) {
+                if (alipayRefundQueryRetVo.getRefundStatus() != null &&
+                        alipayRefundQueryRetVo.getRefundStatus().equals(AlipayRefundState.REFUND_SUCCESS.getDescription())) {
                     refund.setState(RefundState.FINISH_REFUND.getCode());
                 } else {
                     refund.setState(RefundState.FAILED.getCode());
                 }
 
-                refund.setId(Long.parseLong(refundId));
+                refund.setId(refundId);
                 refund.setRefundTime(alipayRefundQueryRetVo.getGmtRefundPay());
                 refund.setTradeSn(alipayRefundQueryRetVo.getTradeNo());
                 transactionDao.updateRefund(refund);
             }
         }
     }
+
+
     @Override
     public void closeTransaction(String requestNo){
         AlipayPaymentQueryVo queryVo = new AlipayPaymentQueryVo();
@@ -208,7 +200,7 @@ public class AlipayTransaction extends TransactionPattern {
 
     @Override
     public String getFundFlowBill(String billDate){
-        DownloadUrlQueryRetVo downloadUrlQueryRetVo = (DownloadUrlQueryRetVo) alipayMicroService.gatewayDo(null,
+        WarpRetObject warpRetObject = alipayMicroService.gatewayDo(null,
                 AlipayMethod.QUERY_DOWNLOAD_BILL.getMethod(),
                 null,
                 null,
@@ -217,6 +209,7 @@ public class AlipayTransaction extends TransactionPattern {
                 null,
                 null,
                 null);
+        DownloadUrlQueryRetVo downloadUrlQueryRetVo = warpRetObject.getDownloadUrlQueryRetVo();
         return downloadUrlQueryRetVo.getBillDownloadUrl();
     }
     @Override
