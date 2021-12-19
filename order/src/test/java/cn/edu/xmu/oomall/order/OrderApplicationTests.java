@@ -115,10 +115,10 @@ class OrderApplicationTests {
                         .header("authorization", token)
                         .contentType("application/json;charset=UTF-8")
                         .content(requestJSON))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectString = "";
+        String expectString = "{\"orderItems\":[{\"productId\":1550,\"onsaleId\":1,\"quantity\":10,\"couponActId\":null,\"couponId\":null,\"price\":null,\"name\":null}],\"consignee\":\"lxc\",\"regionId\":1,\"address\":\"厦门大学\",\"mobile\":\"15165666666\",\"message\":\"没有留言\",\"advancesaleId\":null,\"grouponId\":null,\"customerId\":666,\"point\":100}";
         JSONAssert.assertEquals(expectString, responseString, true);
     }
 
@@ -178,7 +178,7 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        String expected = "{\"errno\":0,\"data\":{\"total\":13,\"pages\":2,\"pageSize\":10,\"page\":1,\"list\":[{\"id\":2,\"customerId\":1,\"shopId\":1,\"pid\":1,\"state\":null,\"gmtCreate\":\"2021-12-02T16:41:29\",\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":9,\"customerId\":4,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-02T17:18:19\",\"originPrice\":280,\"discountPrice\":15,\"expressFee\":6,\"point\":12,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":\"36527364532\"},{\"id\":33,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T21:22:32\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":34,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T21:45:29\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":35,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T21:52:38\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":36,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:41:57\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":37,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:49:16\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":38,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:51:11\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":39,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:52:53\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":40,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T23:23:18\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null}]},\"errmsg\":\"成功\"}";
+        String expected = "{\"errno\":0,\"data\":{\"total\":18,\"pages\":2,\"pageSize\":10,\"page\":1,\"list\":[{\"id\":2,\"customerId\":1,\"shopId\":1,\"pid\":1,\"state\":null,\"gmtCreate\":\"2021-12-02T16:41:29\",\"originPrice\":50,\"discountPrice\":5,\"expressFee\":null,\"point\":3,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":9,\"customerId\":4,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-02T17:18:19\",\"originPrice\":280,\"discountPrice\":15,\"expressFee\":6,\"point\":12,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":\"36527364532\"},{\"id\":33,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T21:22:32\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":34,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T21:45:29\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":35,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T21:52:38\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":36,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:41:57\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":37,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:49:16\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":38,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:51:11\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":39,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T22:52:53\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null},{\"id\":40,\"customerId\":1,\"shopId\":1,\"pid\":0,\"state\":null,\"gmtCreate\":\"2021-12-16T23:23:18\",\"originPrice\":0,\"discountPrice\":0,\"expressFee\":null,\"point\":0,\"grouponId\":null,\"advancesaleId\":null,\"shipmentSn\":null}]},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expected, responseString, true);
     }
 
@@ -363,15 +363,14 @@ class OrderApplicationTests {
                 "  \"address\": \"update-test-address\",\n" +
                 "  \"mobile\": \"13822223333\"\n" +
                 "}";
-        String response = this.mvc.perform(MockMvcRequestBuilders.put("/orders/10")
-                        .header("authorization",token4)
-                        .contentType("application/json;charset=UTF-8")
-                        .content(voStr))
+        String responseString = this.mvc.perform(MockMvcRequestBuilders.put("/orders/10")
+                .header("authorization", token4)
+                .contentType("application/json;charset=UTF-8").content(voStr))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         String expected = "{\"errno\":507,\"errmsg\":\"当前状态禁止此操作\"}";
-        JSONAssert.assertEquals(expected, response, true);
+        JSONAssert.assertEquals(expected, responseString, true);
     }
     /**
      * orderId查item
