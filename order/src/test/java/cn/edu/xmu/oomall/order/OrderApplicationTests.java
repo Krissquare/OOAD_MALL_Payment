@@ -329,8 +329,8 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse = "{\"errno\":0,\"data\":[{\"id\":1,\"tradeSn\":\"34564322\",\"patternId\":1,\"amount\":5,\"state\":1,\"documentId\":\"20216453652635231006\",\"documentType\":0}],\"errmsg\":\"成功\"}";
-        JSONAssert.assertEquals(expectedResponse, responseString, true);
+        String expectedResponse = "{\"errno\":0,\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expectedResponse, responseString, false);
     }
 
     @Test
@@ -365,7 +365,7 @@ class OrderApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
-        String expectedResponse = "{\"errno\":0,\"data\":{\"id\":2,\"tradeSn\":\"7363522132\",\"patternId\":0,\"documentId\":null,\"documentType\":0,\"descr\":null,\"amount\":195,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-02T16:51:38\",\"beginTime\":null,\"endTime\":null},\"errmsg\":\"成功\"}";
+        String expectedResponse = "{\"errno\":0,\"data\":{\"id\":2,\"tradeSn\":\"7363522132\",\"patternId\":0,\"documentId\":\"20216489872635231004\",\"documentType\":0,\"descr\":null,\"amount\":195,\"actualAmount\":null,\"state\":1,\"payTime\":\"2021-12-03T00:51:38.000+08:00\",\"beginTime\":null,\"endTime\":null},\"errmsg\":\"成功\"}";
         JSONAssert.assertEquals(expectedResponse, responseString, true);
     }
 
