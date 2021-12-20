@@ -128,6 +128,7 @@ public class OrderService {
             //验证orderItem的所有可能会不存在的id,以及组装orderitem
             for (SimpleOrderItemVo simpleOrderItemVo : orderItems) {
                 OrderItem orderItem = cloneVo(simpleOrderItemVo, OrderItem.class);
+                orderItem.setCouponActivityId(simpleOrderItemVo.getCouponActId());
                 // 判断productId是否存在
                 InternalReturnObject<ProductVo> productVo = goodsService.getProductDetails(simpleOrderItemVo.getProductId());
                 if (productVo.getErrno() != 0) {
@@ -167,7 +168,7 @@ public class OrderService {
                     }
                 }
                 orderItem.setShopId(productVo.getData().getShop().getId());
-                orderItem.setPrice(onSaleVo.getData().getPrice() * simpleOrderItemVo.getQuantity());
+                orderItem.setPrice(onSaleVo.getData().getPrice());
                 //如果是优惠 就重新set
                 orderItem.setDiscountPrice(0L);
                 orderItem.setName(productVo.getData().getName());

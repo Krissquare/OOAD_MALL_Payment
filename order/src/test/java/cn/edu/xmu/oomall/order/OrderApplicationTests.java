@@ -163,9 +163,25 @@ class OrderApplicationTests {
         JSONAssert.assertEquals(expectString, responseString, true);
     }
 
+    //带优惠券的
     @Test
     public void testAddOrder3() throws Exception {
-        //TODO:测试带优惠券参加优惠活动的
+        SimpleOrderVo simpleOrderVo = new SimpleOrderVo(null, "lxc", 1604L, "厦门大学", "15165666666", "没有留言",
+                null, null, 1L, 100L);
+        List<SimpleOrderItemVo> list = new ArrayList<>();
+        SimpleOrderItemVo simpleOrderItemVo = new SimpleOrderItemVo(1558L, 9L, 10L, 1L, 1L, null, null);
+        list.add(simpleOrderItemVo);
+        simpleOrderVo.setOrderItems(list);
+        String requestJSON = JacksonUtil.toJson(simpleOrderVo);
+        String responseString = mvc.perform(post("/orders")
+                        .header("authorization", token1)
+                        .contentType("application/json;charset=UTF-8")
+                        .content(requestJSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+        String expectString = "{\"errno\":0,\"errmsg\":\"成功\"}";
+        JSONAssert.assertEquals(expectString, responseString, true);
     }
 
     @Test
