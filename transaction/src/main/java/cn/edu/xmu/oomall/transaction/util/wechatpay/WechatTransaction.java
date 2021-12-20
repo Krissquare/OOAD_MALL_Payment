@@ -9,10 +9,9 @@ import cn.edu.xmu.oomall.transaction.model.vo.ReconciliationRetVo;
 import cn.edu.xmu.oomall.transaction.util.PaymentBill;
 import cn.edu.xmu.oomall.transaction.util.RefundBill;
 import cn.edu.xmu.oomall.transaction.util.TransactionPattern;
-import cn.edu.xmu.oomall.transaction.util.TransactionPatternFactory;
-import cn.edu.xmu.oomall.transaction.util.file.FileUtil;
-import cn.edu.xmu.oomall.transaction.util.file.bo.WechatTypeState;
-import cn.edu.xmu.oomall.transaction.util.file.vo.WechatFormat;
+import cn.edu.xmu.oomall.transaction.util.billformatter.FileUtil;
+import cn.edu.xmu.oomall.transaction.util.billformatter.bo.WechatTypeState;
+import cn.edu.xmu.oomall.transaction.util.billformatter.vo.WechatFormat;
 import cn.edu.xmu.oomall.transaction.util.mq.MessageProducer;
 import cn.edu.xmu.oomall.transaction.util.mq.PaymentQueryMessage;
 import cn.edu.xmu.oomall.transaction.util.mq.RefundQueryMessage;
@@ -48,7 +47,6 @@ public class WechatTransaction extends TransactionPattern {
         paymentVo.setOutTradeNo(bill.getOutTradeNo());
         paymentVo.getAmount().setTotal(bill.getAmount());
 
-     //   WechatPaymentRetVo ret = wechatMicroService.requestPayment(paymentVo);
         WechatReturnObject<WechatPaymentRetVo> wechatReturnObject = wechatMicroService.requestPayment(paymentVo);
 
         // prepayId暂时没用
@@ -153,72 +151,70 @@ public class WechatTransaction extends TransactionPattern {
 
 
     @Override
-    public void closeTransaction(String requestNo){
-        wechatMicroService.closeTransaction(requestNo);
+    public void closeTransaction(PaymentBill bill){
+        wechatMicroService.closeTransaction(bill.getOutTradeNo());
     }
 
     @Override
-    public String getFundFlowBill(String billDate){
-        WechatReturnObject<WeChatPayFundFlowBillRetVo> wechatReturnObject=wechatMicroService.getFundFlowBill(billDate);
-        WeChatPayFundFlowBillRetVo weChatPayFundFlowBillRetVo=wechatReturnObject.getData();
+    public String getFundFlowBill(String billDate) {
+        WechatReturnObject<WeChatPayFundFlowBillRetVo> wechatReturnObject = wechatMicroService.getFundFlowBill(billDate);
+        WeChatPayFundFlowBillRetVo weChatPayFundFlowBillRetVo = wechatReturnObject.getData();
         return weChatPayFundFlowBillRetVo.getDownloadUrl();
     }
 
 
     @Override
-    public ReturnObject reconciliation(LocalDateTime beginTime,LocalDateTime endTime){
-        Integer success=0;
-        Integer error=0;
-        Integer extra=0;
+    public ReturnObject reconciliation(LocalDateTime beginTime,LocalDateTime endTime) {
+        Integer success = 0;
+        Integer error = 0;
+        Integer extra = 0;
         //1.提取微信支付流水
-        String url=getFundFlowBill("这个没用");
+        String url = getFundFlowBill("这个没用");
         //TODO:拿到下载地址以后下载，得到zip
         FileUtil.unZip(new File("testfile/wechat/微信支付账单(20211011-20211211).zip"), "testfile/wechat");
         List<WechatFormat> list = FileUtil.wechatParsing(new File("testfile/wechat/微信支付账单(20211011-20211211)/微信支付账单(20211011-20211211).csv"));
         //2.遍历支付宝流水，进行对账
-        for(WechatFormat wechatFormat:list){
+        for (WechatFormat wechatFormat : list) {
             //时间不符
-            if(!(wechatFormat.getTradeCreateTime().isAfter(beginTime)&&wechatFormat.getTradeCreateTime().isBefore(endTime))){
+            if (!(wechatFormat.getTradeCreateTime().isAfter(beginTime) && wechatFormat.getTradeCreateTime().isBefore(endTime))) {
                 break;
             }
             //平台收入，对应Payment
-            if(wechatFormat.getType().equals(WechatTypeState.REFUND)){
-                ReturnObject returnObject=transactionDao.getPaymentByTradeSn(wechatFormat.getTradeNo());
-                if(!returnObject.getCode().equals(ReturnNo.OK)){
+            if (wechatFormat.getType().equals(WechatTypeState.REFUND)) {
+                ReturnObject returnObject = transactionDao.getPaymentByTradeSn(wechatFormat.getTradeNo());
+                if (!returnObject.getCode().equals(ReturnNo.OK)) {
                     return returnObject;
                 }
                 //商城没有：长账,插入错误账
-                if(returnObject.getData()==null){
-                    ErrorAccount errorAccount=new ErrorAccount();
+                if (returnObject.getData() == null) {
+                    ErrorAccount errorAccount = new ErrorAccount();
                     errorAccount.setTradeSn(wechatFormat.getTradeNo());
                     errorAccount.setPatternId(2L);
                     errorAccount.setIncome(wechatFormat.getAmount());
                     errorAccount.setExpenditure(0L);
-                    errorAccount.setState((byte)0);
+                    errorAccount.setState((byte) 0);
                     errorAccount.setTime(wechatFormat.getTradeCreateTime());
                     errorAccount.setDocumentId(wechatFormat.getOutTradeNo());
                     transactionDao.insertErrorAccount(errorAccount);
                     extra++;
-                }
-                else{
-                    Payment payment=(Payment)returnObject.getData();
+                } else {
+                    Payment payment = (Payment) returnObject.getData();
                     //相当于短账，不做处理
-                    if(!(payment.getPayTime().isAfter(beginTime)&&payment.getPayTime().isBefore(endTime))){
+                    if (!(payment.getPayTime().isAfter(beginTime) && payment.getPayTime().isBefore(endTime))) {
                         break;
                     }
                     //错账，插入错误账
-                    if(!payment.getActualAmount().equals(wechatFormat.getAmount())){
-                        ErrorAccount errorAccount=new ErrorAccount();
+                    if (!payment.getActualAmount().equals(wechatFormat.getAmount())) {
+                        ErrorAccount errorAccount = new ErrorAccount();
                         errorAccount.setTradeSn(wechatFormat.getTradeNo());
                         errorAccount.setPatternId(2L);
                         errorAccount.setIncome(wechatFormat.getAmount());
                         errorAccount.setExpenditure(0L);
-                        errorAccount.setState((byte)0);
+                        errorAccount.setState((byte) 0);
                         errorAccount.setTime(wechatFormat.getTradeCreateTime());
                         errorAccount.setDocumentId(wechatFormat.getOutTradeNo());
-                        ReturnObject returnObject1=transactionDao.insertErrorAccount(errorAccount);
-                        if(!returnObject1.getCode().equals(ReturnNo.OK.getCode()))
-                        {
+                        ReturnObject returnObject1 = transactionDao.insertErrorAccount(errorAccount);
+                        if (!returnObject1.getCode().equals(ReturnNo.OK.getCode())) {
                             return returnObject1;
                         }
                         error++;
@@ -226,54 +222,50 @@ public class WechatTransaction extends TransactionPattern {
                     //对账成功，更改状态
                     else {
                         payment.setState(PaymentState.ALREADY_RECONCILIATION.getCode());
-                        ReturnObject returnObject1=transactionDao.updatePayment(payment);
-                        if(!returnObject1.getCode().equals(ReturnNo.OK.getCode()))
-                        {
+                        ReturnObject returnObject1 = transactionDao.updatePayment(payment);
+                        if (!returnObject1.getCode().equals(ReturnNo.OK.getCode())) {
                             return returnObject1;
                         }
                         success++;
                     }
-
                 }
             }
             //平台支出，对应refund
-            else{
-                ReturnObject returnObject=transactionDao.getRefundByTradeSn(wechatFormat.getTradeNo());
-                if(!returnObject.getCode().equals(ReturnNo.OK)){
+            else {
+                ReturnObject returnObject = transactionDao.getRefundByTradeSn(wechatFormat.getTradeNo());
+                if (!returnObject.getCode().equals(ReturnNo.OK)) {
                     return returnObject;
                 }
                 //商城没有：长账，插入错误账
-                if(returnObject.getData()==null){
-                    ErrorAccount errorAccount=new ErrorAccount();
+                if (returnObject.getData() == null) {
+                    ErrorAccount errorAccount = new ErrorAccount();
                     errorAccount.setTradeSn(wechatFormat.getTradeNo());
                     errorAccount.setPatternId(2L);
                     errorAccount.setIncome(0L);
                     errorAccount.setExpenditure(wechatFormat.getAmount());
-                    errorAccount.setState((byte)0);
+                    errorAccount.setState((byte) 0);
                     errorAccount.setTime(wechatFormat.getTradeCreateTime());
                     errorAccount.setDocumentId(wechatFormat.getOutTradeNo());
                     transactionDao.insertErrorAccount(errorAccount);
                     extra++;
-                }
-                else{
-                    Refund refund=(Refund)returnObject.getData();
+                } else {
+                    Refund refund = (Refund) returnObject.getData();
                     //相当于短账，不做处理
-                    if(!(refund.getRefundTime().isAfter(beginTime)&&refund.getRefundTime().isBefore(endTime))){
+                    if (!(refund.getRefundTime().isAfter(beginTime) && refund.getRefundTime().isBefore(endTime))) {
                         break;
                     }
                     //错账，插入错误账
-                    if(!refund.getAmount().equals(wechatFormat.getAmount())){
-                        ErrorAccount errorAccount=new ErrorAccount();
+                    if (!refund.getAmount().equals(wechatFormat.getAmount())) {
+                        ErrorAccount errorAccount = new ErrorAccount();
                         errorAccount.setTradeSn(wechatFormat.getTradeNo());
                         errorAccount.setPatternId(2L);
                         errorAccount.setIncome(0L);
                         errorAccount.setExpenditure(wechatFormat.getAmount());
-                        errorAccount.setState((byte)0);
+                        errorAccount.setState((byte) 0);
                         errorAccount.setTime(wechatFormat.getTradeCreateTime());
                         errorAccount.setDocumentId(wechatFormat.getOutTradeNo());
-                        ReturnObject returnObject1=transactionDao.insertErrorAccount(errorAccount);
-                        if(!returnObject1.getCode().equals(ReturnNo.OK.getCode()))
-                        {
+                        ReturnObject returnObject1 = transactionDao.insertErrorAccount(errorAccount);
+                        if (!returnObject1.getCode().equals(ReturnNo.OK.getCode())) {
                             return returnObject1;
                         }
                         error++;
@@ -281,9 +273,8 @@ public class WechatTransaction extends TransactionPattern {
                     //对账成功，更改状态
                     else {
                         refund.setState(RefundState.FINISH_RECONCILIATION.getCode());
-                        ReturnObject returnObject1=transactionDao.updateRefund(refund);
-                        if(!returnObject1.getCode().equals(ReturnNo.OK.getCode()))
-                        {
+                        ReturnObject returnObject1 = transactionDao.updateRefund(refund);
+                        if (!returnObject1.getCode().equals(ReturnNo.OK.getCode())) {
                             return returnObject1;
                         }
                         success++;
@@ -294,11 +285,10 @@ public class WechatTransaction extends TransactionPattern {
             }
 
         }
-        ReconciliationRetVo reconciliationRetVo=new ReconciliationRetVo();
+        ReconciliationRetVo reconciliationRetVo = new ReconciliationRetVo();
         reconciliationRetVo.setError(error);
         reconciliationRetVo.setSuccess(success);
         reconciliationRetVo.setExtra(extra);
         return new ReturnObject(reconciliationRetVo);
-
     }
 }

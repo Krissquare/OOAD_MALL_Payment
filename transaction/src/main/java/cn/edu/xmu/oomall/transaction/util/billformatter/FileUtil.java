@@ -1,9 +1,9 @@
-package cn.edu.xmu.oomall.transaction.util.file;
+package cn.edu.xmu.oomall.transaction.util.billformatter;
 
-import cn.edu.xmu.oomall.transaction.util.file.bo.WechatState;
-import cn.edu.xmu.oomall.transaction.util.file.bo.WechatTypeState;
-import cn.edu.xmu.oomall.transaction.util.file.vo.AliPayFormat;
-import cn.edu.xmu.oomall.transaction.util.file.vo.WechatFormat;
+import cn.edu.xmu.oomall.transaction.util.billformatter.bo.WechatState;
+import cn.edu.xmu.oomall.transaction.util.billformatter.bo.WechatTypeState;
+import cn.edu.xmu.oomall.transaction.util.billformatter.vo.AliPayFormat;
+import cn.edu.xmu.oomall.transaction.util.billformatter.vo.WechatFormat;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
