@@ -560,7 +560,7 @@ public class OrderService {
             if (!ret3.getCode().equals(ReturnNo.OK)) {
                 return ret3;
             }
-            return orderDao.cancelRelatedOrder(order);
+            return orderDao.updateRelatedSonOrder(order);
         }
         return orderDao.updateOrder(order);
     }
@@ -758,7 +758,7 @@ public class OrderService {
             if (!ret3.getCode().equals(ReturnNo.OK)) {
                 return ret3;
             }
-            return orderDao.cancelRelatedOrder(order);
+            return orderDao.updateRelatedSonOrder(order);
         }
         return orderDao.updateOrder(order);
     }
