@@ -114,7 +114,7 @@ public class WechatService {
         RefundNotifyMessage message = new RefundNotifyMessage();
         String notifyState = wechatRefundNotifyVo.getResource().getCiphertext().getRefundStatus();
         if (notifyState.equals(WechatRefundState.ABNORMAL.getState())) {
-            message.setRefundState(RefundState.CANCEL_REFUND);
+            message.setRefundState(RefundState.FAILED);
         } else if (notifyState.equals(WechatTradeState.SUCCESS.getState())) {
             message.setRefundState(RefundState.FINISH_REFUND);
         }

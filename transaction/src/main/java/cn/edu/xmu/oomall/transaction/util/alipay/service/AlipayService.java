@@ -98,10 +98,11 @@ public class AlipayService {
 
     private RefundNotifyMessage createRefundNotifyMessage(AlipayNotifyVo alipayNotifyVo) {
         RefundNotifyMessage message = new RefundNotifyMessage();
-        if (alipayNotifyVo.getTradeStatus().equals(AlipayTradeState.TRADE_CLOSED.getDescription())) {
-            message.setRefundState(RefundState.CANCEL_REFUND);
-        } else if (alipayNotifyVo.getTradeStatus().equals(AlipayTradeState.TRADE_FINISHED.getDescription()) ||
-                alipayNotifyVo.getTradeStatus().equals(AlipayTradeState.TRADE_SUCCESS.getDescription())) {
+        if (alipayNotifyVo.getRefundFee() == null) {
+            // 退款失败
+            message.setRefundState(RefundState.FAILED);
+        } else {
+            // 退款成功
             message.setRefundState(RefundState.FINISH_REFUND);
         }
 
