@@ -19,27 +19,27 @@ public class WechatPaymentVo {
     public class TransactionAmountVo{
         // 由Integer修改为Long
         private Long total;
-        private String currency;
+        private String currency = "CNY";
     }
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public class PayerVo{
-        private String openid;
+        private String openid = "oUpF8uMuAJO_M2pxb1Q9zNjWeS6o";
     }
 
     @NotBlank
-    private String appid;
+    private String appid = "wxd678efh567hg6787";
 
     @NotBlank
-    private String mchid;
+    private String mchid = "1230000109";
 
     @NotBlank
-    private String description;
+    private String description = "Image形象店-深圳腾大-QQ公仔";
 
     @JsonFormat(shape = JsonFormat.Shape.STRING,pattern ="yyyy-MM-dd'T'HH:mm:ss.SSS" ,timezone = "GMT+8")
-    private LocalDateTime timeExpire;
+    private LocalDateTime timeExpire = LocalDateTime.now();
 
     @NotBlank
     private String outTradeNo;
@@ -51,6 +51,6 @@ public class WechatPaymentVo {
     private PayerVo payer = new PayerVo();
 
     @NotBlank
-    private String notifyUrl;
+    private String notifyUrl = "https://www.weixin.qq.com/wxpay/pay.php";
 
 }

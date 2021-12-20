@@ -22,7 +22,7 @@ public class WechatRefundNotifyVo {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public class Amount{
+    public static class Amount{
         private Integer total;
         private Integer refund;
         private Integer payerTotal;

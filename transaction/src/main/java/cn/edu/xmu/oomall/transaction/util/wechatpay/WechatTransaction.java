@@ -42,7 +42,6 @@ public class WechatTransaction extends TransactionPattern {
     private TransactionDao transactionDao;
 
 
-
     @Override
     public void requestPayment(PaymentBill bill) {
         WechatPaymentVo paymentVo = new WechatPaymentVo();
@@ -62,10 +61,12 @@ public class WechatTransaction extends TransactionPattern {
     @Override
     public void requestRefund(RefundBill bill) {
         WechatRefundVo refundVo = new WechatRefundVo();
+        WechatRefundVo.RefundAmountVo amountVo = new WechatRefundVo.RefundAmountVo();
         refundVo.setOutRefundNo(bill.getOutRefundNo());
         refundVo.setOutTradeNo(bill.getOutTradeNo());
         refundVo.setReason(bill.getReason());
-        refundVo.getAmount().setRefund(bill.getAmount());
+        amountVo.setRefund(bill.getAmount());
+        refundVo.setAmount(amountVo);
 
        WechatReturnObject<WechatRefundRetVo> ret = wechatMicroService.requestRefund(refundVo);
 
@@ -82,14 +83,11 @@ public class WechatTransaction extends TransactionPattern {
            refund.setRefundTime(wechatRefundRetVo.getSuccessTime());
            refund.setTradeSn(wechatRefundRetVo.getTransactionId());
            transactionDao.updateRefund(refund);
-       } else {
-           // 未接受到数据的情况下
-           // 发送主动查询退款的延时消息
-           // 发送主动查询退款的延时消息
-           RefundQueryMessage refundQueryMessage = new RefundQueryMessage();
-           refundQueryMessage.setRefundBill(bill);
-           messageProducer.sendRefundQueryDelayedMessage(refundQueryMessage);
        }
+        // 发送主动查询退款的延时消息
+        RefundQueryMessage refundQueryMessage = new RefundQueryMessage();
+        refundQueryMessage.setRefundBill(bill);
+        messageProducer.sendRefundQueryDelayedMessage(refundQueryMessage);
     }
 
     @Override

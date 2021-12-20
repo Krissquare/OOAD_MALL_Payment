@@ -2,11 +2,13 @@ package cn.edu.xmu.oomall.order.microservice.vo;
 
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 /**
  * @author xiuchen lang 22920192204222
@@ -15,18 +17,27 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AdvanceVo {
+public class AdvanceVo{
     private Long id;
+
     private String name;
+
     private SimpleVo shop;
-    private ProductSimpleVo product;
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS", timezone = "GMT+8")
-    private LocalDateTime payTime;
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS", timezone = "GMT+8")
-    private LocalDateTime beginTime;
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS", timezone = "GMT+8")
-    private LocalDateTime endTime;
+
+    private ProductVo product;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "uuuu-MM-dd'T'HH:mm:ss.SSSZZZZZ")
+    private ZonedDateTime payTime;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "uuuu-MM-dd'T'HH:mm:ss.SSSZZZZZ")
+    private ZonedDateTime beginTime;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "uuuu-MM-dd'T'HH:mm:ss.SSSZZZZZ")
+    private ZonedDateTime endTime;
+
     private Long price;
+
     private Long quantity;
+
     private Long advancePayPrice;
 }
