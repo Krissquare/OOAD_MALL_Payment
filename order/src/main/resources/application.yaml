@@ -110,16 +110,16 @@ oomall:
   order:
     expiretime: 10000
     insert: insert-order
-    #支付回调
-    payment:
-      order:
-        commontopic: payment-type0-notify-topic
-        deposittopic: payment-type2-notify-topic
-        balancetopic: payment-type3-notify-topic
-    refund:
-      order:
-        commontopic: refund-type0-notify-topic
-        deposittopic: refund-type2-notify-topic
-        balancetopic: refund-type3-notify-topic
+  #支付回调
+  payment:
+    order:
+      commontopic: payment-type0-notify-topic
+      deposittopic: payment-type2-notify-topic
+      balancetopic: payment-type3-notify-topic
+  refund:
+    order:
+      commontopic: refund-type0-notify-topic
+      deposittopic: refund-type2-notify-topic
+      balancetopic: refund-type3-notify-topic
 
 
