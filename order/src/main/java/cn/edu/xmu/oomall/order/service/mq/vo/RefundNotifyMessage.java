@@ -1,6 +1,6 @@
-package cn.edu.xmu.oomall.transaction.util.mq;
+package cn.edu.xmu.oomall.order.service.mq.vo;
 
-import cn.edu.xmu.oomall.transaction.model.bo.RefundState;
+import cn.edu.xmu.oomall.order.microservice.bo.RefundState;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

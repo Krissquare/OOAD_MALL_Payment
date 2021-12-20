@@ -2,9 +2,9 @@ package cn.edu.xmu.oomall.transaction;
 
 import cn.edu.xmu.oomall.core.util.JacksonUtil;
 import cn.edu.xmu.oomall.transaction.util.alipay.microservice.AlipayMicroService;
-import cn.edu.xmu.oomall.transaction.util.file.FileUtil;
-import cn.edu.xmu.oomall.transaction.util.file.vo.AliPayFormat;
-import cn.edu.xmu.oomall.transaction.util.file.vo.WechatFormat;
+import cn.edu.xmu.oomall.transaction.util.billformatter.FileUtil;
+import cn.edu.xmu.oomall.transaction.util.billformatter.vo.AliPayFormat;
+import cn.edu.xmu.oomall.transaction.util.billformatter.vo.WechatFormat;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatPaymentNotifyVo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo.WechatRefundNotifyVo;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.WechatMicroService;

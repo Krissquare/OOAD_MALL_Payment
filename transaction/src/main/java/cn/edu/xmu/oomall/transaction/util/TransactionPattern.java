@@ -2,7 +2,6 @@ package cn.edu.xmu.oomall.transaction.util;
 
 
 import cn.edu.xmu.oomall.core.util.ReturnObject;
-
 import java.time.LocalDateTime;
 
 public abstract class TransactionPattern {
@@ -15,7 +14,7 @@ public abstract class TransactionPattern {
 
     public abstract void queryRefund(RefundBill bill);
 
-    public abstract void closeTransaction(String requestNo);
+    public abstract void closeTransaction(PaymentBill bill);
 
     public abstract String getFundFlowBill(String billDate);
 

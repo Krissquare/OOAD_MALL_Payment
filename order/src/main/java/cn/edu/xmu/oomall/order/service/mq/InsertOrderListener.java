@@ -21,7 +21,7 @@ import java.util.List;
  * topic 对应send的destination
  */
 @Service
-@RocketMQMessageListener(topic = "${oomall.order.insert}",consumerGroup ="${oomall.order.insert}")
+@RocketMQMessageListener(topic = "${oomall.order.insert}",consumerGroup ="${oomall.order.insert}",consumeThreadMax = 128)
 public class InsertOrderListener implements RocketMQListener<String>
 {
     @Autowired

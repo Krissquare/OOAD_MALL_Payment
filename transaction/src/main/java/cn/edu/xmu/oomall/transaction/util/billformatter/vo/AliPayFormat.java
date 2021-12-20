@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.transaction.util.file.vo;
+package cn.edu.xmu.oomall.transaction.util.billformatter.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
