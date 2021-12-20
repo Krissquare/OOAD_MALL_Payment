@@ -581,12 +581,38 @@ public class OrderService {
             return ret;
         }
         Order order = (Order) ret.getData();
+        System.out.println(order.getState());
         if (!order.getState().equals(OrderState.SEND_GOODS.getCode())) {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
-        order.setState(OrderState.COMPLETE_ORDER.getCode());
-        Common.setPoModifiedFields(order, loginUserId, loginUserName);
-        return orderDao.updateOrder(order);
+        //用户直接对父订单确认收货（不分单）
+        if(order.getPid()==0){
+            order.setState(OrderState.COMPLETE_ORDER.getCode());
+            Common.setPoModifiedFields(order, loginUserId, loginUserName);
+            return orderDao.updateOrder(order);
+        }
+        //用户对子订单确认收货（分单）：更新它的父订单以及与它关联的所有子订单
+        else{
+            //更新父订单
+            ReturnObject returnObject=orderDao.getNotDeleteOrderById(order.getPid());
+            if (!returnObject.getCode().equals(ReturnNo.OK)) {
+                return returnObject;
+            }
+            Order pOrder = (Order) returnObject.getData();
+            pOrder.setState(OrderState.COMPLETE_ORDER.getCode());
+            Common.setPoModifiedFields(pOrder, loginUserId, loginUserName);
+            ReturnObject returnObject1=orderDao.updateOrder(pOrder);
+            if (!returnObject1.getCode().equals(ReturnNo.OK)) {
+                return returnObject1;
+            }
+            //更新与它关联的所有子订单
+            Order newOrder=new Order();
+            newOrder.setPid(order.getPid());
+            newOrder.setState(OrderState.COMPLETE_ORDER.getCode());
+            Common.setPoModifiedFields(newOrder, loginUserId, loginUserName);
+            return orderDao.updateRelatedSonOrder(newOrder);
+
+        }
     }
 
     /**
@@ -781,6 +807,7 @@ public class OrderService {
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject deliverByShop(Long shopId, Long id, MarkShipmentVo markShipmentVo, Long loginUserId, String loginUserName) {
 
+        LocalDateTime nowTime = LocalDateTime.now();
         ReturnObject returnObject = orderDao.getOrderById(id);
         if (returnObject.getCode() != ReturnNo.OK) {
             return returnObject;
@@ -792,13 +819,40 @@ public class OrderService {
         if (!order.getState().equals(OrderState.FINISH_PAY.getCode())) {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
-        LocalDateTime nowTime = LocalDateTime.now();
-        Order order1 = cloneVo(markShipmentVo, Order.class);
-        order1.setId(id);
-        order1.setConfirmTime(nowTime);
-        order1.setState(OrderState.SEND_GOODS.getCode());
-        setPoModifiedFields(order1, loginUserId, loginUserName);
-        return orderDao.updateOrder(order1);
+        //店家对父订单标记发货（不分单）
+        if(order.getPid()==0){
+            order.setShipmentSn(markShipmentVo.getShipmentSn());
+            order.setConfirmTime(nowTime);
+            order.setState(OrderState.SEND_GOODS.getCode());
+            setPoModifiedFields(order, loginUserId, loginUserName);
+            return orderDao.updateOrder(order);
+        }
+        //用户对子订单确认收货（分单）：更新它的父订单以及与它关联的所有子订单
+        else{
+            //更新父订单
+            ReturnObject returnObject1=orderDao.getNotDeleteOrderById(order.getPid());
+            if (!returnObject1.getCode().equals(ReturnNo.OK)) {
+                return returnObject1;
+            }
+            Order pOrder = (Order) returnObject1.getData();
+            pOrder.setShipmentSn(markShipmentVo.getShipmentSn());
+            pOrder.setConfirmTime(nowTime);
+            pOrder.setState(OrderState.SEND_GOODS.getCode());
+            Common.setPoModifiedFields(pOrder, loginUserId, loginUserName);
+            ReturnObject returnObject2=orderDao.updateOrder(pOrder);
+            if (!returnObject2.getCode().equals(ReturnNo.OK)) {
+                return returnObject2;
+            }
+            //更新与它关联的所有子订单
+            Order newOrder=new Order();
+            newOrder.setPid(order.getPid());
+            newOrder.setConfirmTime(nowTime);
+            newOrder.setShipmentSn(markShipmentVo.getShipmentSn());
+            newOrder.setState(OrderState.SEND_GOODS.getCode());
+            Common.setPoModifiedFields(newOrder, loginUserId, loginUserName);
+            return orderDao.updateRelatedSonOrder(newOrder);
+
+        }
     }
 
     /**
