@@ -449,6 +449,8 @@ public class OrderService {
         }
         //分单则更新所有子订单
         else {
+            newOrder.setId(oldOrder.getPid());
+            orderDao.updateOrder(newOrder);
             newOrder.setPid(orderId);
             return orderDao.updateRelatedSonOrder(newOrder);
         }
