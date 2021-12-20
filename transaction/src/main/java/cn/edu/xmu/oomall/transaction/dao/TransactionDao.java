@@ -5,7 +5,6 @@ import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.transaction.mapper.PaymentPatternPoMapper;
 import cn.edu.xmu.oomall.transaction.mapper.ErrorAccountPoMapper;
-import cn.edu.xmu.oomall.transaction.mapper.PaymentPatternPoMapper;
 import cn.edu.xmu.oomall.transaction.mapper.PaymentPoMapper;
 import cn.edu.xmu.oomall.transaction.model.bo.ErrorAccount;
 import cn.edu.xmu.oomall.transaction.model.bo.Payment;
@@ -23,9 +22,7 @@ import cn.edu.xmu.oomall.transaction.model.bo.Refund;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;

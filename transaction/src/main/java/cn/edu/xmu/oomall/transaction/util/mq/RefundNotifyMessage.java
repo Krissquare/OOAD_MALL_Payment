@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RefundNotifyMessage {
+
     private Byte documentType;
 
     private String documentId;

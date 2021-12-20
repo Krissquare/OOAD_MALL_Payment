@@ -1,7 +1,7 @@
-package cn.edu.xmu.oomall.transaction.util.file.vo;
+package cn.edu.xmu.oomall.transaction.util.billformatter.vo;
 
-import cn.edu.xmu.oomall.transaction.util.file.bo.WechatTypeState;
-import cn.edu.xmu.oomall.transaction.util.file.bo.WechatState;
+import cn.edu.xmu.oomall.transaction.util.billformatter.bo.WechatTypeState;
+import cn.edu.xmu.oomall.transaction.util.billformatter.bo.WechatState;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

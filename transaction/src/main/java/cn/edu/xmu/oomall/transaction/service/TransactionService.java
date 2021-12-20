@@ -136,7 +136,11 @@ public class TransactionService {
                 return new ReturnObject(ReturnNo.STATENOTALLOW);
             }
 
-            // TODO: 判断是否在beginTime和endTime内
+            // 判断是否在beginTime和endTime内
+            if (LocalDateTime.now().isAfter(payment.getBeginTime().toLocalDateTime())
+                    && LocalDateTime.now().isBefore(payment.getEndTime().toLocalDateTime())) {
+                return new ReturnObject((ReturnNo.STATENOTALLOW));
+            }
 
             // 判断是否存在匹配支付渠道的待支付流水
             if (paymentBill.getPatternId().equals(payment.getPatternId()) &&
@@ -145,13 +149,10 @@ public class TransactionService {
             }
         }
 
-        // 开始请求支付
-        TransactionPattern pattern = transactionPatternFactory.getPatternInstance(paymentBill.getPatternId());
 
         // 不存在匹配的流水，则需要新建
         if (validExistedPayment == null) {
             Payment payment = cloneVo(paymentBill, Payment.class);
-            // TODO: userId和userName
             payment.setState(PaymentState.WAIT_PAY.getCode());
             setPoCreatedFields(payment, loginUserId, loginUserName);
             setPoModifiedFields(payment, loginUserId, loginUserName);
@@ -161,9 +162,10 @@ public class TransactionService {
             }
             validExistedPayment = cloneVo(retPayment.getData(), PaymentRetVo.class);
         }
-
-        // 然后请求支付
         paymentBill.setRelatedPayment(cloneVo(validExistedPayment, Payment.class));
+
+        // 开始请求支付
+        TransactionPattern pattern = transactionPatternFactory.getPatternInstance(paymentBill.getPatternId());
         pattern.requestPayment(paymentBill);
 
         return new ReturnObject<>(ReturnNo.OK);
@@ -415,28 +417,22 @@ public class TransactionService {
 
         return new ReturnObject<>(ReturnNo.OK);
     }
+
+
     public ReturnObject reconciliation(LocalDateTime beginTime,LocalDateTime endTime){
-        //支付宝对账
-        TransactionPattern pattern = transactionPatternFactory.getPatternInstance(1L);
-        ReturnObject returnObject=pattern.reconciliation(beginTime,endTime);
-        if(!returnObject.getCode().equals(ReturnNo.OK)){
-            return returnObject;
+        List<TransactionPattern> transactionPatternList = transactionPatternFactory.listAllPatterns();
+        ReconciliationRetVo retVo = new ReconciliationRetVo();
+        for (TransactionPattern pattern : transactionPatternList) {
+            ReturnObject<ReconciliationRetVo> ret = pattern.reconciliation(beginTime, endTime);
+            if (!ret.getCode().equals(ReturnNo.OK)) {
+                return ret;
+            }
+
+            retVo.setSuccess(retVo.getSuccess() + ret.getData().getSuccess());
+            retVo.setError(retVo.getError() + ret.getData().getError());
+            retVo.setExtra(retVo.getExtra() + ret.getData().getExtra());
         }
-        ReconciliationRetVo aliPay=(ReconciliationRetVo) returnObject.getData();
-        //微信支付对账
-        TransactionPattern pattern1 = transactionPatternFactory.getPatternInstance(2L);
-        ReturnObject returnObject1=pattern1.reconciliation(beginTime,endTime);
-        if(!returnObject1.getCode().equals(ReturnNo.OK)){
-            return returnObject1;
-        }
-        ReconciliationRetVo wechatPay=(ReconciliationRetVo) returnObject1.getData();
-        ReconciliationRetVo reconciliationRetVo=new ReconciliationRetVo();
-        reconciliationRetVo.setSuccess(aliPay.getSuccess()+wechatPay.getSuccess());
-        reconciliationRetVo.setError(aliPay.getError()+wechatPay.getError());
-        reconciliationRetVo.setExtra(aliPay.getExtra()+wechatPay.getExtra());
-        return new ReturnObject(reconciliationRetVo);
+
+        return new ReturnObject(retVo);
     }
-
-
-
 }

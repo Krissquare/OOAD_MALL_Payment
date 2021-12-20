@@ -14,8 +14,8 @@ import cn.edu.xmu.oomall.transaction.util.alipay.microservice.vo.*;
 import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayMethod;
 import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayRefundState;
 import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayTradeState;
-import cn.edu.xmu.oomall.transaction.util.file.FileUtil;
-import cn.edu.xmu.oomall.transaction.util.file.vo.AliPayFormat;
+import cn.edu.xmu.oomall.transaction.util.billformatter.FileUtil;
+import cn.edu.xmu.oomall.transaction.util.billformatter.vo.AliPayFormat;
 
 import cn.edu.xmu.oomall.transaction.util.mq.MessageProducer;
 import cn.edu.xmu.oomall.transaction.util.mq.PaymentQueryMessage;
@@ -184,9 +184,9 @@ public class AlipayTransaction extends TransactionPattern {
 
 
     @Override
-    public void closeTransaction(String requestNo){
-        AlipayPaymentQueryVo queryVo = new AlipayPaymentQueryVo();
-        queryVo.setOutTradeNo(requestNo);
+    public void closeTransaction(PaymentBill bill){
+        AlipayCloseVo alipayCloseVo = new AlipayCloseVo();
+        alipayCloseVo.setOutTradeNo(bill.getOutTradeNo());
         alipayMicroService.gatewayDo(null,
                 AlipayMethod.CLOSE.getMethod(),
                 null,
@@ -195,11 +195,11 @@ public class AlipayTransaction extends TransactionPattern {
                 null,
                 null,
                 null,
-                JacksonUtil.toJson(queryVo));
+                JacksonUtil.toJson(alipayCloseVo));
     }
 
     @Override
-    public String getFundFlowBill(String billDate){
+    public String getFundFlowBill(String billDate) {
         WarpRetObject warpRetObject = alipayMicroService.gatewayDo(null,
                 AlipayMethod.QUERY_DOWNLOAD_BILL.getMethod(),
                 null,
@@ -212,6 +212,8 @@ public class AlipayTransaction extends TransactionPattern {
         DownloadUrlQueryRetVo downloadUrlQueryRetVo = warpRetObject.getDownloadUrlQueryRetVo();
         return downloadUrlQueryRetVo.getBillDownloadUrl();
     }
+
+
     @Override
     public ReturnObject reconciliation(LocalDateTime beginTime,LocalDateTime endTime){
         Integer success=0;

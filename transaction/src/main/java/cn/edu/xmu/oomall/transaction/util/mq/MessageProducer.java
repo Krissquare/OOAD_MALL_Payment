@@ -18,14 +18,14 @@ public class MessageProducer {
     public void sendPaymentNotifyMessage(PaymentNotifyMessage notifyMessage) {
         String json = JacksonUtil.toJson(notifyMessage);
         Message message = MessageBuilder.withPayload(json).build();
-        String topic = String.format("payment-notify-topic-%s", notifyMessage.getDocumentType());
+        String topic = String.format("payment-type%s-notify-topic", notifyMessage.getDocumentType());
         rocketMQTemplate.sendOneWay(topic, message);
     }
 
     public void sendRefundNotifyMessage(RefundNotifyMessage notifyMessage) {
         String json = JacksonUtil.toJson(notifyMessage);
         Message message = MessageBuilder.withPayload(json).build();
-        String topic = String.format("refund-notify-topic-%s", notifyMessage.getDocumentType());
+        String topic = String.format("refund-type%s-notify-topic", notifyMessage.getDocumentType());
         rocketMQTemplate.sendOneWay(topic, message);
     }
 
@@ -34,6 +34,7 @@ public class MessageProducer {
         Message message =  MessageBuilder.withPayload(json).build();
         // 30s
         // 主题名字考虑采用PV注入
+
         rocketMQTemplate.sendOneWay("payment-query-topic", message);
     }
 

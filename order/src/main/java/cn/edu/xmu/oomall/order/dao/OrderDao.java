@@ -86,8 +86,8 @@ public class OrderDao {
             return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
-
-    public ReturnObject cancelRelatedOrder(Order order) {
+//传入子订单
+    public ReturnObject updateRelatedSonOrder(Order order) {
         try {
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria cr = orderPoExample.createCriteria();
