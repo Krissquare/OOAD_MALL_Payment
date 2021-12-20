@@ -581,7 +581,6 @@ public class OrderService {
             return ret;
         }
         Order order = (Order) ret.getData();
-        System.out.println(order.getState());
         if (!order.getState().equals(OrderState.SEND_GOODS.getCode())) {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
