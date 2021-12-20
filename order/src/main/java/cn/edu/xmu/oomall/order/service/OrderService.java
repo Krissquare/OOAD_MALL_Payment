@@ -401,7 +401,15 @@ public class OrderService {
         }
         //保证快递费不变的查询
         //get all items
-        ReturnObject itemsRet = orderDao.listOrderItemsByOrderId(orderId);
+        ReturnObject itemsRet = null;
+        //未分单
+        if (oldOrder.getPid().equals(0L)) {
+            itemsRet = orderDao.listOrderItemsByOrderId(orderId);
+        }
+        //已分单
+        else {
+            itemsRet = orderDao.listOrderItemsByPOrderId(oldOrder.getPid());
+        }
         if (!itemsRet.getCode().equals(ReturnNo.OK)){
             return itemsRet;
         }
@@ -415,7 +423,7 @@ public class OrderService {
                 return new ReturnObject(productInterRet);
             }
             oneFreightVo.setWeight(productInterRet.getData().getWeight());
-            //TODO: freight id
+            oneFreightVo.setFreightId(productInterRet.getData().getFreightId());
             freightVoList.add(oneFreightVo);
         }
         //query freight fee via internal api
@@ -433,9 +441,19 @@ public class OrderService {
             return new ReturnObject(ReturnNo.STATENOTALLOW);
         }
         Order newOrder = Common.cloneVo(updateOrderVo, Order.class);
-        newOrder.setId(orderId);
         setPoModifiedFields(newOrder,userId,userName);
-        return orderDao.updateOrder(newOrder);
+        //未分单直接更新父订单
+        if (oldOrder.getPid().equals(0L)) {
+            newOrder.setId(orderId);
+            return orderDao.updateOrder(newOrder);
+        }
+        //分单则更新所有子订单
+        else {
+            newOrder.setId(oldOrder.getPid());
+            orderDao.updateOrder(newOrder);
+            newOrder.setPid(orderId);
+            return orderDao.updateRelatedSonOrder(newOrder);
+        }
     }
 
     /**
