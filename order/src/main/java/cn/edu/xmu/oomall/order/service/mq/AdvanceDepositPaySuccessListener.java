@@ -11,7 +11,7 @@ import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.po.OrderItemPo;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
-import cn.edu.xmu.oomall.order.service.mq.vo.NotifyMessage;
+import cn.edu.xmu.oomall.order.service.mq.vo.PaymentNotifyMessage;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ import static cn.edu.xmu.privilegegateway.annotation.util.Common.*;
  * @date 2021/12/16 17:42
  */
 @Service
-@RocketMQMessageListener(topic = "${oomall.order.pay.advance.deposit}", consumerGroup = "${oomall.order.pay.advance.deposit}")
+@RocketMQMessageListener(topic = "${oomall.payment.order.deposittopic}", consumerGroup = "${oomall.payment.order.deposittopic}")
 public class AdvanceDepositPaySuccessListener implements RocketMQListener<String> {
     @Autowired
     OrderDao orderDao;
@@ -37,11 +37,11 @@ public class AdvanceDepositPaySuccessListener implements RocketMQListener<String
 
     @Override
     public void onMessage(String message) {
-        NotifyMessage notifyMessage = JacksonUtil.toObj(message, NotifyMessage.class);
-        if (!notifyMessage.getState().equals(PaymentState.ALREADY_PAY.getCode())) {
+        PaymentNotifyMessage paymentNotifyMessage = JacksonUtil.toObj(message, PaymentNotifyMessage.class);
+        if(!paymentNotifyMessage.getPaymentState().equals(PaymentState.ALREADY_PAY.getCode())){
             return;
         }
-        ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(notifyMessage.getDocumentId());
+        ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(paymentNotifyMessage.getDocumentId());
         if (orderByOrderSn.getCode() != ReturnNo.OK) {
             return;
         }
