@@ -4,13 +4,11 @@ import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.transaction.model.vo.*;
 import cn.edu.xmu.oomall.transaction.service.TransactionService;
-import cn.edu.xmu.oomall.transaction.util.MyDateTime;
 import cn.edu.xmu.oomall.transaction.util.PaymentBill;
 import cn.edu.xmu.oomall.transaction.util.RefundBill;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
-import cn.edu.xmu.privilegegateway.annotation.util.JwtHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.BindingResult;
@@ -97,6 +95,10 @@ public class TransactionController {
         PaymentBill paymentBill = requestPaymentVo.createPaymentBill();
         return Common.decorateReturnObject(transactionService.requestPayment(paymentBill, loginUserId, loginUserName));
     }
+
+
+
+
     /**
      * gyt
      * 7.平台管理员查询支付信息
