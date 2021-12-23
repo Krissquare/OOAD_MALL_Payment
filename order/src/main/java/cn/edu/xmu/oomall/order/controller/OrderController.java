@@ -3,7 +3,7 @@ package cn.edu.xmu.oomall.order.controller;
 import cn.edu.xmu.oomall.core.util.Common;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
-import cn.edu.xmu.oomall.order.aop.Masking;
+import cn.edu.xmu.oomall.order.annotation.Masking;
 import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.service.OrderService;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;

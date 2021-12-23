@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.order.aop;
+package cn.edu.xmu.oomall.order.annotation;
 
 
 import cn.edu.xmu.privilegegateway.annotation.util.JacksonUtil;
@@ -36,7 +36,7 @@ public class MaskingAspect {
 
     final private static String PHONE_NUMBER_PATTERN = "^1[0-9]{10}$";
 
-    @Pointcut("@annotation(cn.edu.xmu.oomall.order.aop.Masking)")
+    @Pointcut("@annotation(cn.edu.xmu.oomall.order.annotation.Masking)")
     public void maskingAspect() {
 
     }
