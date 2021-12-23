@@ -78,7 +78,7 @@ class OrderApplicationTests {
         onSaleVo.setId(1L);
         ProductVo productVo = new ProductVo();
         productVo.setId(1L);
-        productVo.setOnSaleId(1L);
+        productVo.setOnsaleId(1L);
         productVo.setName("123");
 //        Mockito.when(shopService.getShopById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(new SimpleVo(1L, "aaa")));
 //        Mockito.when(customService.getCustomerById(Mockito.anyLong())).thenReturn(new InternalReturnObject<>(new SimpleVo(1L, "aaa")));

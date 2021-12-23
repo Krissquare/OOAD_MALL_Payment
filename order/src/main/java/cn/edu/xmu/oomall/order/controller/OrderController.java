@@ -36,7 +36,6 @@ public class OrderController {
      *
      * @author Fang Zheng
      */
-    @Audit()
     @GetMapping("/orders/states")
     public Object listAllOrderStateController() {
         return Common.decorateReturnObject(orderService.listAllOrderState());
@@ -82,15 +81,21 @@ public class OrderController {
                                       BindingResult bindingResult,
                                       @LoginUser Long userId,
                                       @LoginName String userName) {
-        Object object = Common.processFieldErrors(bindingResult, httpServletResponse);
-        if (object != null) {
-            return object;
-        }
-        if (simpleOrderVo.getAdvancesaleId() != null && simpleOrderVo.getGrouponId() != null) {
-            return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
+        try{
+            Object object = Common.processFieldErrors(bindingResult, httpServletResponse);
+            if (object != null) {
+                return object;
+            }
+            if (simpleOrderVo.getAdvancesaleId() != null && simpleOrderVo.getGrouponId() != null) {
+                return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
+            }
+
+            return Common.decorateReturnObject(orderService.insertOrder(simpleOrderVo, userId, userName));
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+            return new ReturnObject<>(e.getMessage());
         }
 
-        return Common.decorateReturnObject(orderService.insertOrder(simpleOrderVo, userId, userName));
     }
 
     /**
