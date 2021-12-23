@@ -20,6 +20,7 @@
     <modules>
         <module>order</module>
         <module>transaction</module>
+        <module>annotation</module>
     </modules>
 
     <properties>

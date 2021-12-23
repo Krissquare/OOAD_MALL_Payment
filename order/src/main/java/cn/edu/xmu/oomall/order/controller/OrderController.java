@@ -3,9 +3,9 @@ package cn.edu.xmu.oomall.order.controller;
 import cn.edu.xmu.oomall.core.util.Common;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
+import cn.edu.xmu.oomall.order.aop.Masking;
 import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.service.OrderService;
-import cn.edu.xmu.oomall.order.util.MyDateTime;
 import cn.edu.xmu.privilegegateway.annotation.aop.Audit;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
 import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
@@ -19,12 +19,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
-import java.util.List;
 
 
 @RestController
-@RequestMapping(value = "/", produces = "application/json;charset=UTF-8",consumes = "application/json;charset=UTF-8")
+@RequestMapping(value = "", produces = "application/json;charset=UTF-8")
 public class OrderController {
+
     @Autowired
     private OrderService orderService;
 
@@ -36,7 +36,8 @@ public class OrderController {
      *
      * @author Fang Zheng
      */
-    @GetMapping("orders/states")
+    @Audit()
+    @GetMapping("/orders/states")
     public Object listAllOrderStateController() {
         return Common.decorateReturnObject(orderService.listAllOrderState());
     }
@@ -46,8 +47,8 @@ public class OrderController {
      *
      * @author Fang Zheng
      */
-    @GetMapping("orders")
-    @Audit(departName = "order")
+    @Audit()
+    @GetMapping("/orders")
     public Object listCustomerBriefOrdersController(@LoginUser Long userId,
                                                     @RequestParam(value = "orderSn", required = false) String orderSn,
                                                     @RequestParam(value = "state", required = false) Integer state,
@@ -75,7 +76,7 @@ public class OrderController {
      * @return
      * @author created by xiuchen lang
      */
-    @Audit(departName = "order")
+    @Audit()
     @PostMapping("/orders")
     public Object insertOrderByCustom(@RequestBody @Valid SimpleOrderVo simpleOrderVo,
                                       BindingResult bindingResult,
@@ -97,11 +98,10 @@ public class OrderController {
      *
      * @author Fang Zheng
      */
-    @GetMapping("orders/{id}")
-    @Audit(departName = "order")
-    public Object listCustomerWholeOrderController(@PathVariable("id") Long orderId,
-                                                   @LoginUser Long userId) {
-        return Common.decorateReturnObject(orderService.listCustomerWholeOrder(userId, orderId));
+    @Audit()
+    @GetMapping("/orders/{id}")
+    public Object getCustomerWholeOrderController(@PathVariable("id") Long orderId, @LoginUser Long userId, @LoginName String userName) {
+        return Common.decorateReturnObject(orderService.getCustomerWholeOrder(userId, orderId));
     }
 
     /**
@@ -109,8 +109,8 @@ public class OrderController {
      *
      * @author Fang Zheng
      */
+    @Audit()
     @PutMapping("/orders/{id}")
-    @Audit(departName = "order")
     public Object updateCustomerOrderController(@PathVariable("id") Long orderId,
                                                 @LoginUser Long userId,
                                                 @LoginName String userName,
@@ -132,7 +132,7 @@ public class OrderController {
      * @param username 顾客名称
      * @return
      */
-    @Audit(departName = "order")
+    @Audit()
     @DeleteMapping("/orders/{id}")
     public Object deleteOrderByCustom(@PathVariable("id") Long id, @LoginUser Long userId, @LoginName String username) {
         return Common.decorateReturnObject(orderService.deleteOrderByCustomer(id, userId, username));
@@ -148,8 +148,8 @@ public class OrderController {
      * @param loginUserName
      * @return
      */
-    @Audit(departName = "order")
-    @PutMapping("orders/{id}/cancel")
+    @Audit()
+    @PutMapping("/orders/{id}/cancel")
     public Object cancelOrderByCustomer(@PathVariable("id") Long id,@LoginUser Long loginUserId,@LoginName String loginUserName)
     {
         return Common.decorateReturnObject(orderService.cancelOrderByCustomer(id,loginUserId,loginUserName));
@@ -159,8 +159,8 @@ public class OrderController {
      * 8.买家标记确认收货
      * create by hty
      */
-    @PutMapping("orders/{id}/confirm")
-    @Audit(departName = "order")
+    @Audit()
+    @PutMapping("/orders/{id}/confirm")
     public Object confirmOrder(@PathVariable("id") Long id, @LoginUser Long loginUserId, @LoginName String loginName) {
         return Common.decorateReturnObject(orderService.confirmOrder(id, loginUserId, loginName));
     }
@@ -169,8 +169,8 @@ public class OrderController {
      * 9.店家查询商户所有订单（概要）
      * create by hty
      */
-    @GetMapping("shops/{shopId}/orders")
-    @Audit(departName = "shop")
+    @Audit(departName = "shops")
+    @GetMapping("/shops/{shopId}/orders")
     public Object listBriefOrdersByShopId(@PathVariable("shopId") Long shopId,
                                           @RequestParam(value = "customerId", required = false) Long customerId,
                                           @RequestParam(value = "orderSn", required = false) String orderSn,
@@ -198,8 +198,8 @@ public class OrderController {
      * @param loginUserName
      * @return
      */
-    @PutMapping("shops/{shopId}/orders/{id}")
-    @Audit(departName = "shop")
+    @Audit(departName = "shops")
+    @PutMapping("/shops/{shopId}/orders/{id}")
     public Object updateOrderComment(@PathVariable("shopId") Long shopId, @PathVariable("id") Long orderId, @Validated @RequestBody OrderVo orderVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName) {
         if (bindingResult.hasErrors()) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
@@ -215,8 +215,9 @@ public class OrderController {
      * @param id
      * @return
      */
-    @GetMapping("shops/{shopId}/orders/{id}")
-    @Audit(departName = "shop")
+    @Masking
+    @Audit(departName = "shops")
+    @GetMapping("/shops/{shopId}/orders/{id}")
     public Object getOrderDetail(@PathVariable("shopId") Long shopId, @PathVariable("id") Long id) {
         return Common.decorateReturnObject(orderService.getOrderDetail(shopId, id));
     }
@@ -272,7 +273,7 @@ public class OrderController {
      * @param id
      * @return
      */
-    @Audit(departName = "shops")
+    @Audit()
     @GetMapping("/orders/{id}/payment")
     public Object getPaymentByOrderId(@LoginUser Long loginUserId,
                                       @LoginName String loginUserName,
@@ -314,8 +315,8 @@ public class OrderController {
      * @param username
      * @return
      */
-    @Audit(departName = "shop")
-    @PutMapping("internal/shops/{shopId}/orders/{id}/cancel")
+    @Audit(departName = "shops")
+    @PutMapping("/internal/shops/{shopId}/orders/{id}/cancel")
     public Object internalCancleOrderByShop(@PathVariable("shopId")Long shopId,@PathVariable("id") Long id, @LoginUser Long userId, @LoginName String username) {
         return Common.decorateReturnObject(orderService.internalcancelOrderByShop(shopId, id, userId, username));
     }
@@ -330,8 +331,8 @@ public class OrderController {
      * @param loginUserName
      * @return
      */
-    @Audit(departName = "shop")
-    @PostMapping("internal/shops/{shopId}/orders")
+    @Audit(departName = "shops")
+    @PostMapping("/internal/shops/{shopId}/orders")
     public Object createAftersaleOrder(@PathVariable("shopId") Long shopId, @RequestBody AftersaleRecVo orderVo,
                                        @LoginUser Long loginUserId, @LoginName String loginUserName) {
         return Common.decorateReturnObject(orderService.insertAftersaleOrder(shopId, orderVo, loginUserId, loginUserName));
@@ -344,7 +345,7 @@ public class OrderController {
      * @param id
      * @return
      */
-    @Audit(departName = "order")
+    @Audit()
     @GetMapping("/orders/{id}/refund")
     public Object listOrderRefunds(@PathVariable("id") Long id) {
         ReturnObject ret = orderService.listOrderRefunds(id);
@@ -359,8 +360,8 @@ public class OrderController {
      * @param customerId
      * @return
      */
-    @Audit(departName = "order")
-    @GetMapping("internal/orderitems/{id}")
+    @Audit()
+    @GetMapping("/internal/orderitems/{id}")
     public Object getOrderItemById(@PathVariable("id") Long id, @RequestParam(value = "customerId", required = false) Long customerId) {
         return Common.decorateReturnObject(orderService.getOrderItemById(id, customerId));
     }
@@ -372,8 +373,7 @@ public class OrderController {
      * @param id
      * @return
      */
-//    @Audit(departName = "order")
-    @GetMapping("internal/orderitems/{id}/payment")
+    @GetMapping("/internal/orderitems/{id}/payment")
     public Object getPaymentByOrderItemId(@PathVariable("id") Long id) {
         return Common.decorateReturnObject(orderService.getPaymentByOrderitem(id));
     }

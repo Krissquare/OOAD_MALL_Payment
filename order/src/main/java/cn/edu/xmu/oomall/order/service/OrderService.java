@@ -345,7 +345,7 @@ public class OrderService {
      * @author Fang Zheng
      */
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject listCustomerWholeOrder(Long userId, Long orderId) {
+    public ReturnObject getCustomerWholeOrder(Long userId, Long orderId) {
         ReturnObject ret = orderDao.getNotDeleteOrderById(orderId);
         if (!ret.getCode().equals(ReturnNo.OK)) {
             return ret;

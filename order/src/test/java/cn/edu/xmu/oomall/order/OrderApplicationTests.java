@@ -473,10 +473,6 @@ class OrderApplicationTests {
         JSONAssert.assertEquals(expected, response, false);
     }
 
-    @Test
-    public void test() {
-        System.out.println(customService.getCustomerById(1L).getData());
-    }
 
     @Test
     public void testRequestRefund() {
@@ -491,4 +487,14 @@ class OrderApplicationTests {
         InternalReturnObject<RefundRetVo> refundRetVo = transactionService.requestRefund(refundRecVo);
         System.out.println(refundRetVo.getData());
     }
+
+    @Test
+    public void test() throws Exception{
+        adminToken = jwtHelper.createToken(1L,"admin",1L, 0,1000);
+        System.out.println(adminToken);
+        String response = this.mvc.perform(get("/orders/states").contentType("application/json;charset=UTF-8").header("authorization", adminToken))
+                .andReturn().getResponse().getContentAsString();
+        System.out.println(response);
+    }
+
 }

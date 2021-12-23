@@ -41,7 +41,7 @@ public class TransactionController {
      * 2.获取当前有效的支付渠道
      * */
     @GetMapping("/paypatterns")
-    @Audit(departName = "payment")
+    @Audit()
     public Object listAllValidPayPatterns(@LoginUser Long userId){
         return Common.decorateReturnObject(transactionService.listAllValidPayPatterns());
     }
@@ -49,8 +49,8 @@ public class TransactionController {
      * fz
      * 3.获得所有的支付渠道
      * */
+    @Audit(departName = "shops")
     @GetMapping("/shops/{shopId}/paypatterns")
-    @Audit(departName = "payment")
     public Object listAllPayPatterns(@PathVariable("shopId") Long shopId){
         if (shopId != 0){
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
@@ -84,8 +84,8 @@ public class TransactionController {
      * 6.顾客请求支付
      * hqg
      */
+    @Audit()
     @PostMapping("/payments")
-    @Audit(departName = "payment")
     public Object requestPayment(@Validated @RequestBody RequestPaymentVo requestPaymentVo, BindingResult bindingResult,
                                  @LoginUser Long loginUserId, @LoginName String loginUserName) {
         if (bindingResult.hasErrors()) {
@@ -222,7 +222,7 @@ public class TransactionController {
      * @return
      */
 
-    @Audit(departName="transaction")
+    @Audit(departName="shops")
     @GetMapping("/shops/{shopId}/refund")
     public Object getRefund(@PathVariable("shopId") Long shopId, @RequestParam(value="documentId",required = false)String documentId,
                             @RequestParam(value="state",required = false)Byte state,
@@ -250,7 +250,7 @@ public class TransactionController {
      * @param id
      * @return
      */
-    @Audit(departName = "payment")
+    @Audit(departName = "shops")
     @GetMapping("shops/{shopId}/refund/{id}")
     public Object getRefundDetail(@PathVariable("shopId")Long shopId,@PathVariable("id")Long id) {
         if (shopId != 0) {
@@ -270,7 +270,7 @@ public class TransactionController {
      * @param loginUserName
      * @return
      */
-    @Audit(departName = "payment")
+    @Audit(departName = "shops")
     @PutMapping("shops/{shopId}/refund/{id}")
     public Object updateRefund(@PathVariable("shopId") Long shopId, @PathVariable("id")Long id, @Validated @RequestBody RefundRecVo refundRecVo, BindingResult bindingResult, @LoginUser Long loginUserId, @LoginName String loginUserName) {
         if (bindingResult.hasErrors()) {
@@ -285,8 +285,8 @@ public class TransactionController {
      * b-3 fz
      * 13.平台管理员查询错账信息
      * */
+    @Audit(departName = "shops")
     @GetMapping("/shops/{shopId}/erroraccounts")
-    @Audit(departName = "payment")
     public Object listAllErrorAccountsByAdmin(@PathVariable("shopId") Long shopId,
                                               @LoginUser Long adminId,
                                               @RequestParam(value = "documentId", required = false) String documentId,
@@ -313,11 +313,11 @@ public class TransactionController {
      * b-3 fz
      * 14.平台管理员查询错账信息详情
      * */
+    @Audit(departName = "shops")
     @GetMapping("/shops/{shopId}/erroraccounts/{id}")
-    @Audit(departName = "payment")
     public Object getDetailedErrorAccountByAdmin(@PathVariable("shopId") Long shopId,
-                                                 @PathVariable("id") Long id){
-        if (shopId!=0){
+                                                 @PathVariable("id") Long id) {
+        if (shopId != 0) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
         return Common.decorateReturnObject(transactionService.getDetailedErrorAccount(id));
@@ -327,20 +327,36 @@ public class TransactionController {
      * b-3 fz
      * 15.平台管理员修改错账信息
      * */
+    @Audit(departName = "shops")
     @PostMapping("/shops/{shopId}/erroraccounts/{id}")
-    @Audit(departName = "payment")
     public Object updateErrorAccountByAdmin(@PathVariable("shopId") Long shopId,
                                             @PathVariable("id") Long id,
                                             @LoginUser Long adminId,
                                             @LoginUser String adminName,
                                             @RequestBody ErrorAccountUpdateVo updateVo){
+        if (shopId != 0) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
         return Common.decorateReturnObject(transactionService.updateErrorAccount(adminId, adminName, id, updateVo));
     }
+
+
+    /**
+     * 内部API 对账
+     * @param id
+     * @param beginTime
+     * @param endTime
+     * @return
+     */
+    @Audit(departName = "shops")
     @GetMapping("/shops/{id}/reconciliation")
     public Object reconciliation(@PathVariable("id") Long id,
                                  @RequestParam(value = "beginTime")LocalDateTime beginTime,
-                                 @RequestParam(value = "endTime")LocalDateTime endTime){
-        return Common.decorateReturnObject(transactionService.reconciliation(beginTime,endTime));
+                                 @RequestParam(value = "endTime")LocalDateTime endTime) {
+        if (id != 0) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        return Common.decorateReturnObject(transactionService.reconciliation(beginTime, endTime));
     }
 
     /**

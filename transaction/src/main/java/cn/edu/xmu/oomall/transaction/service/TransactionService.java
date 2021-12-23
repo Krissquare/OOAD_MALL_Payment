@@ -58,11 +58,11 @@ public class TransactionService {
      * fz
      * */
     @Transactional(readOnly = true, rollbackFor = Exception.class)
-    public ReturnObject listAllPayPatterns(){
+    public ReturnObject listAllPayPatterns() {
         ReturnObject ret = transactionDao.listAllPayPattern();
         List<PaymentPatternPo> oriList = (List<PaymentPatternPo>) ret.getData();
         List<PaymentPatternVo> tarList = new ArrayList<>();
-        for (PaymentPatternPo item: oriList){
+        for (PaymentPatternPo item : oriList) {
             PaymentPatternVo tarItem = cloneVo(item, PaymentPatternVo.class);
             tarList.add(tarItem);
         }
