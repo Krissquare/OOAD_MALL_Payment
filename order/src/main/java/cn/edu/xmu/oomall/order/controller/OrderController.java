@@ -89,8 +89,9 @@ public class OrderController {
             if (simpleOrderVo.getAdvancesaleId() != null && simpleOrderVo.getGrouponId() != null) {
                 return Common.decorateReturnObject(new ReturnObject(ReturnNo.FIELD_NOTVALID));
             }
-
-            return Common.decorateReturnObject(orderService.insertOrder(simpleOrderVo, userId, userName));
+            ReturnObject returnObject = orderService.insertOrder(simpleOrderVo, userId, userName);
+            Object o = Common.decorateReturnObject(returnObject);
+            return o;
         }catch (Exception e){
             System.out.println(e.getMessage());
             return new ReturnObject<>(e.getMessage());
