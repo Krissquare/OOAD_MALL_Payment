@@ -79,6 +79,14 @@ public class TransactionService {
         }
         return new ReturnObject(states);
     }
+
+    public ReturnObject listAllRefundStates(){
+        HashMap<Byte, String> states = new HashMap<>();
+        for (RefundState item: RefundState.values()){
+            states.put(item.getCode(),item.getMessage());
+        }
+        return new ReturnObject(states);
+    }
     /**
      * 5.顾客支付已建立的支付单
      * */

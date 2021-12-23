@@ -36,7 +36,6 @@ public class OrderController {
      *
      * @author Fang Zheng
      */
-    @Audit()
     @GetMapping("/orders/states")
     public Object listAllOrderStateController() {
         return Common.decorateReturnObject(orderService.listAllOrderState());
