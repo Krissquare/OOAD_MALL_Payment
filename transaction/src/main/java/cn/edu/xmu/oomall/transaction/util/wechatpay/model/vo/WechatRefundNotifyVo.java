@@ -1,6 +1,5 @@
 package cn.edu.xmu.oomall.transaction.util.wechatpay.model.vo;
 
-import cn.edu.xmu.oomall.transaction.util.MyDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -56,7 +55,7 @@ public class WechatRefundNotifyVo {
     }
 
     private String id;
-    @JsonFormat(pattern = MyDateTime.DATE_TIME_FORMAT,timezone = "GMT+8")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS", timezone = "GMT+8")
     private LocalDateTime createTime;
     private String eventType;
     private String summary;

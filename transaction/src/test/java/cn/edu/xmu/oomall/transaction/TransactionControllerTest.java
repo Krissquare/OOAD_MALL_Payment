@@ -13,7 +13,6 @@ import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayTradeState;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatRefundState;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatTradeState;
 import cn.edu.xmu.oomall.transaction.model.vo.*;
-import cn.edu.xmu.oomall.transaction.util.MyDateTime;
 import cn.edu.xmu.oomall.transaction.util.alipay.model.vo.AlipayNotifyVo;
 import cn.edu.xmu.privilegegateway.annotation.util.JwtHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,13 +60,11 @@ public class TransactionControllerTest {
 
     private static final JwtHelper jwtHelper = new JwtHelper();
 
-    private DateTimeFormatter df;
 
     private static final Locale LOCALE=Locale.CHINA;
 
     @BeforeEach
     void init() {
-        df = DateTimeFormatter.ofPattern(MyDateTime.DATE_TIME_FORMAT, LOCALE);
         adminToken =jwtHelper.createToken(1L,"admin",0L, 1,40000);
     }
 
@@ -364,7 +361,12 @@ public class TransactionControllerTest {
     @Test
     public void printToken() throws Exception{
         adminToken = jwtHelper.createToken(1L,"admin",0L, 1,1000);
-        System.out.println(adminToken);
+      //  System.out.println(adminToken);
+        String response = this.mvc.perform(get("/shops/1/orders/1").contentType("application/json;charset=UTF-8").header("authorization", adminToken))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andReturn().getResponse().getContentAsString();
+
     }
 
     @Test
