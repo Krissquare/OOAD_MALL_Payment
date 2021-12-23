@@ -203,7 +203,7 @@ public class OrderDao {
             OrderPoExample orderPoExample = new OrderPoExample();
             OrderPoExample.Criteria cr = orderPoExample.createCriteria();
             cr.andCustomerIdEqualTo(userId);
-            cr.andBeDeletedIsNull();
+            cr.andBeDeletedEqualTo((byte) 0);
             if (orderSn != null) {
                 cr.andOrderSnEqualTo(orderSn);
             }
