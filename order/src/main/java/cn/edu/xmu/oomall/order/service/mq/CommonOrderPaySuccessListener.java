@@ -92,7 +92,7 @@ public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
         }
         //分单逻辑
         //父订单状态改为已分单
-        order.setState(OrderState.NOT_FROUP.getCode());
+        order.setState(OrderState.FINISH_PAY.getCode());
         setPoCreatedFields(order, 0L, null);
         orderDao.updateOrder(order);
 
