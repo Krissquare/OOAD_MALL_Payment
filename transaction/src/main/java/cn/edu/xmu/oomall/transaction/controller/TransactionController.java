@@ -316,8 +316,8 @@ public class TransactionController {
     @Audit(departName = "shops")
     @GetMapping("/shops/{shopId}/erroraccounts/{id}")
     public Object getDetailedErrorAccountByAdmin(@PathVariable("shopId") Long shopId,
-                                                 @PathVariable("id") Long id){
-        if (shopId!=0){
+                                                 @PathVariable("id") Long id) {
+        if (shopId != 0) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
         return Common.decorateReturnObject(transactionService.getDetailedErrorAccount(id));
@@ -334,6 +334,9 @@ public class TransactionController {
                                             @LoginUser Long adminId,
                                             @LoginUser String adminName,
                                             @RequestBody ErrorAccountUpdateVo updateVo){
+        if (shopId != 0) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
         return Common.decorateReturnObject(transactionService.updateErrorAccount(adminId, adminName, id, updateVo));
     }
 
@@ -349,8 +352,11 @@ public class TransactionController {
     @GetMapping("/shops/{id}/reconciliation")
     public Object reconciliation(@PathVariable("id") Long id,
                                  @RequestParam(value = "beginTime")LocalDateTime beginTime,
-                                 @RequestParam(value = "endTime")LocalDateTime endTime){
-        return Common.decorateReturnObject(transactionService.reconciliation(beginTime,endTime));
+                                 @RequestParam(value = "endTime")LocalDateTime endTime) {
+        if (id != 0) {
+            return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
+        }
+        return Common.decorateReturnObject(transactionService.reconciliation(beginTime, endTime));
     }
 
     /**
