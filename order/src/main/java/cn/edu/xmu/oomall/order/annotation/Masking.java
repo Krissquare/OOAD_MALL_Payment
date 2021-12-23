@@ -1,4 +1,4 @@
-package cn.edu.xmu.oomall.order.aop;
+package cn.edu.xmu.oomall.order.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
