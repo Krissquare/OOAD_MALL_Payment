@@ -490,11 +490,10 @@ class OrderApplicationTests {
 
     @Test
     public void test() throws Exception{
-        adminToken = jwtHelper.createToken(1L,"admin",1L, 0,1000);
-        System.out.println(adminToken);
-        String response = this.mvc.perform(get("/orders/states").contentType("application/json;charset=UTF-8").header("authorization", adminToken))
+        adminToken = jwtHelper.createToken(1L,"admin",1L, 2,1000);
+       // System.out.println(adminToken);
+        String response = this.mvc.perform(get("/shops/1/orders/1").contentType("application/json;charset=UTF-8").header("authorization", adminToken))
                 .andReturn().getResponse().getContentAsString();
         System.out.println(response);
     }
-
 }

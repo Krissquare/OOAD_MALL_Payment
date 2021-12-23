@@ -80,7 +80,7 @@ public class MaskingAspect {
 
     }
 
-    private Object masking(Object object, Integer level) throws JsonProcessingException {
+    private static Object masking(Object object, Integer level) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         String json = JacksonUtil.toJson(object);
         JsonNode root = mapper.readTree(json);
@@ -122,7 +122,10 @@ public class MaskingAspect {
             return null;
         } else if (level.equals(USER_LEVEL_1)) {
             StringBuilder stringBuilder = new StringBuilder(address);
-            stringBuilder.replace(Math.min(3, stringBuilder.length() - 1), stringBuilder.length(), "****");
+            int beginIndex = Math.min(3, stringBuilder.length() - 1);
+            for (int i = beginIndex; i < stringBuilder.length(); i++) {
+                stringBuilder.setCharAt(i, '*');
+            }
             return stringBuilder.toString();
         } else if (level.equals(USER_LEVEL_2)) {
             return address;
