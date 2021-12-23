@@ -61,9 +61,14 @@ public class TransactionController {
      * @author fz
      * 4.获得所有支付单状态
      * */
-    @GetMapping("/payments/states")
+    @GetMapping("/payment/states")
     public Object listAllPaymentStates(){
         return Common.decorateReturnObject(transactionService.listAllPaymentStates());
+    }
+
+    @GetMapping("/refund/states")
+    public Object listAllRefundtStates(){
+        return Common.decorateReturnObject(transactionService.listAllRefundStates());
     }
 
     /**
