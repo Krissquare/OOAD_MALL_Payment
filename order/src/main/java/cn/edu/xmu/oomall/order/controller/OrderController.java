@@ -46,7 +46,7 @@ public class OrderController {
      *
      * @author Fang Zheng
      */
-    @Audit(departName = "orders")
+    @Audit()
     @GetMapping("/orders")
     public Object listCustomerBriefOrdersController(@LoginUser Long userId,
                                                     @RequestParam(value = "orderSn", required = false) String orderSn,
@@ -75,7 +75,7 @@ public class OrderController {
      * @return
      * @author created by xiuchen lang
      */
-    @Audit(departName = "orders")
+    @Audit()
     @PostMapping("/orders")
     public Object insertOrderByCustom(@RequestBody @Valid SimpleOrderVo simpleOrderVo,
                                       BindingResult bindingResult,
@@ -104,7 +104,7 @@ public class OrderController {
      *
      * @author Fang Zheng
      */
-    @Audit(departName = "orders")
+    @Audit()
     @GetMapping("/orders/{id}")
     public Object getCustomerWholeOrderController(@PathVariable("id") Long orderId, @LoginUser Long userId, @LoginName String userName) {
         return Common.decorateReturnObject(orderService.getCustomerWholeOrder(userId, orderId));
@@ -115,7 +115,7 @@ public class OrderController {
      *
      * @author Fang Zheng
      */
-    @Audit(departName = "orders")
+    @Audit()
     @PutMapping("/orders/{id}")
     public Object updateCustomerOrderController(@PathVariable("id") Long orderId,
                                                 @LoginUser Long userId,
@@ -138,7 +138,7 @@ public class OrderController {
      * @param username 顾客名称
      * @return
      */
-    @Audit(departName = "orders")
+    @Audit()
     @DeleteMapping("/orders/{id}")
     public Object deleteOrderByCustom(@PathVariable("id") Long id, @LoginUser Long userId, @LoginName String username) {
         return Common.decorateReturnObject(orderService.deleteOrderByCustomer(id, userId, username));
@@ -154,7 +154,7 @@ public class OrderController {
      * @param loginUserName
      * @return
      */
-    @Audit(departName = "orders")
+    @Audit()
     @PutMapping("/orders/{id}/cancel")
     public Object cancelOrderByCustomer(@PathVariable("id") Long id,@LoginUser Long loginUserId,@LoginName String loginUserName)
     {
@@ -165,7 +165,7 @@ public class OrderController {
      * 8.买家标记确认收货
      * create by hty
      */
-    @Audit(departName = "orders")
+    @Audit()
     @PutMapping("/orders/{id}/confirm")
     public Object confirmOrder(@PathVariable("id") Long id, @LoginUser Long loginUserId, @LoginName String loginName) {
         return Common.decorateReturnObject(orderService.confirmOrder(id, loginUserId, loginName));
