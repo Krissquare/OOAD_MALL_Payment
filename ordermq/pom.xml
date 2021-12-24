@@ -14,10 +14,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-        </dependency>
-        <dependency>
             <groupId>cn.edu.xmu.oomall</groupId>
             <artifactId>core</artifactId>
         </dependency>
