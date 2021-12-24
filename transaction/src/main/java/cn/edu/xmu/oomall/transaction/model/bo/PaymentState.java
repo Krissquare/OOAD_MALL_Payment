@@ -6,7 +6,6 @@ import lombok.Getter;
  * @author 高艺桐 22920192204199
  * @date 2021/12/09 20:32
  */
-@Getter
 public enum PaymentState {
     WAIT_PAY((byte)0,"待支付"),
     ALREADY_PAY((byte)1,"已支付"),
