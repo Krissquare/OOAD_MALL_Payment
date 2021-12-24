@@ -140,7 +140,7 @@ public class CoverageTest {
                         .header("authorization", token_1)
                         .contentType("application/json;charset=UTF-8")
                         .content(JacksonUtil.toJson(updateOrderVo)))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk())//TODO: qm的订单全是400状态...
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
     }
@@ -153,7 +153,7 @@ public class CoverageTest {
         String responseString = mvc.perform(delete("/orders/1")
                         .header("authorization", token_1)
                         .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk())//STATENOTALLOW
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
     }
@@ -166,7 +166,7 @@ public class CoverageTest {
         String responseString = mvc.perform(put("/orders/1/cancel")
                         .header("authorization", token_1)
                         .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk())//STATENOTALLOW
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
     }
@@ -179,7 +179,7 @@ public class CoverageTest {
         String responseString = mvc.perform(put("/orders/1/confirm")
                         .header("authorization", token_1)
                         .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk())//STATENOTALLOW
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
     }
@@ -190,7 +190,7 @@ public class CoverageTest {
     @Test
     public void listBriefOrdersByShopId() throws Exception{
         String responseString = mvc.perform(get("/shops/1/orders")
-                        .header("authorization", token_1)
+                        .header("authorization", adminToken)
                         .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
@@ -205,7 +205,7 @@ public class CoverageTest {
         OrderVo orderVo = new OrderVo("lalalalademaxiya");
 
         String responseString = mvc.perform(put("/shops/1/orders/1")
-                        .header("authorization", token_1)
+                        .header("authorization", adminToken)
                         .contentType("application/json;charset=UTF-8")
                         .content(JacksonUtil.toJson(orderVo)))
                 .andExpect(status().isOk())
@@ -219,7 +219,7 @@ public class CoverageTest {
     @Test
     public void getOrderDetail() throws Exception{
         String responseString = mvc.perform(get("/shops/1/orders/1")
-                        .header("authorization", token_1)
+                        .header("authorization", adminToken)
                         .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
@@ -232,9 +232,9 @@ public class CoverageTest {
     @Test
     public void cancelOrderByShop() throws Exception{
         String responseString = mvc.perform(delete("/shops/1/orders/1")
-                        .header("authorization", token_1)
+                        .header("authorization", adminToken)
                         .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk())//STATENOTALLOW
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
     }
@@ -247,10 +247,10 @@ public class CoverageTest {
         MarkShipmentVo markShipmentVo = new MarkShipmentVo("lalalalalualua");
 
         String responseString = mvc.perform(put("/shops/1/orders/1/deliver")
-                        .header("authorization", token_1)
+                        .header("authorization", adminToken)
                         .contentType("application/json;charset=UTF-8")
                         .content(JacksonUtil.toJson(markShipmentVo)))
-                .andExpect(status().isOk())
+                .andExpect(status().isOk())//STATENOTALLOW
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
     }
@@ -277,7 +277,7 @@ public class CoverageTest {
         String responseString = mvc.perform(put("/internal/shops/1/grouponorders/1/confirm")
                         .header("authorization", token_1)
                         .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isOk())
+                .andExpect(status().isForbidden())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
     }
@@ -288,9 +288,9 @@ public class CoverageTest {
     @Test
     public void internalCancleOrderByShop() throws Exception{
         String responseString = mvc.perform(put("/internal/shops/1/orders/1/cancel")
-                        .header("authorization", token_1)
+                        .header("authorization", adminToken)
                         .contentType("application/json;charset=UTF-8"))
-                .andExpect(status().isOk())
+                .andExpect(status().isForbidden())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andReturn().getResponse().getContentAsString();
     }
@@ -304,7 +304,7 @@ public class CoverageTest {
                 "fz",2417L,null,"13900000000",null,null);
 
         String responseString = mvc.perform(post("/internal/shops/1/orders")
-                        .header("authorization", token_1)
+                        .header("authorization", adminToken)
                         .contentType("application/json;charset=UTF-8")
                         .content(JacksonUtil.toJson(aftersaleRecVo)))
                 .andExpect(status().isOk())
