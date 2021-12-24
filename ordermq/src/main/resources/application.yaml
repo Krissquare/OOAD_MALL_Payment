@@ -109,9 +109,4 @@ oomall:
       deposittopic: payment-type2-notify-topic
       balancetopic: payment-type3-notify-topic
   refund:
-    order:
-      commontopic: refund-type0-notify-topic
-      deposittopic: refund-type2-notify-topic
-      balancetopic: refund-type3-notify-topic
-
-
+    order: refund-type0-notify-topic

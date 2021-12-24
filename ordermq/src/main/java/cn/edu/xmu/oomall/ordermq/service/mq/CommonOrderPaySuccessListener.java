@@ -11,6 +11,7 @@ import cn.edu.xmu.oomall.ordermq.model.bo.OrderItem;
 import cn.edu.xmu.oomall.ordermq.model.bo.OrderState;
 import cn.edu.xmu.oomall.ordermq.model.po.OrderPo;
 import cn.edu.xmu.oomall.ordermq.service.mq.vo.PaymentNotifyMessage;
+import cn.edu.xmu.oomall.ordermq.util.IdUtil;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -44,7 +45,7 @@ public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
         if(!paymentNotifyMessage.getPaymentState().equals(PaymentState.ALREADY_PAY)){
             return;
         }
-        ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(paymentNotifyMessage.getDocumentId().substring(0, 18));
+        ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(paymentNotifyMessage.getDocumentId());
         if (orderByOrderSn.getCode() != ReturnNo.OK) {
             return;
         }
@@ -65,7 +66,7 @@ public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
                 return;
             }
             order.setState(OrderState.WAIT_GROUP.getCode());
-            setPoModifiedFields(order, 0L, null);
+            setPoModifiedFields(order, order.getCreatorId(), order.getCreatorName());
             orderDao.updateOrder(order);
             return;
         }
@@ -80,14 +81,14 @@ public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
         }
         if (set.size() <= 1) {
             order.setState(OrderState.FINISH_PAY.getCode());
-            setPoCreatedFields(order, 0L, null);
+            setPoModifiedFields(order, order.getCreatorId(), order.getCreatorName());
             orderDao.updateOrder(order);
             return;
         }
         //分单逻辑
         //父订单状态改为已支付
         order.setState(OrderState.FINISH_PAY.getCode());
-        setPoCreatedFields(order, 0L, null);
+        setPoModifiedFields(order, order.getCreatorId(), order.getCreatorName());
         orderDao.updateOrder(order);
 
         Long discountPrice = 0L;
@@ -104,7 +105,7 @@ public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
             order.setExpressFee(null);
             order.setShopId(shopId);
             //子订单生成订单号
-            order.setOrderSn(genSeqNum(1));
+            order.setOrderSn(IdUtil.getGuid());
             setPoCreatedFields(order, 0L, null);
             setPoModifiedFields(order, 0L, null);
             for (OrderItem orderItem : orderItems) {

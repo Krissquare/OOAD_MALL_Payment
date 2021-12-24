@@ -1,6 +1,5 @@
 package cn.edu.xmu.oomall.ordermq.service.mq;
 
-import cn.edu.xmu.oomall.core.util.JacksonUtil;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.ordermq.dao.OrderDao;
@@ -66,7 +65,7 @@ public class AdvanceDepositPaySuccessListener implements RocketMQListener<String
             } else {
                 return;
             }
-            setPoModifiedFields(order, 0L, null);
+            setPoModifiedFields(order, order.getCreatorId(), order.getCreatorName());
             orderDao.updateOrder(order);
             return;
         }
