@@ -1,17 +1,17 @@
-package cn.edu.xmu.oomall.order.service.mq;
+package cn.edu.xmu.oomall.ordermq.service.mq;
 
 import cn.edu.xmu.oomall.core.util.JacksonUtil;
 import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
-import cn.edu.xmu.oomall.order.dao.OrderDao;
-import cn.edu.xmu.oomall.order.microservice.GoodsService;
-import cn.edu.xmu.oomall.order.microservice.bo.PaymentState;
-import cn.edu.xmu.oomall.order.microservice.vo.QuantityVo;
-import cn.edu.xmu.oomall.order.model.bo.Order;
-import cn.edu.xmu.oomall.order.model.bo.OrderState;
-import cn.edu.xmu.oomall.order.model.po.OrderItemPo;
-import cn.edu.xmu.oomall.order.model.po.OrderPo;
-import cn.edu.xmu.oomall.order.service.mq.vo.PaymentNotifyMessage;
+import cn.edu.xmu.oomall.ordermq.dao.OrderDao;
+import cn.edu.xmu.oomall.ordermq.microservice.InternalGoodsService;
+import cn.edu.xmu.oomall.ordermq.microservice.vo.IntegerQuantityVo;
+import cn.edu.xmu.oomall.ordermq.model.bo.Order;
+import cn.edu.xmu.oomall.ordermq.model.bo.OrderState;
+import cn.edu.xmu.oomall.ordermq.model.po.OrderItemPo;
+import cn.edu.xmu.oomall.ordermq.model.po.OrderPo;
+import cn.edu.xmu.oomall.ordermq.service.mq.bo.PaymentState;
+import cn.edu.xmu.oomall.ordermq.service.mq.vo.PaymentNotifyMessage;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static cn.edu.xmu.privilegegateway.annotation.util.Common.*;
+import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
+import static cn.edu.xmu.privilegegateway.annotation.util.Common.setPoModifiedFields;
 
 /**
  * 预售定金支付成功
@@ -33,7 +34,7 @@ public class AdvanceDepositPaySuccessListener implements RocketMQListener<String
     @Autowired
     OrderDao orderDao;
     @Autowired
-    GoodsService goodsService;
+    InternalGoodsService internalGoodsService;
 
     @Override
     public void onMessage(String message) {
@@ -54,7 +55,7 @@ public class AdvanceDepositPaySuccessListener implements RocketMQListener<String
         List<OrderItemPo> orderItemPos = (List<OrderItemPo>) orderItemListReturnObject.getData();
         for (OrderItemPo orderItemPo : orderItemPos) {
             //减少库存
-            goodsService.decreaseOnSale(orderItemPo.getShopId(), orderItemPo.getOnsaleId(), new QuantityVo(-orderItemPo.getQuantity()));
+            internalGoodsService.updateOnsaleQuantity( orderItemPo.getOnsaleId(), new IntegerQuantityVo(Math.toIntExact(-orderItemPo.getQuantity())));
         }
         if (order.getAdvancesaleId() != 0) {
             //这是预售 不用拆单子
