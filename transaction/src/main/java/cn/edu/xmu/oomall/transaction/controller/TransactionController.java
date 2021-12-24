@@ -130,18 +130,18 @@ public class TransactionController {
                               @RequestParam(value = "endTime",required = false)@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endTime,
                               @RequestParam(value = "page",required = false)Integer page,
                               @RequestParam(value = "pageSize",required = false)Integer pageSize) {
-        if (shopId != 0) {
+        if (shopId != 0L) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
         if (beginTime != null && endTime != null) {
             if (beginTime.isAfter(endTime))
             {
-                return new ReturnObject(ReturnNo.LATE_BEGINTIME);
+                return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
             }
         }
         LocalDateTime localBeginTime=beginTime==null?null:beginTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
         LocalDateTime localEndTime=endTime==null?null:endTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
-        return transactionService.listPayment(documentId, state,localBeginTime,localEndTime, page, pageSize);
+        return Common.decorateReturnObject(transactionService.listPayment(documentId, state, localBeginTime, localEndTime, page, pageSize));
     }
 
     /**

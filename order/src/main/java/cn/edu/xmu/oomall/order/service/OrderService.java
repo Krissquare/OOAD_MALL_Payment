@@ -17,6 +17,7 @@ import cn.edu.xmu.oomall.order.model.po.OrderItemPo;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
+import cn.edu.xmu.oomall.order.util.IdUtil;
 import cn.edu.xmu.privilegegateway.annotation.util.Common;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -270,7 +271,7 @@ public class OrderService {
             }
             order.setCustomerId(userId);
             order.setPid(0L);
-            order.setOrderSn(genSeqNum(1));
+            order.setOrderSn(IdUtil.getGuid());
             order.setState(OrderState.NEW_ORDER.getCode());
             order.setBeDeleted((byte) 0);
             setPoCreatedFields(order, userId, userName);

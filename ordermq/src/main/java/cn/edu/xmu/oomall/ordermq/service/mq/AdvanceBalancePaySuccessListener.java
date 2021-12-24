@@ -49,7 +49,7 @@ public class AdvanceBalancePaySuccessListener implements RocketMQListener<String
             }else {
                 return;
             }
-            setPoModifiedFields(order, 0L, null);
+            setPoModifiedFields(order, order.getCreatorId(), order.getCreatorName());
             orderDao.updateOrder(order);
             return;
         }
