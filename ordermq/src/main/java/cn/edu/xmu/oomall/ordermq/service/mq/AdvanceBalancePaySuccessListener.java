@@ -9,6 +9,7 @@ import cn.edu.xmu.oomall.ordermq.model.bo.OrderState;
 import cn.edu.xmu.oomall.ordermq.model.po.OrderPo;
 import cn.edu.xmu.oomall.ordermq.service.mq.bo.PaymentState;
 import cn.edu.xmu.oomall.ordermq.service.mq.vo.PaymentNotifyMessage;
+import com.alibaba.fastjson.JSONObject;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +31,8 @@ public class AdvanceBalancePaySuccessListener implements RocketMQListener<String
 
     @Override
     public void onMessage(String message) {
-        PaymentNotifyMessage paymentNotifyMessage = JacksonUtil.toObj(message, PaymentNotifyMessage.class);
-        if(!paymentNotifyMessage.getPaymentState().equals(PaymentState.ALREADY_PAY.getCode())){
+        PaymentNotifyMessage paymentNotifyMessage = JSONObject.parseObject(message, PaymentNotifyMessage.class);
+        if(!paymentNotifyMessage.getPaymentState().equals(PaymentState.ALREADY_PAY)){
             return;
         }
         ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(paymentNotifyMessage.getDocumentId());
