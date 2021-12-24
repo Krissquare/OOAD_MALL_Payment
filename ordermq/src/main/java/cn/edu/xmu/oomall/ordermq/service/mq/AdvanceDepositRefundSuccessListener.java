@@ -1,6 +1,6 @@
-package cn.edu.xmu.oomall.order.service.mq;
+package cn.edu.xmu.oomall.ordermq.service.mq;
 
-import cn.edu.xmu.oomall.order.dao.OrderDao;
+import cn.edu.xmu.oomall.ordermq.dao.OrderDao;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +11,8 @@ import org.springframework.stereotype.Service;
  * @date 2021/12/14 9:25
  */
 @Service
-@RocketMQMessageListener(consumerGroup = "${oomall.refund.order.balancetopic}", topic = "${oomall.refund.order.balancetopic}")
-public class AdvanceBalanceRefundSuccessListener implements RocketMQListener<String> {
+@RocketMQMessageListener(consumerGroup = "${oomall.refund.order.deposittopic}", topic = "${oomall.refund.order.deposittopic}")
+public class AdvanceDepositRefundSuccessListener implements RocketMQListener<String> {
     @Autowired
     OrderDao orderDao;
 
