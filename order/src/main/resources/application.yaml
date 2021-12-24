@@ -19,7 +19,9 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 10.30.82.244:8848
+        server-addr: 101.132.164.244:8888
+        username: nacos
+        password: ooad_javaee201
   servlet:
     multipart:
       #是否使用http上传
@@ -30,7 +32,7 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:mysql://localhost:3306/ooad?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF8
+    url: jdbc:mysql://101.132.164.244:3306/oomall?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF8
     username: dbuser
     password: 12345678
     druid:
@@ -55,7 +57,11 @@ spring:
   redis:
     database: 0
     #Redis服务器地址
-    host: 127.0.0.1
+    host: 101.132.164.244
+    #Redis服务器连接端口
+    port: 6889
+    # Redis服务器连接密码
+    password: 123456
     #连接池最大连接数（使用负值表示没有限制）
     lettuce:
       pool:
