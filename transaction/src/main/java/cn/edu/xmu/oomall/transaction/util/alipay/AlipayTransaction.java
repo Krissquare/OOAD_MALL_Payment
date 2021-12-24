@@ -9,6 +9,7 @@ import cn.edu.xmu.oomall.transaction.model.vo.ReconciliationRetVo;
 import cn.edu.xmu.oomall.transaction.util.PaymentBill;
 import cn.edu.xmu.oomall.transaction.util.RefundBill;
 import cn.edu.xmu.oomall.transaction.util.TransactionPattern;
+import cn.edu.xmu.oomall.transaction.util.TransactionPatternFactory;
 import cn.edu.xmu.oomall.transaction.util.alipay.microservice.AlipayMicroService;
 import cn.edu.xmu.oomall.transaction.util.alipay.microservice.vo.*;
 import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayMethod;
@@ -18,6 +19,7 @@ import cn.edu.xmu.oomall.transaction.util.billformatter.FileUtil;
 import cn.edu.xmu.oomall.transaction.util.billformatter.vo.AliPayFormat;
 
 import cn.edu.xmu.oomall.transaction.util.mq.MessageProducer;
+import cn.edu.xmu.oomall.transaction.util.mq.PaymentNotifyMessage;
 import cn.edu.xmu.oomall.transaction.util.mq.PaymentQueryMessage;
 import cn.edu.xmu.oomall.transaction.util.mq.RefundQueryMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AlipayTransaction extends TransactionPattern {
@@ -119,27 +122,46 @@ public class AlipayTransaction extends TransactionPattern {
                 AlipayPaymentQueryRetVo alipayPaymentQueryRetVo = warpRetObject.getAlipayPaymentQueryRetVo();
 
                 Payment payment = new Payment();
+                // 创建paymentNotifyMessage，通过rocketMQ生产者发送
+                PaymentNotifyMessage message = new PaymentNotifyMessage();
                 if (alipayPaymentQueryRetVo.getTradeStatus().equals(AlipayTradeState.WAIT_BUYER_PAY.getDescription())) {
                     // 发送主动查询支付的延时消息
                     PaymentQueryMessage paymentQueryMessage = new PaymentQueryMessage();
                     paymentQueryMessage.setPaymentBill(bill);
                     messageProducer.sendPaymentQueryDelayedMessage(paymentQueryMessage);
+
+                    // 返回
+                    return;
                 }
                 else if (alipayPaymentQueryRetVo.getTradeStatus().equals(AlipayTradeState.TRADE_CLOSED.getDescription())) {
                     // 已关闭
-                    payment.setState(PaymentState.CANCEL.getCode());
+                    // 更新数据库
+                    payment.setId(paymentId);
+                    payment.setState(PaymentState.FAIL.getCode());
+                    transactionDao.updatePayment(payment);
+
+                    message.setPaymentState(PaymentState.FAIL);
                 } else if (alipayPaymentQueryRetVo.getTradeStatus().equals(AlipayTradeState.TRADE_FINISHED.getDescription()) ||
                         alipayPaymentQueryRetVo.getTradeStatus().equals(AlipayTradeState.TRADE_SUCCESS.getDescription())) {
                     // 交易结束
                     // 成功
+                    // 更新数据库
+                    payment.setId(paymentId);
                     payment.setState(PaymentState.ALREADY_PAY.getCode());
+                    payment.setPayTime(alipayPaymentQueryRetVo.getSendPayDate());
+                    payment.setTradeSn(alipayPaymentQueryRetVo.getTradeNo());
+                    payment.setActualAmount(alipayPaymentQueryRetVo.getBuyerPayAmount());
+                    transactionDao.updatePayment(payment);
+
+                    message.setPaymentState(PaymentState.ALREADY_PAY);
                 }
 
-                payment.setId(paymentId);
-                payment.setPayTime(alipayPaymentQueryRetVo.getSendPayDate());
-                payment.setTradeSn(alipayPaymentQueryRetVo.getTradeNo());
-                payment.setActualAmount(alipayPaymentQueryRetVo.getBuyerPayAmount());
-                transactionDao.updatePayment(payment);
+                // 通知其他模块支付情况
+                Map<String, Object> map = TransactionPatternFactory.decodeRequestNo(alipayPaymentQueryRetVo.getOutTradeNo());
+                message.setDocumentId((String) map.get("documentId"));
+                message.setDocumentType(Byte.parseByte((String) map.get("documentType")));
+                messageProducer.sendPaymentNotifyMessage(message);
+
             }
         }
     }

@@ -895,7 +895,7 @@ public class OrderService {
         }
         Order order = (Order) returnObject1.getData();
         String ducumentId = order.getOrderSn();
-        InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPaymentInternal( ducumentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPaymentInternal( ducumentId, null, null, null, 1, 10);
         if(!returnObject.getErrno().equals(ReturnNo.OK.getCode()))
         {
             return new ReturnObject(returnObject);

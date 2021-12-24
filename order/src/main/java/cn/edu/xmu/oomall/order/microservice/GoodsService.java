@@ -4,11 +4,8 @@ import cn.edu.xmu.oomall.core.config.OpenFeignConfig;
 import cn.edu.xmu.oomall.order.microservice.vo.OnSaleVo;
 import cn.edu.xmu.oomall.order.microservice.vo.ProductVo;
 import cn.edu.xmu.oomall.order.microservice.vo.QuantityVo;
-import cn.edu.xmu.privilegegateway.annotation.aop.LoginName;
-import cn.edu.xmu.privilegegateway.annotation.aop.LoginUser;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  * @author xiuchen lang 22920192204222
  * @date 2021/12/07 16:16
  */
-@FeignClient(name = "goods-service",configuration= OpenFeignConfig.class)
+@FeignClient(name = "goods-service", configuration= OpenFeignConfig.class)
 public interface GoodsService {
     /**
      * /internal/onsales/{id}
@@ -41,7 +38,7 @@ public interface GoodsService {
      */
     //SOVLED BY HTY
     @GetMapping("/products/{id}")
-    InternalReturnObject<ProductVo> getProductDetails(@PathVariable Long id) ;
+    InternalReturnObject<ProductVo> getProductDetails(@PathVariable Long id);
 
 
     /**

@@ -5,7 +5,9 @@ import cn.edu.xmu.oomall.core.util.ReturnNo;
 import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.dao.OrderDao;
 import cn.edu.xmu.oomall.order.microservice.GoodsService;
+import cn.edu.xmu.oomall.order.microservice.InternalGoodsService;
 import cn.edu.xmu.oomall.order.microservice.bo.PaymentState;
+import cn.edu.xmu.oomall.order.microservice.vo.IntegerQuantityVo;
 import cn.edu.xmu.oomall.order.microservice.vo.QuantityVo;
 import cn.edu.xmu.oomall.order.model.bo.Order;
 import cn.edu.xmu.oomall.order.model.bo.OrderItem;
@@ -13,6 +15,7 @@ import cn.edu.xmu.oomall.order.model.bo.OrderState;
 import cn.edu.xmu.oomall.order.model.po.OrderItemPo;
 import cn.edu.xmu.oomall.order.model.po.OrderPo;
 import cn.edu.xmu.oomall.order.service.mq.vo.PaymentNotifyMessage;
+import com.alibaba.fastjson.JSONObject;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,12 +40,12 @@ public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
     @Autowired
     OrderDao orderDao;
     @Autowired
-    GoodsService goodsService;
+    InternalGoodsService internalGoodsService;
 
     @Override
     public void onMessage(String message) {
-        PaymentNotifyMessage paymentNotifyMessage = JacksonUtil.toObj(message, PaymentNotifyMessage.class);
-        if(!paymentNotifyMessage.getPaymentState().equals(PaymentState.ALREADY_PAY.getCode())){
+        PaymentNotifyMessage paymentNotifyMessage = JSONObject.parseObject(message, PaymentNotifyMessage.class);
+        if(!paymentNotifyMessage.getPaymentState().equals(PaymentState.ALREADY_PAY)){
             return;
         }
         ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(paymentNotifyMessage.getDocumentId());
@@ -55,11 +58,11 @@ public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
         if (orderItemListReturnObject.getCode() != ReturnNo.OK) {
             return;
         }
-        List<OrderItemPo> orderItemPos = (List<OrderItemPo>) orderItemListReturnObject.getData();
-        for (OrderItemPo orderItemPo : orderItemPos) {
-            //减少库存
-            goodsService.decreaseOnSale(orderItemPo.getShopId(), orderItemPo.getOnsaleId(), new QuantityVo(-orderItemPo.getQuantity()));
-        }
+        List<OrderItem> orderItemList = (List<OrderItem>) orderItemListReturnObject.getData();
+//        for (OrderItem orderItem : orderItemList) {
+//            //减少库存
+//            internalGoodsService.updateOnsaleQuantity(orderItem.getOnsaleId(), new IntegerQuantityVo(-orderItem.getQuantity().intValue()));
+//        }
         if (order.getGrouponId() != 0) {
             //这是团购，不用拆单子
             if (order.getState() != OrderState.NEW_ORDER.getCode()) {
@@ -74,12 +77,8 @@ public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
         if (orderPo.getState() != OrderState.NEW_ORDER.getCode()) {
             return;
         }
-        //查明细列表
-        ReturnObject<List<OrderItem>> returnObject = orderDao.listOrderItemsByOrderId(orderPo.getId());
-        if (returnObject.getCode() != ReturnNo.OK) {
-            return;
-        }
-        List<OrderItem> orderItemList = returnObject.getData();
+
+        // 看是否是一个商店
         Set<Long> set = new HashSet<>();
         for (OrderItem orderItem : orderItemList) {
             set.add(orderItem.getShopId());
@@ -90,8 +89,9 @@ public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
             orderDao.updateOrder(order);
             return;
         }
+
         //分单逻辑
-        //父订单状态改为已分单
+        //父订单状态改为已支付
         order.setState(OrderState.FINISH_PAY.getCode());
         setPoCreatedFields(order, 0L, null);
         orderDao.updateOrder(order);
