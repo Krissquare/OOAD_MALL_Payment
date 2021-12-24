@@ -87,6 +87,14 @@ public class TransactionService {
         }
         return new ReturnObject(states);
     }
+
+    public ReturnObject listAllPayPatternsStates(){
+        HashMap<Byte, String> states = new HashMap<>();
+        for (PaymentPatternState item: PaymentPatternState.values()){
+            states.put(item.getCode(),item.getState());
+        }
+        return new ReturnObject(states);
+    }
     /**
      * 5.顾客支付已建立的支付单
      * */

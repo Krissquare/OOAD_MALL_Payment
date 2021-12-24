@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 
@@ -60,8 +61,8 @@ public class OrderController {
                 return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
             }
         }
-        LocalDateTime localBeginTime=beginTime==null?null:beginTime.toLocalDateTime();
-        LocalDateTime localEndTime=endTime==null?null:endTime.toLocalDateTime();
+        LocalDateTime localBeginTime=beginTime==null?null:beginTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime localEndTime=endTime==null?null:endTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
         return Common.decorateReturnObject(orderService.listCustomerBriefOrder(userId, orderSn, state, localBeginTime, localEndTime, pageNumber, pageSize));
     }
 
@@ -187,8 +188,8 @@ public class OrderController {
         if (beginTime != null && endTime != null && beginTime.isAfter(endTime)) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
         }
-        LocalDateTime localBeginTime=beginTime==null?null:beginTime.toLocalDateTime();
-        LocalDateTime localEndTime=endTime==null?null:endTime.toLocalDateTime();
+        LocalDateTime localBeginTime=beginTime==null?null:beginTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime localEndTime=endTime==null?null:endTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
         return Common.decorateReturnObject(orderService.listBriefOrdersByShopId(shopId, customerId, orderSn,localBeginTime, localEndTime, page, pageSize));
     }
 
