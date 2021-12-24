@@ -9,12 +9,11 @@ import cn.edu.xmu.oomall.transaction.model.vo.ReconciliationRetVo;
 import cn.edu.xmu.oomall.transaction.util.PaymentBill;
 import cn.edu.xmu.oomall.transaction.util.RefundBill;
 import cn.edu.xmu.oomall.transaction.util.TransactionPattern;
+import cn.edu.xmu.oomall.transaction.util.TransactionPatternFactory;
 import cn.edu.xmu.oomall.transaction.util.billformatter.FileUtil;
 import cn.edu.xmu.oomall.transaction.util.billformatter.bo.WechatTypeState;
 import cn.edu.xmu.oomall.transaction.util.billformatter.vo.WechatFormat;
-import cn.edu.xmu.oomall.transaction.util.mq.MessageProducer;
-import cn.edu.xmu.oomall.transaction.util.mq.PaymentQueryMessage;
-import cn.edu.xmu.oomall.transaction.util.mq.RefundQueryMessage;
+import cn.edu.xmu.oomall.transaction.util.mq.*;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.WechatMicroService;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.microservice.vo.*;
 import cn.edu.xmu.oomall.transaction.util.wechatpay.model.bo.WechatRefundState;
@@ -26,6 +25,7 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 
 @Component
@@ -82,7 +82,7 @@ public class WechatTransaction extends TransactionPattern {
            refund.setTradeSn(wechatRefundRetVo.getTransactionId());
            transactionDao.updateRefund(refund);
        }
-        // 发送主动查询退款的延时消息
+        // 没接到消息，才发送主动查询退款的延时消息（基本不发生）
         RefundQueryMessage refundQueryMessage = new RefundQueryMessage();
         refundQueryMessage.setRefundBill(bill);
         messageProducer.sendRefundQueryDelayedMessage(refundQueryMessage);
@@ -95,32 +95,49 @@ public class WechatTransaction extends TransactionPattern {
         if (retPayment.getCode().equals(ReturnNo.OK)) {
             // 待支付的情况下，才主动查询
             if (retPayment.getData().getState().equals(PaymentState.WAIT_PAY.getCode())) {
-                {
-                    WechatReturnObject<WechatPaymentQueryRetVo> wechatReturnObject
-                            = wechatMicroService.queryPayment(bill.getOutTradeNo());
-                    WechatPaymentQueryRetVo wechatPaymentQueryRetVo = wechatReturnObject.getData();
-                    Payment payment = new Payment();
-                    if (wechatPaymentQueryRetVo.getTradeState().equals(WechatTradeState.NOTPAY.getState())) {
-                        // 发送主动查询支付的延时消息
-                        PaymentQueryMessage paymentQueryMessage = new PaymentQueryMessage();
-                        paymentQueryMessage.setPaymentBill(bill);
-                        messageProducer.sendPaymentQueryDelayedMessage(paymentQueryMessage);
-                    }
-                    else if (wechatPaymentQueryRetVo.getTradeState().equals(WechatTradeState.CLOSED.getState())) {
-                        // 已关闭
-                        payment.setState(PaymentState.CANCEL.getCode());
-                    } else if (wechatPaymentQueryRetVo.getTradeState().equals(WechatTradeState.SUCCESS.getState())) {
-                        // 成功
-                        payment.setState(PaymentState.ALREADY_PAY.getCode());
-                    }
+                WechatReturnObject<WechatPaymentQueryRetVo> wechatReturnObject
+                        = wechatMicroService.queryPayment(bill.getOutTradeNo());
+                WechatPaymentQueryRetVo wechatPaymentQueryRetVo = wechatReturnObject.getData();
+                Payment payment = new Payment();
+                // 创建paymentNotifyMessage，通过rocketMQ生产者发送
+                PaymentNotifyMessage message = new PaymentNotifyMessage();
+                if (wechatPaymentQueryRetVo.getTradeState().equals(WechatTradeState.NOTPAY.getState())) {
+                    // 发送主动查询支付的延时消息
+                    PaymentQueryMessage paymentQueryMessage = new PaymentQueryMessage();
+                    paymentQueryMessage.setPaymentBill(bill);
+                    messageProducer.sendPaymentQueryDelayedMessage(paymentQueryMessage);
 
+                    // 返回
+                    return;
+                } else if (wechatPaymentQueryRetVo.getTradeState().equals(WechatTradeState.CLOSED.getState())) {
+                    // 已关闭
+                    // 更新数据库
                     payment.setId(paymentId);
+                    payment.setState(PaymentState.FAIL.getCode());
+                    transactionDao.updatePayment(payment);
+
+                    message.setPaymentState(PaymentState.FAIL);
+                } else if (wechatPaymentQueryRetVo.getTradeState().equals(WechatTradeState.SUCCESS.getState())) {
+                    // 交易结束
+                    // 成功
+                    // 更新数据库
+                    payment.setId(paymentId);
+                    payment.setState(PaymentState.ALREADY_PAY.getCode());
                     payment.setPayTime(wechatPaymentQueryRetVo.getSuccessTime());
                     payment.setTradeSn(wechatPaymentQueryRetVo.getTransactionId());
                     payment.setActualAmount(wechatPaymentQueryRetVo.getAmount().getPayerTotal());
                     transactionDao.updatePayment(payment);
+
+                    message.setPaymentState(PaymentState.ALREADY_PAY);
                 }
+
+                // 通知其他模块支付情况
+                Map<String, Object> map = TransactionPatternFactory.decodeRequestNo(bill.getOutTradeNo());
+                message.setDocumentId((String) map.get("documentId"));
+                message.setDocumentType(Byte.parseByte((String) map.get("documentType")));
+                messageProducer.sendPaymentNotifyMessage(message);
             }
+
         }
     }
 
@@ -134,17 +151,29 @@ public class WechatTransaction extends TransactionPattern {
                 WechatReturnObject<WechatRefundQueryRetVo> wechatReturnObject =
                         wechatMicroService.queryRefund(bill.getOutRefundNo());
                 WechatRefundQueryRetVo wechatRefundQueryRetVo = wechatReturnObject.getData();
+
                 Refund refund = new Refund();
+                // 创建refundMessage，通过rocketMQ生产者发送
+                RefundNotifyMessage message = new RefundNotifyMessage();
                 if (wechatRefundQueryRetVo.getStatus().equals(WechatRefundState.SUCCESS.getState())) {
                     refund.setState(RefundState.FINISH_REFUND.getCode());
+                    message.setRefundState(RefundState.FINISH_REFUND);
                 } else {
                     refund.setState(RefundState.FAILED.getCode());
+                    message.setRefundState(RefundState.FAILED);
                 }
 
+                // 更新数据库
                 refund.setId(refundId);
                 refund.setRefundTime(wechatRefundQueryRetVo.getSuccessTime());
                 refund.setTradeSn(wechatRefundQueryRetVo.getTransactionId());
                 transactionDao.updateRefund(refund);
+
+                // 通知其他模块退款情况
+                Map<String, Object> map = TransactionPatternFactory.decodeRequestNo(bill.getOutRefundNo());
+                message.setDocumentId((String) map.get("documentId"));
+                message.setDocumentType(Byte.parseByte((String) map.get("documentType")));
+                messageProducer.sendRefundNotifyMessage(message);
             }
         }
     }
