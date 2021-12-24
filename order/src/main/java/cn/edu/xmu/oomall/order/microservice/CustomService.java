@@ -30,19 +30,19 @@ public interface CustomService {
      */
     //TODO:LXC
     @PutMapping("/internal/coupons/{id}/refund")
-    InternalReturnObject refundCoupon(@PathVariable Long id);
+    InternalReturnObject refundCoupon(@RequestParam Long userId, @RequestParam String userName, @PathVariable Long id);
 
     /**
      * solved:LXC
      * 使用优惠券消费后，修改优惠券状态为已使用
      */
     @PutMapping("/internal/coupons/{id}/use")
-    InternalReturnObject useCoupon( @PathVariable Long id);
+    InternalReturnObject useCoupon(@RequestParam Long userId, @RequestParam String userName, @PathVariable Long id);
 
     /**
      * 查询优惠券是否存在
      * solved:LXC
      */
     @GetMapping("/internal/coupons/{id}/exists")
-    InternalReturnObject isCouponExists(@PathVariable Long id);
+    InternalReturnObject isCouponExists(@PathVariable Long id, @RequestParam Long userId);
 }

@@ -18,10 +18,7 @@ import cn.edu.xmu.oomall.transaction.util.alipay.model.bo.AlipayTradeState;
 import cn.edu.xmu.oomall.transaction.util.billformatter.FileUtil;
 import cn.edu.xmu.oomall.transaction.util.billformatter.vo.AliPayFormat;
 
-import cn.edu.xmu.oomall.transaction.util.mq.MessageProducer;
-import cn.edu.xmu.oomall.transaction.util.mq.PaymentNotifyMessage;
-import cn.edu.xmu.oomall.transaction.util.mq.PaymentQueryMessage;
-import cn.edu.xmu.oomall.transaction.util.mq.RefundQueryMessage;
+import cn.edu.xmu.oomall.transaction.util.mq.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -157,7 +154,7 @@ public class AlipayTransaction extends TransactionPattern {
                 }
 
                 // 通知其他模块支付情况
-                Map<String, Object> map = TransactionPatternFactory.decodeRequestNo(alipayPaymentQueryRetVo.getOutTradeNo());
+                Map<String, Object> map = TransactionPatternFactory.decodeRequestNo(bill.getOutTradeNo());
                 message.setDocumentId((String) map.get("documentId"));
                 message.setDocumentType(Byte.parseByte((String) map.get("documentType")));
                 messageProducer.sendPaymentNotifyMessage(message);
@@ -189,17 +186,28 @@ public class AlipayTransaction extends TransactionPattern {
                 AlipayRefundQueryRetVo alipayRefundQueryRetVo = warpRetObject.getAlipayRefundQueryRetVo();
 
                 Refund refund = new Refund();
+                // 创建refundMessage，通过rocketMQ生产者发送
+                RefundNotifyMessage message = new RefundNotifyMessage();
                 if (alipayRefundQueryRetVo.getRefundStatus() != null &&
                         alipayRefundQueryRetVo.getRefundStatus().equals(AlipayRefundState.REFUND_SUCCESS.getDescription())) {
                     refund.setState(RefundState.FINISH_REFUND.getCode());
+                    message.setRefundState(RefundState.FINISH_REFUND);
                 } else {
                     refund.setState(RefundState.FAILED.getCode());
+                    message.setRefundState(RefundState.FAILED);
                 }
 
+                // 更新数据库
                 refund.setId(refundId);
                 refund.setRefundTime(alipayRefundQueryRetVo.getGmtRefundPay());
                 refund.setTradeSn(alipayRefundQueryRetVo.getTradeNo());
                 transactionDao.updateRefund(refund);
+
+                // 通知其他模块退款情况
+                Map<String, Object> map = TransactionPatternFactory.decodeRequestNo(bill.getOutRefundNo());
+                message.setDocumentId((String) map.get("documentId"));
+                message.setDocumentType(Byte.parseByte((String) map.get("documentType")));
+                messageProducer.sendRefundNotifyMessage(message);
             }
         }
     }

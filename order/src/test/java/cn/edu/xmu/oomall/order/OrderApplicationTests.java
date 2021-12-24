@@ -1,40 +1,29 @@
 package cn.edu.xmu.oomall.order;
 
 import cn.edu.xmu.oomall.core.util.JacksonUtil;
-import cn.edu.xmu.oomall.core.util.ReturnNo;
-import cn.edu.xmu.oomall.core.util.ReturnObject;
 import cn.edu.xmu.oomall.order.microservice.CustomService;
-import cn.edu.xmu.oomall.order.microservice.GoodsService;
-import cn.edu.xmu.oomall.order.microservice.ShopService;
 import cn.edu.xmu.oomall.order.microservice.TransactionService;
-import cn.edu.xmu.oomall.order.microservice.bo.PaymentState;
-import cn.edu.xmu.oomall.order.microservice.bo.RefundState;
-import cn.edu.xmu.oomall.order.microservice.bo.RefundType;
 import cn.edu.xmu.oomall.order.microservice.vo.OnSaleVo;
 import cn.edu.xmu.oomall.order.microservice.vo.ProductVo;
-import cn.edu.xmu.oomall.order.microservice.vo.RefundRecVo;
+import cn.edu.xmu.oomall.order.microservice.vo.RefundVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRetVo;
 import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.util.CreateObject;
-import cn.edu.xmu.oomall.order.util.IdUtil;
 import cn.edu.xmu.privilegegateway.annotation.util.Common;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import cn.edu.xmu.privilegegateway.annotation.util.JwtHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -478,14 +467,13 @@ class OrderApplicationTests {
 
     @Test
     public void testRequestRefund() {
-        RefundRecVo refundRecVo = new RefundRecVo();
+        RefundVo refundRecVo = new RefundVo();
         refundRecVo.setDocumentType((byte) 0);
         refundRecVo.setPaymentId(1L);
         refundRecVo.setAmount(50L);
         refundRecVo.setDescr("123");
         refundRecVo.setReason("aaa");
         refundRecVo.setDocumentId("2021");
-        refundRecVo.setPatternId(0L);
         InternalReturnObject<RefundRetVo> refundRetVo = transactionService.requestRefund(refundRecVo);
         System.out.println(refundRetVo.getData());
     }

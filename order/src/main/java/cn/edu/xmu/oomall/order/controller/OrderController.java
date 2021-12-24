@@ -156,7 +156,7 @@ public class OrderController {
      * @return
      */
     @Audit()
-    @PutMapping("/orders/{id}/cancel")
+    @GetMapping("/orders/{id}/cancel")
     public Object cancelOrderByCustomer(@PathVariable("id") Long id,@LoginUser Long loginUserId,@LoginName String loginUserName)
     {
         return Common.decorateReturnObject(orderService.cancelOrderByCustomer(id,loginUserId,loginUserName));

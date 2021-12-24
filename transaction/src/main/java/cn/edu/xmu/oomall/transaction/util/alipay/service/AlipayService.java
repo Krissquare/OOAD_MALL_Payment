@@ -73,10 +73,10 @@ public class AlipayService {
     @Transactional()
     public Object refundNotifyByAlipay(AlipayNotifyVo alipayNotifyVo) {
         Refund refund = new Refund();
-        // 退款失败
         // 创建refundMessage，通过rocketMQ生产者发送
         RefundNotifyMessage message = new RefundNotifyMessage();
         if (alipayNotifyVo.getRefundFee() == null) {
+            // 退款失败
             refund.setState(RefundState.FAILED.getCode());
             message.setRefundState(RefundState.FAILED);
         } else {
@@ -84,11 +84,6 @@ public class AlipayService {
             refund.setState(RefundState.FINISH_REFUND.getCode());
             message.setRefundState(RefundState.FINISH_REFUND);
         }
-
-        // 通知其他模块退款情况
-        Map<String, Object> map = TransactionPatternFactory.decodeRequestNo(alipayNotifyVo.getOutTradeNo());
-        message.setDocumentId((String) map.get("documentId"));
-        message.setDocumentType(Byte.parseByte((String) map.get("documentType")));
 
         // 根据请求号解码出Id，更新数据库
         String refundId = (String) TransactionPatternFactory
@@ -98,8 +93,12 @@ public class AlipayService {
         refund.setTradeSn(alipayNotifyVo.getTradeNo());
         transactionDao.updateRefund(refund);
 
+        // 通知其他模块退款情况
+        Map<String, Object> map = TransactionPatternFactory.decodeRequestNo(alipayNotifyVo.getOutBizNo());
+        message.setDocumentId((String) map.get("documentId"));
+        message.setDocumentType(Byte.parseByte((String) map.get("documentType")));
+        messageProducer.sendRefundNotifyMessage(message);
+
         return new WechatNotifyRetVo();
     }
-
-
 }

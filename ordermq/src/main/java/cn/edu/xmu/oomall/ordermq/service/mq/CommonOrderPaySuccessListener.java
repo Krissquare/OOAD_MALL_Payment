@@ -13,6 +13,7 @@ import cn.edu.xmu.oomall.ordermq.model.po.OrderPo;
 import cn.edu.xmu.oomall.ordermq.service.mq.vo.PaymentNotifyMessage;
 import cn.edu.xmu.oomall.ordermq.util.IdUtil;
 import com.alibaba.fastjson.JSONObject;
+import org.apache.rocketmq.spring.annotation.ConsumeMode;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,7 @@ import static cn.edu.xmu.privilegegateway.annotation.util.Common.*;
  * @date 2021/12/17 15:56
  */
 @Service
-@RocketMQMessageListener(topic = "${oomall.payment.order.commontopic}", consumerGroup = "${oomall.payment.order.commontopic}")
+@RocketMQMessageListener(topic = "${oomall.payment.order.commontopic}", consumeMode = ConsumeMode.ORDERLY, consumerGroup = "${oomall.payment.order.commontopic}")
 public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
     @Autowired
     OrderDao orderDao;
@@ -45,8 +46,9 @@ public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
         if(!paymentNotifyMessage.getPaymentState().equals(PaymentState.ALREADY_PAY)){
             return;
         }
-        ReturnObject orderByOrderSn = orderDao.getOrderByOrderSn(paymentNotifyMessage.getDocumentId());
-        if (orderByOrderSn.getCode() != ReturnNo.OK) {
+        ReturnObject<OrderPo> orderByOrderSn = orderDao.getOrderByOrderSn(paymentNotifyMessage.getDocumentId());
+        if (orderByOrderSn.getCode() != ReturnNo.OK
+        && orderByOrderSn.getData().getState().equals(OrderState.FINISH_PAY.getCode())) {
             return;
         }
         OrderPo orderPo = (OrderPo) orderByOrderSn.getData();
@@ -91,25 +93,23 @@ public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
         setPoModifiedFields(order, order.getCreatorId(), order.getCreatorName());
         orderDao.updateOrder(order);
 
-        Long discountPrice = 0L;
-        Long originprice = 0L;
-        Long point = 0L;
+        Long pid = order.getId();
         for (Long shopId : set) {
-            discountPrice = 0L;
-            originprice = 0L;
-            point = 0L;
+            long discountPrice = 0L;
+            long originprice = 0L;
+            long point = 0L;
             List<OrderItem> listByShop = new ArrayList();
             //上面的order就当新的子order
-            order.setPid(order.getId());
             order.setId(null);
-            order.setExpressFee(null);
+            order.setPid(pid);
+            order.setExpressFee(0L);
             order.setShopId(shopId);
             //子订单生成订单号
             order.setOrderSn(IdUtil.getGuid());
             setPoCreatedFields(order, order.getCreatorId(), order.getCreatorName());
             setPoModifiedFields(order, order.getCreatorId(), order.getCreatorName());
             for (OrderItem orderItem : orderItems) {
-                //是这个商铺的  累加积点，累加钱，累加优惠 子改pid，改状态    改明细order_id
+                //是这个商铺的  累加积点，累加钱，累加优惠 子改pid，改状态,改明细order_id
                 if (orderItem.getShopId().equals(shopId)) {
                     listByShop.add(orderItem);
                     discountPrice += orderItem.getDiscountPrice() * orderItem.getQuantity();
