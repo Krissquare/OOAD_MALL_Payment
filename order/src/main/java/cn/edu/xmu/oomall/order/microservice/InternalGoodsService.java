@@ -1,5 +1,6 @@
 package cn.edu.xmu.oomall.order.microservice;
 
+import cn.edu.xmu.oomall.order.microservice.vo.IntegerQuantityVo;
 import cn.edu.xmu.oomall.order.microservice.vo.QuantityVo;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -14,6 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(name = "goods-service")
 public interface InternalGoodsService {
     @PutMapping("internal/onsales/{id}/stock")
-    InternalReturnObject updateOnsaleQuantity(@PathVariable Long id, @RequestBody QuantityVo vo);
+    InternalReturnObject updateOnsaleQuantity(@PathVariable Long id, @RequestBody IntegerQuantityVo vo);
 
 }
