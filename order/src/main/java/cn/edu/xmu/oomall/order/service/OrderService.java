@@ -327,15 +327,16 @@ public class OrderService {
             rocketMQTemplate.sendOneWay(INSERT_ORDER_TOPIC, message);
             Order order1 = orderAndOrderItemsVo.getOrder();
             List<SimplePayment> list = new ArrayList<>();
+            ZonedDateTime now = ZonedDateTime.now();
             Long price =order1.getOriginPrice()-order1.getDiscountPrice()+order1.getExpressFee()- order1.getPoint();
             if (order1.getAdvancesaleId()!=null){
-                SimplePayment simplePayment = new SimplePayment(order1.getOrderSn(),(byte)2,null,deposit,ZonedDateTime.now(),ZonedDateTime.now().plusDays(1L));
-                SimplePayment simplePayment1 = new SimplePayment(order1.getOrderSn(),(byte)3,null,price-deposit,paytime,paytime.plusDays(1L));
+                SimplePayment simplePayment = new SimplePayment(order1.getOrderSn(),(byte)2,null,deposit,now.minusNanos(now.getNano()),now.minusNanos(now.getNano()).plusDays(1L));
+                SimplePayment simplePayment1 = new SimplePayment(order1.getOrderSn(),(byte)3,null,price-deposit,paytime.minusNanos(paytime.getNano()),paytime.minusNanos(paytime.getNano()).plusDays(1L));
                 list.add(simplePayment);
                 list.add(simplePayment1);
                 return new ReturnObject(list);
             }else {
-                SimplePayment simplePayment = new SimplePayment(order1.getOrderSn(),(byte)0,null,price,ZonedDateTime.now(),ZonedDateTime.now().plusDays(1L));
+                SimplePayment simplePayment = new SimplePayment(order1.getOrderSn(),(byte)0,null,price,now.minusNanos(now.getNano()),now.minusNanos(now.getNano()).plusDays(1L));
                 list.add(simplePayment);
                 return new ReturnObject(list);
             }
