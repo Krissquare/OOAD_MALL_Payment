@@ -276,7 +276,7 @@ public class OrderController {
     /**
      * 14.查询自己订单的支付信息
      * gyt
-     * TODO：这里的documentId是用like
+     *
      * @param id
      * @return
      */
