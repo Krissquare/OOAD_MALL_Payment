@@ -196,7 +196,7 @@ public class OrderService {
                     return new ReturnObject(ReturnNo.getByCode(onsaleById.getErrno()));
                 }
                 OnSaleVo onSaleVo = onsaleById.getData();
-                //判断onsaleid里的activity是不是couponid
+                //判断onsaleid里的activity是不是Grouponid
                 if (!(onSaleVo.getType() == (byte) 2 && onSaleVo.getActivityId().equals(simpleOrderVo.getGrouponId()))) {
                     return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
                 }
@@ -218,7 +218,7 @@ public class OrderService {
                     return new ReturnObject(ReturnNo.getByCode(onsaleById.getErrno()));
                 }
                 OnSaleVo onSaleVo = onsaleById.getData();
-                //判断onsaleid里的activity是不是couponid
+                //判断onsaleid里的activity是不是Advancesaleid
                 if (!(onSaleVo.getType() == (byte) 3 && onSaleVo.getActivityId().equals(simpleOrderVo.getAdvancesaleId()))) {
                     return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
                 }
@@ -686,12 +686,14 @@ public class OrderService {
         DetailOrderVo orderVo = Common.cloneVo(order, DetailOrderVo.class);
         orderVo.setCustomerVo(customerVo);
         orderVo.setShop(shopVo);
-        List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();//根据orderId查orderItem
+        List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();
+        //根据orderId查orderItem
         List<SimpleOrderitemRetVo> simpleOrderItemVos = new ArrayList<>();
+        if(orderItemList!=null){
         for (OrderItem orderItem : orderItemList) {
             SimpleOrderitemRetVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderitemRetVo.class);
             simpleOrderItemVos.add(simpleOrderItemVo);
-        }
+        }}
         orderVo.setOrderItem(simpleOrderItemVos);
         return new ReturnObject(orderVo);
     }
