@@ -106,8 +106,8 @@ public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
             order.setShopId(shopId);
             //子订单生成订单号
             order.setOrderSn(IdUtil.getGuid());
-            setPoCreatedFields(order, 0L, null);
-            setPoModifiedFields(order, 0L, null);
+            setPoCreatedFields(order, order.getCreatorId(), order.getCreatorName());
+            setPoModifiedFields(order, order.getCreatorId(), order.getCreatorName());
             for (OrderItem orderItem : orderItems) {
                 //是这个商铺的  累加积点，累加钱，累加优惠 子改pid，改状态    改明细order_id
                 if (orderItem.getShopId().equals(shopId)) {
@@ -129,7 +129,7 @@ public class CommonOrderPaySuccessListener implements RocketMQListener<String> {
                 orderItem.setOrderId(data.getId());
                 orderDao.insertOrderItem(orderItem);
             }
-            return;
         }
+        return;
     }
 }
