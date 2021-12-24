@@ -6,6 +6,7 @@ import cn.edu.xmu.oomall.ordermq.mapper.OrderItemPoMapper;
 import cn.edu.xmu.oomall.ordermq.mapper.OrderPoMapper;
 import cn.edu.xmu.oomall.ordermq.model.bo.Order;
 import cn.edu.xmu.oomall.ordermq.model.bo.OrderItem;
+import cn.edu.xmu.oomall.ordermq.model.bo.OrderState;
 import cn.edu.xmu.oomall.ordermq.model.po.OrderItemPo;
 import cn.edu.xmu.oomall.ordermq.model.po.OrderItemPoExample;
 import cn.edu.xmu.oomall.ordermq.model.po.OrderPo;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.cloneVo;
+import static cn.edu.xmu.privilegegateway.annotation.util.Common.setPoModifiedFields;
 
 
 @Repository
@@ -145,6 +147,25 @@ public class OrderDao {
         }catch (Exception e){
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR,e.getMessage());
+        }
+    }
+
+    //传入子订单
+    public ReturnObject updateRelatedSonOrder(Order order) {
+        try {
+            OrderPoExample orderPoExample = new OrderPoExample();
+            OrderPoExample.Criteria cr = orderPoExample.createCriteria();
+            cr.andPidEqualTo(order.getPid());
+            List<OrderPo> sonOrderList = orderPoMapper.selectByExample(orderPoExample);
+            for (OrderPo orderPo : sonOrderList) {
+                orderPo.setState(OrderState.CANCEL_ORDER.getCode());
+                setPoModifiedFields(orderPo, orderPo.getCreatorId(), orderPo.getCreatorName());
+                updateOrder(cloneVo(orderPo, Order.class));
+            }
+            return new ReturnObject(ReturnNo.OK);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ReturnObject<>(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
         }
     }
 }

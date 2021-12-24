@@ -11,7 +11,7 @@ import java.util.List;
 public class DetailOrderVo {
     private Long id;
     private String orderSn;
-    private SimpleVo customerVo;
+    private SimpleVo customer;
     private SimpleVo shop;
     private Long pid;
     private Integer state;

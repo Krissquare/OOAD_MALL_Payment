@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-@RocketMQMessageListener(topic = "refund-query-topic", consumeMode = ConsumeMode.CONCURRENTLY, consumerGroup = "refund-query-group")
+@RocketMQMessageListener(topic = "refund-query-topic", consumeMode = ConsumeMode.ORDERLY, consumerGroup = "refund-query-group")
 public class RefundQueryMessageListener implements RocketMQListener<String> {
 
     @Autowired

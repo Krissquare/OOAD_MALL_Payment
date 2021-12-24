@@ -71,16 +71,27 @@ public class WechatTransaction extends TransactionPattern {
        if (ret != null) {
            WechatRefundRetVo wechatRefundRetVo = ret.getData();
            Refund refund = new Refund();
+           // 创建refundMessage，通过rocketMQ生产者发送
+           RefundNotifyMessage message = new RefundNotifyMessage();
            if (wechatRefundRetVo.getStatus().equals(WechatRefundState.SUCCESS.getState())) {
                refund.setState(RefundState.FINISH_REFUND.getCode());
+               message.setRefundState(RefundState.FINISH_REFUND);
            } else {
                refund.setState(RefundState.FAILED.getCode());
+               message.setRefundState(RefundState.FAILED);
            }
+           // 更新数据库
            Long refundId = bill.getRelatedRefund().getId();
            refund.setId(refundId);
            refund.setRefundTime(wechatRefundRetVo.getSuccessTime());
            refund.setTradeSn(wechatRefundRetVo.getTransactionId());
            transactionDao.updateRefund(refund);
+
+           // 通知其他模块退款情况
+           Map<String, Object> map = TransactionPatternFactory.decodeRequestNo(bill.getOutRefundNo());
+           message.setDocumentId((String) map.get("documentId"));
+           message.setDocumentType(Byte.parseByte((String) map.get("documentType")));
+           messageProducer.sendRefundNotifyMessage(message);
        }
         // 没接到消息，才发送主动查询退款的延时消息（基本不发生）
         RefundQueryMessage refundQueryMessage = new RefundQueryMessage();

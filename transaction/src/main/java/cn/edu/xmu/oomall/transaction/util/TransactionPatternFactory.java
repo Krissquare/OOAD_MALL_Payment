@@ -26,11 +26,11 @@ public class TransactionPatternFactory {
     @Autowired
     private TransactionDao transactionDao;
 
-    final private static String REQUEST_NO_PATTERN = "^[0-9]+/[\\S]+/[0-9]$";
+    final private static String REQUEST_NO_PATTERN = "^[0-9]+-[\\S]+-[0-9]$";
 
     public static String encodeRequestNo(Long id, String documentId, Byte docymentType) {
         // 请求号 = 流水Id + documentId + documentType
-        String requestNo = String.format("%s/%s/%s", id.toString(), documentId, docymentType.toString());
+        String requestNo = String.format("%s-%s-%s", id.toString(), documentId, docymentType.toString());
         boolean isMatch = Pattern.matches(REQUEST_NO_PATTERN, requestNo);
         if (isMatch) {
             return requestNo;
@@ -42,7 +42,7 @@ public class TransactionPatternFactory {
     public static Map<String, Object> decodeRequestNo(String requestNo) {
         boolean isMatch = Pattern.matches(REQUEST_NO_PATTERN, requestNo);
         if (isMatch) {
-            String[] strings = requestNo.split("/");
+            String[] strings = requestNo.split("-");
             Map<String, Object> map = new HashMap<>();
             map.put("id", strings[0]);
             map.put("documentId", strings[1]);

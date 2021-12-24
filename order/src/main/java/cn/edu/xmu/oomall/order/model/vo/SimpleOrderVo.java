@@ -33,5 +33,7 @@ public class SimpleOrderVo {
     private Long advancesaleId;
     private Long grouponId;
     private Long customerId;
+
+    @NotNull
     private Long point;
 }

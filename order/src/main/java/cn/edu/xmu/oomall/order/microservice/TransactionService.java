@@ -3,7 +3,7 @@ package cn.edu.xmu.oomall.order.microservice;
 import cn.edu.xmu.oomall.core.config.OpenFeignConfig;
 import cn.edu.xmu.oomall.order.microservice.vo.PageVo;
 import cn.edu.xmu.oomall.order.microservice.vo.PaymentRetVo;
-import cn.edu.xmu.oomall.order.microservice.vo.RefundRecVo;
+import cn.edu.xmu.oomall.order.microservice.vo.RefundVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRetVo;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -50,5 +50,5 @@ public interface TransactionService {
 
     //TODO:GYT
     @PostMapping("/internal/refunds")
-    InternalReturnObject<RefundRetVo> requestRefund(@Validated @RequestBody RefundRecVo refundVo);
+    InternalReturnObject<RefundRetVo> requestRefund(@Validated @RequestBody RefundVo refundVo);
 }

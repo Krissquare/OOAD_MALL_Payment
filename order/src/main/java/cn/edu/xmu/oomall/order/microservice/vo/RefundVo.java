@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RefundRecVo {
-    private Long patternId;
+public class RefundVo {
 
     private String documentId;
 

@@ -23,7 +23,7 @@ public class PaymentRetVo {
     private Byte documentType;
     private String descr;
     private Long amount;
-    private String actualAmount;
+    private Long actualAmount;
     private Byte state;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ", timezone = "GMT+8")
     private ZonedDateTime payTime;

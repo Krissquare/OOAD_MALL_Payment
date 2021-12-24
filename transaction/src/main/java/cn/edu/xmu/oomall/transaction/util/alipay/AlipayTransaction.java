@@ -191,10 +191,10 @@ public class AlipayTransaction extends TransactionPattern {
                 if (alipayRefundQueryRetVo.getRefundStatus() != null &&
                         alipayRefundQueryRetVo.getRefundStatus().equals(AlipayRefundState.REFUND_SUCCESS.getDescription())) {
                     refund.setState(RefundState.FINISH_REFUND.getCode());
-                    message.setRefundState(RefundState.FAILED);
+                    message.setRefundState(RefundState.FINISH_REFUND);
                 } else {
                     refund.setState(RefundState.FAILED.getCode());
-                    message.setRefundState(RefundState.FINISH_REFUND);
+                    message.setRefundState(RefundState.FAILED);
                 }
 
                 // 更新数据库
