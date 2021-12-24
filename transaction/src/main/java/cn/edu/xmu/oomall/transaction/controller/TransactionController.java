@@ -146,6 +146,7 @@ public class TransactionController {
 
     /**
      * 内部API，只给售后用
+     *
      * @param documentId
      * @param state
      * @param beginTime

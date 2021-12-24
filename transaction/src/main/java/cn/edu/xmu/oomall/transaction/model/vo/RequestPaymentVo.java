@@ -23,7 +23,6 @@ public class RequestPaymentVo implements PaymentBillObject {
     @NotNull
     private Byte documentType;
 
-    @NotNull
     private String descr;
 
     @NotNull
@@ -39,6 +38,6 @@ public class RequestPaymentVo implements PaymentBillObject {
 
     @Override
     public PaymentBill createPaymentBill() {
-        return new PaymentBill(patternId, documentId, documentType, descr, amount, beginTime.toLocalDateTime(), endTime.toLocalDateTime(), null);
+        return new PaymentBill(patternId, documentId, documentType, descr, amount, beginTime, endTime, null);
     }
 }

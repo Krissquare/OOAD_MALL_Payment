@@ -26,11 +26,11 @@ public class TransactionPatternFactory {
     @Autowired
     private TransactionDao transactionDao;
 
-    final private static String REQUEST_NO_PATTERN = "^[0-9]+-[0-9a-zA-z]+-[0-9]$";
+    final private static String REQUEST_NO_PATTERN = "^[0-9]+/[\\S]+/[0-9]$";
 
     public static String encodeRequestNo(Long id, String documentId, Byte docymentType) {
         // 请求号 = 流水Id + documentId + documentType
-        String requestNo = String.format("%s-%s-%s", id.toString(), documentId, docymentType.toString());
+        String requestNo = String.format("%s/%s/%s", id.toString(), documentId, docymentType.toString());
         boolean isMatch = Pattern.matches(REQUEST_NO_PATTERN, requestNo);
         if (isMatch) {
             return requestNo;
@@ -42,7 +42,7 @@ public class TransactionPatternFactory {
     public static Map<String, Object> decodeRequestNo(String requestNo) {
         boolean isMatch = Pattern.matches(REQUEST_NO_PATTERN, requestNo);
         if (isMatch) {
-            String[] strings = requestNo.split("-");
+            String[] strings = requestNo.split("/");
             Map<String, Object> map = new HashMap<>();
             map.put("id", strings[0]);
             map.put("documentId", strings[1]);
@@ -54,19 +54,19 @@ public class TransactionPatternFactory {
     }
 
     public TransactionPattern getPatternInstance(Long patternId) {
-        ReturnObject<PaymentPattern> retPaymentPattern = transactionDao.getPaymentPatternById(patternId);
-        if (!retPaymentPattern.getCode().equals(ReturnNo.OK)) {
+   //     ReturnObject<PaymentPattern> retPaymentPattern = transactionDao.getPaymentPatternById(patternId);
+       // if (!retPaymentPattern.getCode().equals(ReturnNo.OK)) {
 //            throw new ClassNotFoundException();
-            return null;
-        }
+     //       return null;
+    //    }
 
-        PaymentPattern paymentPattern = retPaymentPattern.getData();
+    //    PaymentPattern paymentPattern = retPaymentPattern.getData();
 
         // TODO: 利用Spring技术获取Bean对象
-        if (paymentPattern.getId() == 2) {
-            return wechatTransaction;
-        } else {
+        if (patternId == 0) {
             return alipayTransaction;
+        } else {
+            return wechatTransaction;
         }
     }
 

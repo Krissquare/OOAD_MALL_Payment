@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -132,6 +133,12 @@ public class TransactionService {
      */
     @Transactional(rollbackFor = Exception.class)
     public ReturnObject requestPayment(PaymentBill paymentBill, Long loginUserId, String loginUserName) {
+        // 判断是否在beginTime和endTime内
+        if (LocalDateTime.now().isBefore(paymentBill.getBeginTime().withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime())
+                && LocalDateTime.now().isAfter(paymentBill.getEndTime().withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime())) {
+            return new ReturnObject((ReturnNo.STATENOTALLOW));
+        }
+
         // 根据documentId, documentType去查payment
         ReturnObject<PageInfo<Payment>> retPaymentPageInfo =
                 transactionDao.listPayment(null, paymentBill.getDocumentId(), paymentBill.getDocumentType(), null, null, null, 1, 100);
@@ -152,11 +159,6 @@ public class TransactionService {
                 return new ReturnObject(ReturnNo.STATENOTALLOW);
             }
 
-            // 判断是否在beginTime和endTime内
-            if (LocalDateTime.now().isAfter(payment.getBeginTime().toLocalDateTime())
-                    && LocalDateTime.now().isBefore(payment.getEndTime().toLocalDateTime())) {
-                return new ReturnObject((ReturnNo.STATENOTALLOW));
-            }
 
             // 判断是否存在匹配支付渠道的待支付流水
             if (paymentBill.getPatternId().equals(payment.getPatternId()) &&
