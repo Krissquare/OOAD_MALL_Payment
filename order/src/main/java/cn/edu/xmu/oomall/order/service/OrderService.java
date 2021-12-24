@@ -19,8 +19,6 @@ import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.model.vo.SimpleVo;
 import cn.edu.xmu.privilegegateway.annotation.util.Common;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
-import org.apache.rocketmq.client.producer.SendResult;
-import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 import static cn.edu.xmu.privilegegateway.annotation.util.Common.*;
@@ -120,6 +119,8 @@ public class OrderService {
             Set<Long> couponIds = new HashSet<>();
             Set<Long> couponActivityIds = new HashSet<>();
             Set<Long> shopIds = new HashSet<>();
+            Long deposit = null;
+            ZonedDateTime paytime = null;
             // 订单的orderItem不能为空
             List<SimpleOrderItemVo> orderItems = simpleOrderVo.getOrderItems();
             if (orderItems.size() == 0) {
@@ -142,7 +143,7 @@ public class OrderService {
                     return new ReturnObject(ReturnNo.getByCode(onSaleVo.getErrno()));
                 }
                 // 判断回传的Product中的OnsaleId（某一时刻唯一）是否和传入的OnsaleId对应
-                if (!onSaleVo.getData().getId().equals(productVo.getData().getOnSaleId())) {
+                if (!onSaleVo.getData().getId().equals(productVo.getData().getOnsaleId())) {
                     return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
                 }
 
@@ -208,6 +209,9 @@ public class OrderService {
                 if (advanceSaleById.getErrno() != 0) {
                     return new ReturnObject(ReturnNo.getByCode(advanceSaleById.getErrno()));
                 }
+                AdvanceVo data = advanceSaleById.getData();
+                deposit = data.getAdvancePayPrice();
+                paytime = data.getPayTime();
                 SimpleOrderItemVo simpleOrderItemVo = orderItems.get(0);
                 InternalReturnObject<OnSaleVo> onsaleById = goodsService.selectFullOnsale(simpleOrderItemVo.getOnsaleId());
                 if (onsaleById.getErrno() != 0) {
@@ -293,45 +297,49 @@ public class OrderService {
                     return new ReturnObject(internalReturnObject);
                 }
             }
-            //转换为1/10的单位
-            sumNow = sumOrigin * 10 - sumDiscount;
-            for (int i = 0; i < orderItemsBo.size(); i++) {
-                OrderItem orderItem = orderItemsBo.get(i);
-                double sum = orderItem.getQuantity() * (orderItem.getPrice() * 10 - orderItem.getDiscountPrice());
-                double proportion = sum / sumNow;
-                orderItem.setPoint((long) (proportion * totalPoint / orderItem.getQuantity()));
-            }
-            order.setOriginPrice(sumOrigin);
-            order.setDiscountPrice(sumDiscount);
-            InternalReturnObject<FreightCalculatingRetVo> freightCalculatingRetVoInternalReturnObject = null;
             //计算运费
-            freightCalculatingRetVoInternalReturnObject = freightService.calculateFreight(order.getRegionId(), freightCalculatingPostVos);
+            InternalReturnObject<FreightCalculatingRetVo> freightCalculatingRetVoInternalReturnObject = freightService.calculateFreight(order.getRegionId(), freightCalculatingPostVos);
             if (freightCalculatingRetVoInternalReturnObject.getErrno() != 0) {
                 return new ReturnObject(ReturnNo.getByCode(freightCalculatingRetVoInternalReturnObject.getErrno()));
             }
             order.setExpressFee(freightCalculatingRetVoInternalReturnObject.getData().getFreightPrice());
+            if (totalPoint > order.getExpressFee()) {
+                totalPoint -= order.getExpressFee();
+                //转换为1/10的单位
+                sumNow = sumOrigin * 10 - sumDiscount;
+                for (int i = 0; i < orderItemsBo.size(); i++) {
+                    OrderItem orderItem = orderItemsBo.get(i);
+                    double sum = orderItem.getQuantity() * (orderItem.getPrice() * 10 - orderItem.getDiscountPrice());
+                    double proportion = sum / sumNow;
+                    orderItem.setPoint((long) (proportion * totalPoint / orderItem.getQuantity()));
+                }
+            }
+            order.setOriginPrice(sumOrigin);
+            order.setDiscountPrice(sumDiscount);
+            order.setAdvancesaleId(order.getAdvancesaleId() == null ? 0 : order.getAdvancesaleId());
+            order.setGrouponId(order.getGrouponId() == null ? 0 : order.getGrouponId());
             orderAndOrderItemsVo.setOrder(order);
             orderAndOrderItemsVo.setOrderItems(orderItemsBo);
             //todo: redis暂存 以防没插进去就支付
             //发消息
             String json = JacksonUtil.toJson(orderAndOrderItemsVo);
             Message message = MessageBuilder.withPayload(json).build();
-            SendResult sendResult = rocketMQTemplate.syncSend(INSERT_ORDER_TOPIC, message);
-            if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
-                //回滚积点,优惠卷
-                internalReturnObject1 = customService.changeCustomerPoint(userId, new CustomerModifyPointsVo(orderAndOrderItemsVo.getOrder().getPoint()));
-                if (internalReturnObject1.getErrno() != 0) {
-                    return new ReturnObject(internalReturnObject1);
-                }
-                for (Long id : couponIds) {
-                    InternalReturnObject internalReturnObject = customService.refundCoupon(id);
-                    if (internalReturnObject.getErrno() != 0) {
-                        return new ReturnObject(internalReturnObject);
-                    }
-                }
-                return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, "发送消息失败");
+            rocketMQTemplate.sendOneWay(INSERT_ORDER_TOPIC, message);
+            Order order1 = orderAndOrderItemsVo.getOrder();
+            List<SimplePayment> list = new ArrayList<>();
+            ZonedDateTime now = ZonedDateTime.now();
+            Long price = order1.getOriginPrice() - order1.getDiscountPrice() + order1.getExpressFee() - order1.getPoint();
+            if (order1.getAdvancesaleId() != 0) {
+                SimplePayment simplePayment = new SimplePayment(order1.getOrderSn(), (byte) 2, null, deposit, now.minusNanos(now.getNano()), now.minusNanos(now.getNano()).plusDays(1L));
+                SimplePayment simplePayment1 = new SimplePayment(order1.getOrderSn(), (byte) 3, null, price - deposit, paytime.minusNanos(paytime.getNano()), paytime.minusNanos(paytime.getNano()).plusDays(1L));
+                list.add(simplePayment);
+                list.add(simplePayment1);
+                return new ReturnObject(list);
+            } else {
+                SimplePayment simplePayment = new SimplePayment(order1.getOrderSn(), (byte) 0, null, price, now.minusNanos(now.getNano()), now.minusNanos(now.getNano()).plusDays(1L));
+                list.add(simplePayment);
+                return new ReturnObject(list);
             }
-            return new ReturnObject();
         } catch (Exception e) {
             logger.error(e.getMessage());
             return new ReturnObject(ReturnNo.INTERNAL_SERVER_ERR, e.getMessage());
@@ -366,14 +374,14 @@ public class OrderService {
         SimpleVo shopVo = (SimpleVo) shopRet.getData();
         DetailOrderVo orderVo = Common.cloneVo(order, DetailOrderVo.class);
         orderVo.setCustomerVo(customerVo);
-        orderVo.setShopVo(shopVo);
+        orderVo.setShop(shopVo);
         List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();
         List<SimpleOrderitemRetVo> simpleOrderItemVos = new ArrayList<>();
         for (OrderItem orderItem : orderItemList) {
             SimpleOrderitemRetVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderitemRetVo.class);
             simpleOrderItemVos.add(simpleOrderItemVo);
         }
-        orderVo.setOrderItems(simpleOrderItemVos);
+        orderVo.setOrderItem(simpleOrderItemVos);
         return new ReturnObject(orderVo);
     }
 
@@ -699,14 +707,14 @@ public class OrderService {
         SimpleVo shopVo = shopService.getSimpleShopById(order.getShopId()).getData();
         DetailOrderVo orderVo = Common.cloneVo(order, DetailOrderVo.class);
         orderVo.setCustomerVo(customerVo);
-        orderVo.setShopVo(shopVo);
+        orderVo.setShop(shopVo);
         List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();//根据orderId查orderItem
         List<SimpleOrderitemRetVo> simpleOrderItemVos = new ArrayList<>();
         for (OrderItem orderItem : orderItemList) {
             SimpleOrderitemRetVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderitemRetVo.class);
             simpleOrderItemVos.add(simpleOrderItemVo);
         }
-        orderVo.setOrderItems(simpleOrderItemVos);
+        orderVo.setOrderItem(simpleOrderItemVos);
         return new ReturnObject(orderVo);
     }
 
@@ -1060,7 +1068,7 @@ public class OrderService {
             return new ReturnObject(ReturnNo.getByCode(onSaleVo.getErrno()));
         }
         // 判断回传的Product中的OnsaleId（某一时刻唯一）是否和传入的OnsaleId对应
-        if (!onSaleVo.getData().getId().equals(productVo.getData().getOnSaleId())) {
+        if (!onSaleVo.getData().getId().equals(productVo.getData().getOnsaleId())) {
             return new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE);
         }
         Order order = cloneVo(orderVo, Order.class);
