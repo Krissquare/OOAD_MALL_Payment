@@ -21,6 +21,7 @@
         <module>order</module>
         <module>transaction</module>
         <module>annotation</module>
+        <module>ordermq</module>
     </modules>
 
     <properties>

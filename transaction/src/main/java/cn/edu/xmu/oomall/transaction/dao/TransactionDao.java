@@ -76,7 +76,7 @@ public class TransactionDao {
                 criteria.andPatternIdEqualTo(patternId);
             }
             if (documentId != null) {
-                criteria.andDocumentIdEqualTo(documentId);
+                criteria.andDocumentIdLike(documentId+"%");
             }
             if (documentType != null) {
                 criteria.andDocumentTypeEqualTo(documentType);

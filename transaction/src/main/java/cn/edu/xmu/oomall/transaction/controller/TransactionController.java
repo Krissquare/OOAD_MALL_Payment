@@ -29,15 +29,6 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
     /**
-     * fz
-     * 1.获得支付渠道的所有状态
-     * */
-    @GetMapping("/paypatterns/states")
-    public Object listAllPayPatternStates(){
-        //TODO: qm没给出支付渠道状态图，待补
-        return new ReturnObject<>();
-    }
-    /**
      * @author fz
      * 2.获取当前有效的支付渠道
      * */
@@ -155,6 +146,7 @@ public class TransactionController {
 
     /**
      * 内部API，只给售后用
+     * TODO：这里的documentId是用like
      * @param documentId
      * @param state
      * @param beginTime

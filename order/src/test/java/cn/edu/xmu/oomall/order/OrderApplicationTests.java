@@ -16,6 +16,7 @@ import cn.edu.xmu.oomall.order.microservice.vo.RefundRecVo;
 import cn.edu.xmu.oomall.order.microservice.vo.RefundRetVo;
 import cn.edu.xmu.oomall.order.model.vo.*;
 import cn.edu.xmu.oomall.order.util.CreateObject;
+import cn.edu.xmu.privilegegateway.annotation.util.Common;
 import cn.edu.xmu.privilegegateway.annotation.util.InternalReturnObject;
 import cn.edu.xmu.privilegegateway.annotation.util.JwtHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -492,6 +493,9 @@ class OrderApplicationTests {
     public void test() throws Exception{
         adminToken = jwtHelper.createToken(1L,"admin",0L, 2,1000);
         System.out.println(adminToken);
+        for(int i=0;i<10;i++){
+            System.out.println(Common.genSeqNum(1).substring(0,18));
+        }
 //        String response = this.mvc.perform(get("/shops/1/orders/1").contentType("application/json;charset=UTF-8").header("authorization", adminToken))
 //                .andReturn().getResponse().getContentAsString();
 //        System.out.println(response);
