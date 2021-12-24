@@ -316,6 +316,8 @@ public class OrderService {
             }
             order.setOriginPrice(sumOrigin);
             order.setDiscountPrice(sumDiscount);
+            order.setAdvancesaleId(order.getAdvancesaleId()==null?0:order.getAdvancesaleId());
+            order.setGrouponId(order.getGrouponId()==null?0:order.getGrouponId());
             orderAndOrderItemsVo.setOrder(order);
             orderAndOrderItemsVo.setOrderItems(orderItemsBo);
             //todo: redis暂存 以防没插进去就支付
@@ -371,14 +373,14 @@ public class OrderService {
         SimpleVo shopVo = (SimpleVo) shopRet.getData();
         DetailOrderVo orderVo = Common.cloneVo(order, DetailOrderVo.class);
         orderVo.setCustomerVo(customerVo);
-        orderVo.setShopVo(shopVo);
+        orderVo.setShop(shopVo);
         List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();
         List<SimpleOrderitemRetVo> simpleOrderItemVos = new ArrayList<>();
         for (OrderItem orderItem : orderItemList) {
             SimpleOrderitemRetVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderitemRetVo.class);
             simpleOrderItemVos.add(simpleOrderItemVo);
         }
-        orderVo.setOrderItems(simpleOrderItemVos);
+        orderVo.setOrderItem(simpleOrderItemVos);
         return new ReturnObject(orderVo);
     }
 
@@ -704,14 +706,14 @@ public class OrderService {
         SimpleVo shopVo = shopService.getSimpleShopById(order.getShopId()).getData();
         DetailOrderVo orderVo = Common.cloneVo(order, DetailOrderVo.class);
         orderVo.setCustomerVo(customerVo);
-        orderVo.setShopVo(shopVo);
+        orderVo.setShop(shopVo);
         List<OrderItem> orderItemList = (List<OrderItem>) orderDao.listOrderItemsByOrderId(orderId).getData();//根据orderId查orderItem
         List<SimpleOrderitemRetVo> simpleOrderItemVos = new ArrayList<>();
         for (OrderItem orderItem : orderItemList) {
             SimpleOrderitemRetVo simpleOrderItemVo = Common.cloneVo(orderItem, SimpleOrderitemRetVo.class);
             simpleOrderItemVos.add(simpleOrderItemVo);
         }
-        orderVo.setOrderItems(simpleOrderItemVos);
+        orderVo.setOrderItem(simpleOrderItemVos);
         return new ReturnObject(orderVo);
     }
 

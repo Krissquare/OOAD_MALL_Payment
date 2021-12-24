@@ -12,7 +12,7 @@ public class DetailOrderVo {
     private Long id;
     private String orderSn;
     private SimpleVo customerVo;
-    private SimpleVo shopVo;
+    private SimpleVo shop;
     private Long pid;
     private Integer state;
     private LocalDateTime confirmTime;
@@ -28,5 +28,5 @@ public class DetailOrderVo {
     private Long grouponId;
     private Long advancesaleId;
     private String shipmentSn;
-    private List<SimpleOrderitemRetVo> orderItems;
+    private List<SimpleOrderitemRetVo> orderItem;
 }
