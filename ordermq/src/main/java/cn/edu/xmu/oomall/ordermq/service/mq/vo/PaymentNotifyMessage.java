@@ -1,6 +1,7 @@
-package cn.edu.xmu.oomall.order.service.mq.vo;
+package cn.edu.xmu.oomall.ordermq.service.mq.vo;
 
-import cn.edu.xmu.oomall.order.microservice.bo.RefundState;
+
+import cn.edu.xmu.oomall.ordermq.service.mq.bo.PaymentState;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,12 +9,12 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RefundNotifyMessage {
+public class PaymentNotifyMessage {
 
     private Byte documentType;
 
     private String documentId;
 
-    private RefundState refundState;
+    private PaymentState paymentState;
 
 }
