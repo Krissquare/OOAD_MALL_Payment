@@ -146,7 +146,7 @@ public class TransactionController {
 
     /**
      * 内部API，只给售后用
-     * TODO：这里的documentId是用like
+     *
      * @param documentId
      * @param state
      * @param beginTime

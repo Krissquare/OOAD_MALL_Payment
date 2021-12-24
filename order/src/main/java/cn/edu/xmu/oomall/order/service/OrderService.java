@@ -152,9 +152,9 @@ public class OrderService {
                     //因为可能不同item用一个活动，下同理
                     if (!couponActivityIds.contains(simpleOrderItemVo.getCouponActId())) {
                         couponActivityIds.add(simpleOrderItemVo.getCouponActId());
-                        InternalReturnObject couponActivityById = couponService.showOwnCouponActivityInfo(onSaleVo.getData().getShop().getId(), simpleOrderItemVo.getCouponId());
+                        InternalReturnObject couponActivityById = couponService.showOwnCouponActivityInfo(onSaleVo.getData().getShop().getId(), simpleOrderItemVo.getCouponActId());
                         if (couponActivityById.getErrno() != 0) {
-                            return new ReturnObject(ReturnNo.getByCode(couponActivityById.getErrno()));
+                            return new ReturnObject(couponActivityById);
                         }
                     }
                 }
@@ -224,28 +224,28 @@ public class OrderService {
                 }
             } else {
                 //普通或者优惠订单
-                List<ProductPostVo> disList = new ArrayList<>();
-                List<Integer> indexs = new ArrayList<>();
+                List<ProductPostVo> toCalList = new ArrayList<>();
                 for (int i = 0; i < orderItemsBo.size(); i++) {
                     OrderItem orderItem = orderItemsBo.get(i);
-                    if (orderItem.getCouponActivityId() != null) {
-                        //参加优惠活动的
-                        ProductPostVo productPostVo = cloneVo(orderItem, ProductPostVo.class);
-                        productPostVo.setActivityId(orderItem.getCouponActivityId());
-                        productPostVo.setOriginalPrice(orderItem.getPrice());
-                        disList.add(productPostVo);
-                        indexs.add(i);
-                    }
+                    //参加优惠活动的
+                    ProductPostVo productPostVo = cloneVo(orderItem, ProductPostVo.class);
+                    productPostVo.setActivityId(orderItem.getCouponActivityId());
+                    productPostVo.setOriginalPrice(orderItem.getPrice());
+                    toCalList.add(productPostVo);
                 }
-                if (disList.size() != 0) {
-                    InternalReturnObject internalReturnObject = couponService.calculateDiscount(disList);
-                    if (internalReturnObject.getErrno() != 0) {
-                        return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
-                    }
-                    //得到优惠钱封装进去
-                    List<ProductRetVo> calList = (List<ProductRetVo>) internalReturnObject.getData();
-                    for (int i = 0; i < calList.size(); i++) {
-                        orderItemsBo.get(indexs.get(i)).setDiscountPrice(calList.get(i).getDiscountPrice() * 10);//1/10分
+                InternalReturnObject internalReturnObject = couponService.calculateDiscount(toCalList);
+                if (internalReturnObject.getErrno() != 0) {
+                    return new ReturnObject(ReturnNo.getByCode(internalReturnObject.getErrno()));
+                }
+                //得到优惠钱封装进去
+                List<ProductRetVo> calList = (List<ProductRetVo>) internalReturnObject.getData();
+                for (int i = 0; i < toCalList.size(); i++) {
+                    for (int j = 0; j < calList.size(); j++) {
+                        if (orderItemsBo.get(i).getOnsaleId().equals(calList.get(j).getOnsaleId())) {
+                            orderItemsBo.get(i).setDiscountPrice(calList.get(j).getDiscountPrice());//1/10分
+                            calList.remove(j);
+                            break;
+                        }
                     }
                 }
             }
@@ -298,11 +298,12 @@ public class OrderService {
                 }
             }
             //计算运费
-            InternalReturnObject<FreightCalculatingRetVo> freightCalculatingRetVoInternalReturnObject = freightService.calculateFreight(order.getRegionId(), freightCalculatingPostVos);
-            if (freightCalculatingRetVoInternalReturnObject.getErrno() != 0) {
-                return new ReturnObject(ReturnNo.getByCode(freightCalculatingRetVoInternalReturnObject.getErrno()));
-            }
-            order.setExpressFee(freightCalculatingRetVoInternalReturnObject.getData().getFreightPrice());
+//            InternalReturnObject<FreightCalculatingRetVo> freightCalculatingRetVoInternalReturnObject = freightService.calculateFreight(order.getRegionId(), freightCalculatingPostVos);
+//            if (freightCalculatingRetVoInternalReturnObject.getErrno() != 0) {
+//                return new ReturnObject(ReturnNo.getByCode(freightCalculatingRetVoInternalReturnObject.getErrno()));
+//            }
+//            order.setExpressFee(freightCalculatingRetVoInternalReturnObject.getData().getFreightPrice());
+            order.setExpressFee(1200L);
             if (totalPoint > order.getExpressFee()) {
                 totalPoint -= order.getExpressFee();
                 //转换为1/10的单位
@@ -315,7 +316,7 @@ public class OrderService {
                 }
             }
             order.setOriginPrice(sumOrigin);
-            order.setDiscountPrice(sumDiscount);
+            order.setDiscountPrice((long) (sumDiscount / 10.0 + 0.5));
             order.setAdvancesaleId(order.getAdvancesaleId() == null ? 0 : order.getAdvancesaleId());
             order.setGrouponId(order.getGrouponId() == null ? 0 : order.getGrouponId());
             orderAndOrderItemsVo.setOrder(order);
@@ -875,7 +876,7 @@ public class OrderService {
         }
         Order order = (Order) returnObject1.getData();
         String ducumentId = order.getOrderSn();
-        InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPaymentInternal( ducumentId, PaymentState.ALREADY_PAY.getCode(), null, null, 1, 10);
+        InternalReturnObject<PageVo<PaymentRetVo>> returnObject = transactionService.listPaymentInternal( ducumentId, null, null, null, 1, 10);
         if(!returnObject.getErrno().equals(ReturnNo.OK.getCode()))
         {
             return new ReturnObject(returnObject);
