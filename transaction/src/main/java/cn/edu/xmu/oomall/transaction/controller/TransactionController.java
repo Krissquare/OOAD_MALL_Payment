@@ -16,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 
@@ -27,15 +28,6 @@ public class TransactionController {
 
     @Autowired
     private TransactionService transactionService;
-    /**
-     * fz
-     * 1.获得支付渠道的所有状态
-     * */
-    @GetMapping("/paypatterns/states")
-    public Object listAllPayPatternStates(){
-        //TODO: qm没给出支付渠道状态图，待补
-        return new ReturnObject<>();
-    }
     /**
      * @author fz
      * 2.获取当前有效的支付渠道
@@ -66,9 +58,22 @@ public class TransactionController {
         return Common.decorateReturnObject(transactionService.listAllPaymentStates());
     }
 
+    /**
+     * 退款状态
+     * @return
+     */
     @GetMapping("/refund/states")
     public Object listAllRefundtStates(){
         return Common.decorateReturnObject(transactionService.listAllRefundStates());
+    }
+
+    /**
+     * 支付方式状态
+     * @return
+     */
+    @GetMapping("/paypatterns/states")
+    public Object listAllPayPatternsStates(){
+        return Common.decorateReturnObject(transactionService.listAllPayPatternsStates());
     }
 
     /**
@@ -134,13 +139,14 @@ public class TransactionController {
                 return new ReturnObject(ReturnNo.LATE_BEGINTIME);
             }
         }
-        LocalDateTime localBeginTime=beginTime==null?null:beginTime.toLocalDateTime();
-        LocalDateTime localEndTime=endTime==null?null:endTime.toLocalDateTime();
+        LocalDateTime localBeginTime=beginTime==null?null:beginTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime localEndTime=endTime==null?null:endTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
         return transactionService.listPayment(documentId, state,localBeginTime,localEndTime, page, pageSize);
     }
 
     /**
      * 内部API，只给售后用
+     * TODO：这里的documentId是用like
      * @param documentId
      * @param state
      * @param beginTime
@@ -162,8 +168,8 @@ public class TransactionController {
                 return new ReturnObject(ReturnNo.LATE_BEGINTIME);
             }
         }
-        LocalDateTime localBeginTime=beginTime==null?null:beginTime.toLocalDateTime();
-        LocalDateTime localEndTime=endTime==null?null:endTime.toLocalDateTime();
+        LocalDateTime localBeginTime=beginTime==null?null:beginTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime localEndTime=endTime==null?null:endTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
         return transactionService.listPayment(documentId, state, localBeginTime, localEndTime, page, pageSize);
     }
 
@@ -241,8 +247,8 @@ public class TransactionController {
         if (shopId != 0) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.RESOURCE_ID_OUTSCOPE));
         }
-        LocalDateTime localBeginTime=beginTime==null?null:beginTime.toLocalDateTime();
-        LocalDateTime localEndTime=endTime==null?null:endTime.toLocalDateTime();
+        LocalDateTime localBeginTime=beginTime==null?null:beginTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime localEndTime=endTime==null?null:endTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
         final ReturnObject refund = transactionService.getRefund(documentId, state, localBeginTime, localEndTime, page, pageSize);
         System.out.println(refund);
         return Common.decorateReturnObject(refund);
@@ -309,8 +315,8 @@ public class TransactionController {
         if (beginTime != null && endTime != null && beginTime.isAfter(endTime)) {
             return Common.decorateReturnObject(new ReturnObject(ReturnNo.LATE_BEGINTIME));
         }
-        LocalDateTime localBeginTime=beginTime==null?null:beginTime.toLocalDateTime();
-        LocalDateTime localEndTime=endTime==null?null:endTime.toLocalDateTime();
+        LocalDateTime localBeginTime=beginTime==null?null:beginTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+        LocalDateTime localEndTime=endTime==null?null:endTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
         return Common.decorateReturnObject(transactionService.listErrorAccountsByConditions(documentId,state,localBeginTime,localEndTime,page,pageSize));
     }
 

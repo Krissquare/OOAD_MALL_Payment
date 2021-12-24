@@ -1,6 +1,4 @@
-package cn.edu.xmu.oomall.transaction.model.bo;
-
-import lombok.Getter;
+package cn.edu.xmu.oomall.ordermq.service.mq.bo;
 
 /**
  * @author 高艺桐 22920192204199
@@ -11,8 +9,7 @@ public enum PaymentState {
     ALREADY_PAY((byte)1,"已支付"),
     ALREADY_RECONCILIATION((byte)2,"已对账"),
     ALREADY_LIQUIDATION((byte)3,"已清算"),
-    CANCEL((byte)4,"取消"),
-    FAIL((byte)5,"支付失败");
+    FAIL((byte)5,"失败");
     private Byte code;
     private String state;
     PaymentState(Byte code, String state){
